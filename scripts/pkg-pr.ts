@@ -11,10 +11,9 @@ await writeFile("pnpm-workspace.yaml", yamlContent, "utf8");
 
 const exclude = ["alchemy-effect-cloudflare"];
 
-const packages = (await readdir(".")).filter((p) =>
-  p.startsWith("alchemy-effect"),
-);
+const packages = (await readdir("."))
+  .filter((p) => p.startsWith("alchemy-effect"))
+  .filter((p) => !exclude.includes(p))
+  .map((p) => `./${p}`);
 
-for (const p of packages) {
-  await $`bunx pkg-pr-new publish --pnpm ./alchemy-effect`;
-}
+await $`bunx pkg-pr-new publish --pnpm ${packages.join(" ")}`;
