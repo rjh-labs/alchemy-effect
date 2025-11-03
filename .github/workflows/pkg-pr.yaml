@@ -25,4 +25,4 @@ jobs:
         run: bun run build
 
       - name: Prepare Publish
-        run: bunx pkg-pr-new publish --bun ./alchemy-effect*
+        run: bunx pkg-pr-new publish --bun ./alchemy-effect ./alchemy-effect-aws ./alchemy-effect-cloudflare ./alchemy-effect-cli
