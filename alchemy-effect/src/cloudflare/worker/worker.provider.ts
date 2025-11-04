@@ -6,7 +6,6 @@ import {
   CloudflareAccountId,
   notFoundToUndefined,
 } from "../api.ts";
-import { WorkerAssets } from "./worker.assets.ts";
 import { bundle } from "./worker.bundle.ts";
 import { Worker, type WorkerAttr, type WorkerProps } from "./worker.ts";
 
@@ -16,7 +15,6 @@ export const workerProvider = () =>
       const app = yield* App;
       const api = yield* Cloudflare;
       const accountId = yield* CloudflareAccountId;
-      const workerAssets = yield* WorkerAssets;
 
       const createWorkerName = (id: string, props: WorkerProps | undefined) =>
         props?.name ?? `${app.name}-${id}-${app.stage}`;
@@ -34,75 +32,50 @@ export const workerProvider = () =>
         accountId,
       });
 
-      const prepareAssets = Effect.fn(function* (
-        workerId: string,
-        props: WorkerProps,
-      ) {
-        if (!props.assets) return;
-        const result = yield* workerAssets.read(props.assets.directory);
-        const { jwt } = yield* workerAssets.upload(
-          workerId,
-          accountId,
-          props.assets!.directory,
-          result.manifest,
-        );
-        return {
-          config: props.assets?.config,
-          jwt,
-          _headers: result._headers,
-          _redirects: result._redirects,
-        };
-      });
-
       const createVersion = Effect.fn(function* (
         workerId: string,
         accountId: string,
         props: WorkerProps,
         bindings: Array<Worker["binding"]>,
       ) {
-        const [assets, { code, hash }] = yield* Effect.all([
-          prepareAssets(workerId, props),
-          bundle({
-            entryPoints: [props.main],
-            bundle: true,
-            format: "esm",
-          }),
-        ]);
-        const modules: Workers.Version.Module[] = [];
-        modules.push({
-          name: "worker.js",
-          content_base64: Buffer.from(code).toString("base64"),
-          content_type: "application/javascript",
+        const { code, hash } = yield* bundle({
+          entryPoints: [props.main],
+          bundle: true,
+          format: "esm",
         });
-        if (assets?._headers) {
-          modules.push({
-            name: "_headers",
-            content_base64: Buffer.from(assets._headers).toString("base64"),
-            content_type: "text/plain",
-          });
-        }
-        if (assets?._redirects) {
-          modules.push({
-            name: "_redirects",
-            content_base64: Buffer.from(assets._redirects).toString("base64"),
-            content_type: "text/plain",
-          });
+        let assets: Worker.Assets | undefined;
+        const resolvedBindings: Worker.Binding[] = [];
+        const modules: Worker.Module[] = [
+          {
+            name: "worker.js",
+            content_base64: Buffer.from(code).toString("base64"),
+            content_type: "application/javascript",
+          },
+        ];
+        for (const binding of bindings) {
+          if (binding.bindings) {
+            resolvedBindings.push(...binding.bindings);
+          }
+          if (binding.assets) {
+            assets = binding.assets;
+          }
+          if (binding.modules) {
+            modules.push(...binding.modules);
+          }
         }
         return yield* api.workers.beta.workers.versions.create(workerId, {
           account_id: accountId,
+          deploy: true,
           compatibility_date: props.compatibility?.date,
           compatibility_flags: props.compatibility?.flags,
           limits: props.limits,
           placement: props.placement,
-          bindings: bindings.flatMap((binding) => binding.bindings),
+          bindings: resolvedBindings,
           main_module: "worker.js",
           modules,
           migrations: undefined,
           annotations: undefined,
-          assets: {
-            config: assets?.config,
-            jwt: assets?.jwt,
-          },
+          assets,
         });
       });
 

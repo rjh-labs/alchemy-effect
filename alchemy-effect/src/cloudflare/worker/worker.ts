@@ -15,10 +15,6 @@ export type WorkerProps = {
     date?: string;
     flags?: string[];
   };
-  assets?: {
-    directory: string;
-    config?: Worker.AssetsConfig;
-  };
   limits?: Worker.Limits;
   placement?: Worker.Placement;
 };
@@ -41,7 +37,9 @@ export interface Worker extends Runtime<WorkerType> {
   props: WorkerProps;
   attr: WorkerAttr<Extract<this["props"], WorkerProps>>;
   binding: {
-    bindings: Worker.Binding[];
+    bindings?: Worker.Binding[];
+    assets?: Worker.Assets;
+    modules?: Worker.Module[];
   };
 }
 
@@ -55,5 +53,6 @@ export declare namespace Worker {
   >[number];
   export type Limits = Workers.Version.Limits;
   export type Placement = Workers.Version.Placement;
-  export type AssetsConfig = Workers.Version.Assets.Config;
+  export type Assets = Workers.Version.Assets;
+  export type Module = Workers.Version.Module;
 }
