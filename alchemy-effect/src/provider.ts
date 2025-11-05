@@ -1,5 +1,6 @@
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
+import type { Scope } from "effect/Scope";
 import type { ScopedPlanStatusSession } from "./apply.ts";
 import type { Resource } from "./resource.ts";
 import type { Runtime } from "./runtime.ts";
@@ -38,24 +39,24 @@ export interface ProviderService<Res extends Resource = Resource> {
     output: Res["attr"] | undefined; // current state -> synced state
     session: ScopedPlanStatusSession;
     bindings: BindingData<Res>;
-  }): Effect.Effect<Res["attr"] | undefined, any, never>;
+  }): Effect.Effect<Res["attr"] | undefined, any, Scope>;
   diff?(input: {
     id: string;
     olds: Res["props"];
     news: Res["props"];
     output: Res["attr"];
-  }): Effect.Effect<Diff, never, never>;
+  }): Effect.Effect<Diff, never, Scope>;
   stub?(input: {
     id: string;
     news: Res["props"];
     session: ScopedPlanStatusSession;
-  }): Effect.Effect<Res["attr"], any, never>;
+  }): Effect.Effect<Res["attr"], any, Scope>;
   create(input: {
     id: string;
     news: Res["props"];
     session: ScopedPlanStatusSession;
     bindings: BindingData<Res>;
-  }): Effect.Effect<Res["attr"], any, never>;
+  }): Effect.Effect<Res["attr"], any, Scope>;
   update(input: {
     id: string;
     news: Res["props"];
@@ -63,12 +64,12 @@ export interface ProviderService<Res extends Resource = Resource> {
     output: Res["attr"];
     session: ScopedPlanStatusSession;
     bindings: BindingData<Res>;
-  }): Effect.Effect<Res["attr"], any, never>;
+  }): Effect.Effect<Res["attr"], any, Scope>;
   delete(input: {
     id: string;
     olds: Res["props"];
     output: Res["attr"];
     session: ScopedPlanStatusSession;
     bindings: BindingData<Res>;
-  }): Effect.Effect<void, any, never>;
+  }): Effect.Effect<void, any, Scope>;
 }

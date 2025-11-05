@@ -1,13 +1,29 @@
 import * as cf from "cloudflare";
 import { isRequestOptions, type APIPromise } from "cloudflare/core.mjs";
 import type { APIError } from "cloudflare/src/error.js";
+import { Layer } from "effect";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { EnvironmentVariableNotSet } from "../aws/region";
 
 export class CloudflareAccountId extends Context.Tag("CloudflareAccountId")<
   CloudflareAccountId,
   string
->() {}
+>() {
+  static readonly fromEnv = Layer.effect(
+    CloudflareAccountId,
+    Effect.gen(function* () {
+      const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+      if (!accountId) {
+        return yield* new EnvironmentVariableNotSet({
+          message: "CLOUDFLARE_ACCOUNT_ID is not set",
+          variable: "CLOUDFLARE_ACCOUNT_ID",
+        });
+      }
+      return accountId;
+    }),
+  );
+}
 
 type ToEffect<T> = {
   [K in keyof T]: T[K] extends (...args: any[]) => any
@@ -37,7 +53,7 @@ const createRecursiveProxy = <T extends object>(target: T): ToEffect<T> => {
             } else {
               modifiedArgs = [...args, { signal }];
             }
-            const result = await value(...modifiedArgs);
+            const result = await value.apply(target, modifiedArgs);
             return result;
           });
         });

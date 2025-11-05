@@ -143,11 +143,13 @@ export const apply = <P extends Plan, Err, Req>(
                   let attr: any;
                   if (node.provider.stub) {
                     // stub the resource prior to resolving upstream resources or bindings if a stub is available
-                    attr = yield* node.provider.stub({
-                      id,
-                      news: node.news,
-                      session: scopedSession,
-                    });
+                    attr = yield* node.provider
+                      .stub({
+                        id,
+                        news: node.news,
+                        session: scopedSession,
+                      })
+                      .pipe(Effect.scoped);
                   }
 
                   const bindings = yield* applyBindings(
@@ -170,6 +172,7 @@ export const apply = <P extends Plan, Err, Req>(
                       session: scopedSession,
                     })
                     .pipe(
+                      Effect.scoped,
                       checkpoint,
                       Effect.tap(() => report("created")),
                     );
@@ -198,6 +201,7 @@ export const apply = <P extends Plan, Err, Req>(
                       session: scopedSession,
                     })
                     .pipe(
+                      Effect.scoped,
                       checkpoint,
                       Effect.tap(() => report("updated")),
                     );
@@ -224,19 +228,22 @@ export const apply = <P extends Plan, Err, Req>(
                       bindings: [],
                     })
                     .pipe(
+                      Effect.scoped,
                       Effect.flatMap(() => state.delete(id)),
                       Effect.tap(() => report("deleted")),
                     );
                 } else if (node.action === "replace") {
                   const destroy = Effect.gen(function* () {
                     yield* report("deleting");
-                    return yield* node.provider.delete({
-                      id,
-                      olds: node.olds,
-                      output: node.output,
-                      session: scopedSession,
-                      bindings: [],
-                    });
+                    return yield* node.provider
+                      .delete({
+                        id,
+                        olds: node.olds,
+                        output: node.output,
+                        session: scopedSession,
+                        bindings: [],
+                      })
+                      .pipe(Effect.scoped);
                   });
                   const create = Effect.gen(function* () {
                     yield* report("creating");
@@ -259,6 +266,7 @@ export const apply = <P extends Plan, Err, Req>(
                         })
                         // TODO(sam): delete and create will conflict here, we need to extend the state store for replace
                         .pipe(
+                          Effect.scoped,
                           checkpoint,
                           Effect.tap(() => report("created")),
                         )

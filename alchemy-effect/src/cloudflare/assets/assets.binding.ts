@@ -2,7 +2,7 @@ import * as FileSystem from "@effect/platform/FileSystem";
 import * as Path from "@effect/platform/Path";
 import { Binding, type Capability, type From } from "alchemy-effect";
 import * as Effect from "effect/Effect";
-import { Cloudflare } from "../api.ts";
+import { Cloudflare, CloudflareAccountId } from "../api.ts";
 import { Worker } from "../worker/index.ts";
 import { Assets, type AssetsAttr, type AssetsProps } from "./assets.ts";
 
@@ -19,16 +19,17 @@ export const readFromWorker = () =>
   Read.provider.effect(
     Effect.gen(function* () {
       const cloudflare = yield* Cloudflare;
+      const accountId = yield* CloudflareAccountId;
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
 
       const upload = Effect.fn(function* (
-        workerId: string,
-        accountId: string,
+        workerName: string,
         assets: AssetsAttr<AssetsProps>,
       ) {
+        console.log("assets", assets);
         const session = yield* cloudflare.workers.scripts.assets.upload.create(
-          workerId,
+          workerName,
           {
             account_id: accountId,
             manifest: assets.manifest,
@@ -42,6 +43,7 @@ export const readFromWorker = () =>
           assetsByHash.set(hash, name);
         }
         let jwt: string | undefined;
+        console.log("session", session);
         yield* Effect.forEach(
           session.buckets,
           Effect.fn(function* (bucket) {
@@ -83,9 +85,9 @@ export const readFromWorker = () =>
 
       return {
         attach: Effect.fn(function* ({ source, target }) {
+          console.log("attach", source, target);
           const result = yield* upload(
-            target.attr.id,
-            target.attr.accountId,
+            target.attr?.name ?? target.props.name!, // todo: target attributes undefined
             source.attr,
           ).pipe(Effect.orDie); // todo: handle error?
           const modules: Worker.Module[] = [];

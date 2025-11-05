@@ -61,10 +61,20 @@
       "import": "./lib/aws/credentials.js",
       "types": "./lib/aws/credentials.d.ts"
     },
+    "./cli": {
+      "bun": "./src/cli/index.ts",
+      "import": "./lib/cli/index.js",
+      "types": "./lib/cli/index.d.ts"
+    },
     "./cloudflare": {
       "bun": "./src/cloudflare/index.ts",
       "import": "./lib/cloudflare/index.js",
       "types": "./lib/cloudflare/index.d.ts"
+    },
+    "./cloudflare/assets": {
+      "bun": "./src/cloudflare/assets/index.ts",
+      "import": "./lib/cloudflare/assets/index.js",
+      "types": "./lib/cloudflare/assets/index.d.ts"
     },
     "./cloudflare/kv-namespace": {
       "bun": "./src/cloudflare/kv-namespace/index.ts",

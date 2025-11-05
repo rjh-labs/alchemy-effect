@@ -1,5 +1,5 @@
 import * as Layer from "effect/Layer";
-import { Cloudflare } from "./api.ts";
+import { Cloudflare, CloudflareAccountId } from "./api.ts";
 import * as Assets from "./assets/index.ts";
 import * as KVNamespace from "./kv-namespace/index.ts";
 import * as R2Bucket from "./r2-bucket/index.ts";
@@ -23,6 +23,14 @@ export const bindings = Layer.mergeAll(
   R2Bucket.bindFromWorker(),
 );
 
-export const clients = Layer.merge(KVNamespace.client());
+export const clients = Layer.merge(Assets.client(), KVNamespace.client());
 
-export const live = providers.pipe(Layer.provide(Cloudflare.Default({})));
+export const defaultProviders = providers.pipe(
+  Layer.provideMerge(bindings),
+  Layer.provide(clients),
+);
+
+export const live = defaultProviders.pipe(
+  Layer.provide(Cloudflare.Default({})),
+  Layer.provide(CloudflareAccountId.fromEnv),
+);

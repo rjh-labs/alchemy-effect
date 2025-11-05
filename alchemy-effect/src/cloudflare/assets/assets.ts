@@ -12,12 +12,14 @@ export type AssetsAttr<Props extends AssetsProps> = {
     ? Props["config"]
     : undefined;
   manifest: Record<string, { hash: string; size: number }>;
-  _headers: string;
-  _redirects: string;
+  _headers: string | undefined;
+  _redirects: string | undefined;
 };
 
-export interface Assets<ID extends string, Props extends AssetsProps>
-  extends Resource<"Cloudflare.Assets", ID, Props, AssetsAttr<Props>> {}
+export interface Assets<
+  ID extends string = string,
+  Props extends AssetsProps = AssetsProps,
+> extends Resource<"Cloudflare.Assets", ID, Props, AssetsAttr<Props>> {}
 
 export const Assets = Resource<{
   <const ID extends string, const Props extends AssetsProps>(

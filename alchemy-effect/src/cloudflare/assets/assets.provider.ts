@@ -14,15 +14,13 @@ export const assetsProvider = () =>
       const path = yield* Path.Path;
 
       const maybeReadString = Effect.fn(function* (file: string) {
-        return yield* fs
-          .readFileString(file)
-          .pipe(
-            Effect.mapError((error) =>
-              error._tag === "SystemError" && error.reason === "NotFound"
-                ? Effect.succeed(undefined)
-                : Effect.fail(error),
-            ),
-          );
+        return yield* fs.readFileString(file).pipe(
+          Effect.catchIf(
+            (error) =>
+              error._tag === "SystemError" && error.reason === "NotFound",
+            () => Effect.succeed(undefined),
+          ),
+        );
       });
 
       const read = Effect.fn(function* <Props extends AssetsProps>(
@@ -36,7 +34,11 @@ export const assetsProvider = () =>
           maybeReadString(path.join(props.directory, "_redirects")),
         ]);
         const matcher = yield* Effect.sync(() => {
-          return Ignore().add([ignore, "_headers", "_redirects"]);
+          const matcher = Ignore().add(["_headers", "_redirects"]);
+          if (ignore) {
+            matcher.add(ignore);
+          }
+          return matcher;
         });
         const manifest: Record<string, { hash: string; size: number }> = {};
         yield* Effect.forEach(
@@ -46,13 +48,15 @@ export const assetsProvider = () =>
             if (matcher.ignores(file)) return;
             const stat = yield* fs.stat(file);
             if (stat.type !== "File") return;
-            const hash = yield* fs
-              .readFile(file)
-              .pipe(
-                Effect.map((content) =>
-                  crypto.createHash("sha256").update(content).digest("hex"),
-                ),
-              );
+            const hash = yield* fs.readFile(file).pipe(
+              Effect.map((content) =>
+                crypto
+                  .createHash("sha256")
+                  .update(content + path.extname(file))
+                  .digest("hex")
+                  .slice(0, 32),
+              ),
+            );
             const size = Number(stat.size);
             if (size > MAX_ASSET_SIZE) {
               return yield* Effect.fail(
@@ -61,9 +65,9 @@ export const assetsProvider = () =>
                 ),
               );
             }
-            manifest[name] = { hash, size };
+            manifest[name.startsWith("/") ? name : `/${name}`] = { hash, size };
           }),
-          { concurrency: "unbounded" },
+          { concurrency: "unbounded", discard: true },
         );
         return {
           directory: props.directory,
