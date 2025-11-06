@@ -11,8 +11,10 @@ export type KVNamespaceAttr<Props extends KVNamespaceProps> = {
   accountId: string;
 };
 
-export interface KVNamespace<ID extends string, Props extends KVNamespaceProps>
-  extends Resource<
+export interface KVNamespace<
+  ID extends string = string,
+  Props extends KVNamespaceProps = KVNamespaceProps,
+> extends Resource<
     "Cloudflare.KVNamespace",
     ID,
     Props,

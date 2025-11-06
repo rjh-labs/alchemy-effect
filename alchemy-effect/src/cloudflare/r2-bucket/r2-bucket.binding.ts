@@ -17,7 +17,7 @@ export const bindFromWorker = () =>
       bindings: [
         {
           type: "r2_bucket",
-          name: source.attr.name, // todo: standardize binding name
+          name: source.id,
           bucket_name: source.attr.name,
           jurisdiction:
             source.attr.jurisdiction === "default"

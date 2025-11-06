@@ -17,7 +17,7 @@ export const bindFromWorker = () =>
       bindings: [
         {
           type: "kv_namespace",
-          name: source.attr.title, // todo: standardize binding name
+          name: source.id,
           namespace_id: source.attr.namespaceId,
         },
       ],
