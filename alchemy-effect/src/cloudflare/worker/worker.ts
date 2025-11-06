@@ -1,10 +1,10 @@
 import type { Workers } from "cloudflare/resources/workers/beta.mjs";
-import { Runtime } from "../../runtime.ts";
+import { Runtime, type RuntimeProps } from "../../runtime.ts";
 
 export const WorkerType = "Cloudflare.Worker" as const;
 export type WorkerType = typeof WorkerType;
 
-export type WorkerProps = {
+export interface WorkerProps<Req = any> extends RuntimeProps<Worker, Req> {
   name?: string;
   logpush?: boolean;
   observability?: Worker.Observability;
@@ -17,7 +17,7 @@ export type WorkerProps = {
   };
   limits?: Worker.Limits;
   placement?: Worker.Placement;
-};
+}
 
 export type WorkerAttr<Props extends WorkerProps> = {
   id: string;
@@ -25,7 +25,9 @@ export type WorkerAttr<Props extends WorkerProps> = {
   logpush: Props["logpush"] extends boolean ? Props["logpush"] : boolean;
   observability: Props["observability"] extends Worker.Observability
     ? Props["observability"]
-    : Worker.Observability;
+    : {
+        // whatever cloudflare's (or our, probably ours) default is
+      };
   subdomain: Props["subdomain"] extends Worker.Subdomain
     ? Props["subdomain"]
     : Worker.Subdomain;

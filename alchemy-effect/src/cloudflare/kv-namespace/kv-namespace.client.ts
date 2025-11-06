@@ -1,6 +1,8 @@
 import type * as cf from "@cloudflare/workers-types";
 import * as Effect from "effect/Effect";
+import type { To } from "../../policy.ts";
 import { CloudflareEnv } from "../env";
+import type { Bind } from "./kv-namespace.binding.ts";
 import type * as KV from "./kv-namespace.ts";
 
 const fromEnv = Effect.fn(function* <Key extends string = string>(
@@ -10,76 +12,76 @@ const fromEnv = Effect.fn(function* <Key extends string = string>(
   return env[namespace.id] as cf.KVNamespace<Key>;
 });
 
-export function get<Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
+export function get<Key extends string, Kv extends KV.KVNamespace>(
+  namespace: Kv,
   key: Key,
   options?: Partial<cf.KVNamespaceGetOptions<undefined>>,
-): Effect.Effect<string | null>;
-export function get<Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Key,
-  type: "text",
-): Effect.Effect<string | null>;
-export function get<ExpectedValue = unknown, Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Key,
-  type: "json",
-): Effect.Effect<ExpectedValue | null>;
-export function get<Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Key,
-  type: "arrayBuffer",
-): Effect.Effect<ArrayBuffer | null>;
-export function get<Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Key,
-  type: "stream",
-): Effect.Effect<ReadableStream | null>;
-export function get<Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Key,
-  options: cf.KVNamespaceGetOptions<"text">,
-): Effect.Effect<string | null>;
-export function get<ExpectedValue = unknown, Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Key,
-  options: cf.KVNamespaceGetOptions<"json">,
-): Effect.Effect<ExpectedValue | null>;
-export function get<Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Key,
-  options: cf.KVNamespaceGetOptions<"arrayBuffer">,
-): Effect.Effect<ArrayBuffer | null>;
-export function get<Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Key,
-  options: cf.KVNamespaceGetOptions<"stream">,
-): Effect.Effect<ReadableStream | null>;
-export function get<Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Array<Key>,
-  type: "text",
-): Effect.Effect<Map<string, string | null>>;
-export function get<ExpectedValue = unknown, Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Array<Key>,
-  type: "json",
-): Effect.Effect<Map<string, ExpectedValue | null>>;
-export function get<Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Array<Key>,
-  options?: Partial<cf.KVNamespaceGetOptions<undefined>>,
-): Effect.Effect<Map<string, string | null>>;
-export function get<Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Array<Key>,
-  options: cf.KVNamespaceGetOptions<"text">,
-): Effect.Effect<Map<string, string | null>>;
-export function get<ExpectedValue = unknown, Key extends string = string>(
-  namespace: KV.KVNamespace<Key>,
-  key: Array<Key>,
-  options: cf.KVNamespaceGetOptions<"json">,
-): Effect.Effect<Map<string, ExpectedValue | null>>;
+): Effect.Effect<string | null, never, Bind<To<Kv>>>;
+// export function get<Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Key,
+//   type: "text",
+// ): Effect.Effect<string | null>;
+// export function get<ExpectedValue = unknown, Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Key,
+//   type: "json",
+// ): Effect.Effect<ExpectedValue | null>;
+// export function get<Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Key,
+//   type: "arrayBuffer",
+// ): Effect.Effect<ArrayBuffer | null>;
+// export function get<Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Key,
+//   type: "stream",
+// ): Effect.Effect<ReadableStream | null>;
+// export function get<Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Key,
+//   options: cf.KVNamespaceGetOptions<"text">,
+// ): Effect.Effect<string | null>;
+// export function get<ExpectedValue = unknown, Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Key,
+//   options: cf.KVNamespaceGetOptions<"json">,
+// ): Effect.Effect<ExpectedValue | null>;
+// export function get<Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Key,
+//   options: cf.KVNamespaceGetOptions<"arrayBuffer">,
+// ): Effect.Effect<ArrayBuffer | null>;
+// export function get<Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Key,
+//   options: cf.KVNamespaceGetOptions<"stream">,
+// ): Effect.Effect<ReadableStream | null>;
+// export function get<Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Array<Key>,
+//   type: "text",
+// ): Effect.Effect<Map<string, string | null>>;
+// export function get<ExpectedValue = unknown, Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Array<Key>,
+//   type: "json",
+// ): Effect.Effect<Map<string, ExpectedValue | null>>;
+// export function get<Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Array<Key>,
+//   options?: Partial<cf.KVNamespaceGetOptions<undefined>>,
+// ): Effect.Effect<Map<string, string | null>>;
+// export function get<Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Array<Key>,
+//   options: cf.KVNamespaceGetOptions<"text">,
+// ): Effect.Effect<Map<string, string | null>>;
+// export function get<ExpectedValue = unknown, Key extends string = string>(
+//   namespace: KV.KVNamespace<Key>,
+//   key: Array<Key>,
+//   options: cf.KVNamespaceGetOptions<"json">,
+// ): Effect.Effect<Map<string, ExpectedValue | null>>;
 export function get<Key extends string = string>(
   namespace: KV.KVNamespace<Key>,
   key: any,

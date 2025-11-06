@@ -19,7 +19,7 @@ export const serve =
       ) => Effect.Effect<Response, never, Req>;
     },
   ) =>
-  <const Props extends Worker.WorkerProps>(props: Props) =>
+  <const Props extends Worker.WorkerProps<Req>>(props: Props) =>
     Worker.Worker(id, { handle: fetch })({
       ...props,
       url: true,
