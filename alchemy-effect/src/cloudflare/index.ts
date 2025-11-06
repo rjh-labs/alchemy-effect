@@ -18,7 +18,7 @@ export const providers = Layer.mergeAll(
 );
 
 export const bindings = Layer.mergeAll(
-  Assets.readFromWorker(),
+  Assets.fetchFromWorker(),
   KVNamespace.bindFromWorker(),
   R2Bucket.bindFromWorker(),
 );

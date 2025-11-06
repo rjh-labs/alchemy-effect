@@ -16,14 +16,12 @@ export type AssetsAttr<Props extends AssetsProps> = {
   _redirects: string | undefined;
 };
 
-export interface Assets<
-  ID extends string = string,
-  Props extends AssetsProps = AssetsProps,
-> extends Resource<"Cloudflare.Assets", ID, Props, AssetsAttr<Props>> {}
+export interface Assets<Props extends AssetsProps = AssetsProps>
+  extends Resource<"Cloudflare.Assets", "Assets", Props, AssetsAttr<Props>> {}
 
-export const Assets = Resource<{
-  <const ID extends string, const Props extends AssetsProps>(
-    id: ID,
-    props: Props,
-  ): Assets<ID, Props>;
-}>("Cloudflare.Assets");
+// export const Assets = Resource<{
+//   <const ID extends string, const Props extends AssetsProps>(
+//     id: ID,
+//     props: Props,
+//   ): Assets<ID, Props>;
+// }>("Cloudflare.Assets");

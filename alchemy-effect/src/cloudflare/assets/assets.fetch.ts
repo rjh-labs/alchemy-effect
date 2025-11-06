@@ -1,22 +1,26 @@
 import * as FileSystem from "@effect/platform/FileSystem";
 import * as Path from "@effect/platform/Path";
-import { Binding, type Capability, type From } from "alchemy-effect";
+import { Binding, declare, type Capability } from "alchemy-effect";
 import * as Effect from "effect/Effect";
 import { Cloudflare, CloudflareAccountId } from "../api.ts";
 import { Worker } from "../worker/index.ts";
-import { Assets, type AssetsAttr, type AssetsProps } from "./assets.ts";
+import { type AssetsAttr, type AssetsProps } from "./assets.ts";
 
-export interface Read<B = Assets<string, AssetsProps>>
-  extends Capability<"Cloudflare.Assets.Read", B> {}
+export interface Fetch extends Capability<"Cloudflare.Assets.Fetch"> {}
 
-export const Read = Binding<
-  <B extends Assets<string, AssetsProps>>(
-    assets: B,
-  ) => Binding<Worker, Read<From<B>>>
->(Worker, "Cloudflare.Assets.Read");
+export const Fetch = Binding<() => Binding<Worker, Fetch>>(
+  Worker,
+  "Cloudflare.Assets.Fetch",
+);
 
-export const readFromWorker = () =>
-  Read.provider.effect(
+export const fetch = (request: Request, sub?: RequestInit) =>
+  Effect.gen(function* () {
+    yield* declare<Fetch>();
+    return undefined!; // TODO(john): implement
+  });
+
+export const fetchFromWorker = () =>
+  Fetch.provider.effect(
     Effect.gen(function* () {
       const cloudflare = yield* Cloudflare;
       const accountId = yield* CloudflareAccountId;
