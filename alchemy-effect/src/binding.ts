@@ -2,6 +2,7 @@ import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type { Capability, ICapability } from "./capability.ts";
+import type { Diff } from "./provider.ts";
 import type { Resource } from "./resource.ts";
 import type { Runtime } from "./runtime.ts";
 
@@ -111,6 +112,61 @@ export interface BindingDeclaration<
   };
 }
 
+export interface BindingDiffProps<
+  Source extends Resource = Resource,
+  Target extends Resource = Resource,
+  Props = any,
+> {
+  source: {
+    id: string;
+    props: Source["props"];
+    oldProps?: Source["props"];
+    oldAttr?: Source["attr"];
+  };
+  props: Props;
+  target: {
+    id: string;
+    props: Target["props"];
+    oldProps?: Target["props"];
+    oldAttr?: Target["attr"];
+  };
+}
+export interface BindingAttachProps<
+  Source extends Resource,
+  Target extends Resource,
+  Props,
+> {
+  source: {
+    id: string;
+    attr: Source["attr"];
+    props: Source["props"];
+  };
+  props: Props;
+  target: {
+    id: string;
+    props: Target["props"];
+    attr: Target["attr"];
+  };
+}
+
+export interface BindingDetachProps<
+  Source extends Resource,
+  Target extends Resource,
+  Props,
+> {
+  source: {
+    id: string;
+    attr: Source["attr"];
+    props: Source["props"];
+  };
+  props: Props;
+  target: {
+    id: string;
+    props: Target["props"];
+    attr: Target["attr"];
+  };
+}
+
 export type BindingService<
   Target extends Runtime = any,
   Source extends Resource = Resource,
@@ -118,27 +174,13 @@ export type BindingService<
   AttachReq = never,
   DetachReq = never,
 > = {
-  attach: (props: {
-    source: {
-      id: string;
-      attr: Source["attr"];
-      props: Source["props"];
-    };
-    props: Props;
-    target: {
-      id: string;
-      props: Target["props"];
-      attr: Target["attr"];
-    };
-  }) =>
+  diff?: (
+    props: BindingDiffProps<Source, Target, Props>,
+  ) => Effect<Diff, never, never>;
+  attach: (
+    props: BindingAttachProps<Source, Target, Props>,
+  ) =>
     | Effect<Partial<Target["binding"]> | void, never, AttachReq>
     | Partial<Target["binding"]>;
-  detach?: (
-    resource: {
-      id: string;
-      attr: Source["attr"];
-      props: Source["props"];
-    },
-    from: Target["binding"],
-  ) => Effect<void, never, DetachReq> | void;
+  detach?: () => Effect<void, never, DetachReq> | void;
 };
