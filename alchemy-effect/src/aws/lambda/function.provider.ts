@@ -5,7 +5,7 @@ import { FileSystem } from "@effect/platform";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
 
-import { App, DotAlchemy } from "alchemy-effect";
+import { App, DotAlchemy, type ProviderService } from "alchemy-effect";
 
 import type {
   CreateFunctionUrlConfigRequest,
@@ -21,13 +21,13 @@ import { Account } from "../account.ts";
 import * as IAM from "../iam.ts";
 import { Region } from "../region.ts";
 import { zipCode } from "../zip.ts";
-import { FunctionClient } from "./function.client.ts";
+import { LambdaClient } from "./client.ts";
 import { Function, type FunctionAttr, type FunctionProps } from "./function.ts";
 
 export const functionProvider = () =>
   Function.provider.effect(
     Effect.gen(function* () {
-      const lambda = yield* FunctionClient;
+      const lambda = yield* LambdaClient;
       const iam = yield* IAM.IAMClient;
       const accountId = yield* Account;
       const region = yield* Region;
@@ -362,22 +362,17 @@ export const functionProvider = () =>
         }),
         diff: Effect.fn(function* ({ id, olds, news, output }) {
           if (
-            output.functionName !==
-            (news.functionName ?? createFunctionName(id))
-          ) {
             // function name changed
-            return { action: "replace" };
-          }
-          if (olds.url !== news.url) {
+            output.functionName !==
+              (news.functionName ?? createFunctionName(id)) ||
             // url changed
+            olds.url !== news.url
+          ) {
             return { action: "replace" };
-          }
-          const { hash } = yield* bundleCode(id, news);
-          if (output.code.hash !== hash) {
+          } else if (output.code.hash !== (yield* bundleCode(id, news)).hash) {
             // code changed
             return { action: "update" };
           }
-          return { action: "noop" };
         }),
         create: Effect.fn(function* ({ id, news, bindings, session }) {
           const roleName = createRoleName(id);
@@ -536,6 +531,6 @@ export const functionProvider = () =>
             .pipe(Effect.catchTag("NoSuchEntityException", () => Effect.void));
           return null as any;
         }),
-      };
+      } satisfies ProviderService<Function>;
     }),
   );

@@ -161,7 +161,6 @@ export const plan = <
   type ServiceHosts = {
     [ID in ServiceIDs]: Extract<Services[number], Service<Extract<ID, string>>>;
   };
-
   type UpstreamTags = {
     [ID in ServiceIDs]: ServiceHosts[ID]["props"]["bindings"]["tags"][number];
   }[ServiceIDs];
@@ -264,47 +263,42 @@ export const plan = <
                         // phantom
                         attributes: undefined!,
                       });
-                    } else if (provider.diff) {
-                      const diff = yield* provider.diff({
-                        id,
+                    }
+
+                    const diff = provider.diff
+                      ? yield* provider.diff({
+                          id,
+                          olds: oldState.props,
+                          news,
+                          output: oldState.output,
+                        })
+                      : undefined;
+
+                    if (!diff && compare(oldState, resource.props)) {
+                      return Node<Update<Resource>>({
+                        action: "update",
                         olds: oldState.props,
                         news,
                         output: oldState.output,
+                        provider,
+                        resource,
+                        bindings,
+                        // phantom
+                        attributes: undefined!,
                       });
-                      if (diff.action === "noop") {
-                        return Node<NoopUpdate<Resource>>({
-                          action: "noop",
-                          resource,
-                          bindings,
-                          // phantom
-                          attributes: undefined!,
-                        });
-                      } else if (diff.action === "replace") {
-                        return Node<Replace<Resource>>({
-                          action: "replace",
-                          olds: oldState.props,
-                          news,
-                          output: oldState.output,
-                          provider,
-                          resource,
-                          bindings,
-                          // phantom
-                          attributes: undefined!,
-                        });
-                      } else {
-                        return Node<Update<Resource>>({
-                          action: "update",
-                          olds: oldState.props,
-                          news,
-                          output: oldState.output,
-                          provider,
-                          resource,
-                          bindings,
-                          // phantom
-                          attributes: undefined!,
-                        });
-                      }
-                    } else if (compare(oldState, resource.props)) {
+                    } else if (diff?.action === "replace") {
+                      return Node<Replace<Resource>>({
+                        action: "replace",
+                        olds: oldState.props,
+                        news,
+                        output: oldState.output,
+                        provider,
+                        resource,
+                        bindings,
+                        // phantom
+                        attributes: undefined!,
+                      });
+                    } else if (diff?.action === "update") {
                       return Node<Update<Resource>>({
                         action: "update",
                         olds: oldState.props,

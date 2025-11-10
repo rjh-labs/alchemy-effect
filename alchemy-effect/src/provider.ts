@@ -44,7 +44,7 @@ export interface ProviderService<Res extends Resource = Resource> {
     olds: Res["props"];
     news: Res["props"];
     output: Res["attr"];
-  }): Effect.Effect<Diff, never, never>;
+  }): Effect.Effect<Diff | void, never, never>;
   stub?(input: {
     id: string;
     news: Res["props"];

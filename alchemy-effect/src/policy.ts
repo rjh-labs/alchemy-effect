@@ -27,7 +27,11 @@ export interface Policy<
   /** Add more Capabilities to a Policy */
   and<B extends AnyBinding[]>(
     ...bindings: B
-  ): Policy<F, B[number]["capability"] | Capabilities, Tags>;
+  ): Policy<
+    F,
+    B[number]["capability"] | Capabilities,
+    BindingTags<B[number]> | Exclude<Tags, unknown>
+  >;
 }
 
 export type $<T> = Instance<T>;
