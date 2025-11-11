@@ -1,3 +1,18 @@
+## v0.2.0
+
+### &nbsp;&nbsp;&nbsp;🚀 Features
+
+- Diff bindings &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(20ef4)</samp>](https://github.com/alchemy-run/alchemy/commit/20ef4e2)
+- **aws**: DynamoDB Table and getItem &nbsp;-&nbsp; by **Sam Goodwin** in https://github.com/alchemy-run/alchemy/issues/10 [<samp>(877ba)</samp>](https://github.com/alchemy-run/alchemy/commit/877ba8f)
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- Properly type the Resource Provider Layers and use Layer.merge &nbsp;-&nbsp; by **Sam Goodwin** [<samp>(77d69)</samp>](https://github.com/alchemy-run/alchemy/commit/77d69be)
+
+##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/alchemy-run/alchemy/compare/v0.1.0...v0.2.0)
+
+---
+
 ## v0.1.0
 
 ### &nbsp;&nbsp;&nbsp;🚀 Features
