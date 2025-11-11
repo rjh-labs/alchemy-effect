@@ -17,6 +17,7 @@ export type AnyBinding<F extends Runtime = any> = Binding<
   F,
   any,
   any,
+  any,
   string,
   boolean
 >;
@@ -25,6 +26,7 @@ export interface Binding<
   Run extends Runtime,
   Cap extends Capability = Capability,
   Props = any,
+  Attr extends Run["binding"] = any,
   Tag extends string = Cap["type"],
   IsCustom extends boolean = Cap["type"] extends Tag ? false : true,
 > {
@@ -32,6 +34,7 @@ export interface Binding<
   capability: Cap;
   tag: Tag;
   props: Props;
+  attr: Attr;
   isCustom: IsCustom;
 }
 
@@ -82,7 +85,7 @@ export const Binding: {
         tag: tag ?? cap,
         // @ts-expect-error - we smuggle this property because it interacts poorly with inference
         Tag,
-      }) satisfies Binding<any, any, any, string, false>,
+      }) satisfies Binding<any, any, any, any, string, false>,
     {
       provider: {
         effect: (eff) => Layer.effect(Tag, eff),
@@ -101,13 +104,23 @@ export interface BindingDeclaration<
   provider: {
     effect<Err, Req>(
       eff: Effect<
-        BindingService<Run, Parameters<F>[0], Parameters<F>[1]>,
+        BindingService<
+          Run,
+          Parameters<F>[0],
+          Parameters<F>[1],
+          ReturnType<F>["attr"]
+        >,
         Err,
         Req
       >,
     ): Layer.Layer<Bind<Run, Cap, Tag>, Err, Req>;
     succeed(
-      service: BindingService<Run, Parameters<F>[0], Parameters<F>[1]>,
+      service: BindingService<
+        Run,
+        Parameters<F>[0],
+        Parameters<F>[1],
+        ReturnType<F>["attr"]
+      >,
     ): Layer.Layer<Bind<Run, Cap, Tag>>;
   };
 }
@@ -116,6 +129,7 @@ export interface BindingDiffProps<
   Source extends Resource = Resource,
   Target extends Resource = Resource,
   Props = any,
+  Attr = any,
 > {
   source: {
     id: string;
@@ -124,6 +138,7 @@ export interface BindingDiffProps<
     oldAttr?: Source["attr"];
   };
   props: Props;
+  attr: Attr | undefined;
   target: {
     id: string;
     props: Target["props"];
@@ -131,10 +146,12 @@ export interface BindingDiffProps<
     oldAttr?: Target["attr"];
   };
 }
+
 export interface BindingAttachProps<
   Source extends Resource,
   Target extends Resource,
   Props,
+  Attr,
 > {
   source: {
     id: string;
@@ -142,6 +159,27 @@ export interface BindingAttachProps<
     props: Source["props"];
   };
   props: Props;
+  attr: Attr | undefined;
+  target: {
+    id: string;
+    props: Target["props"];
+    attr: Target["attr"];
+  };
+}
+
+export interface BindingReattachProps<
+  Source extends Resource,
+  Target extends Resource,
+  Props,
+  Attr,
+> {
+  source: {
+    id: string;
+    attr: Source["attr"];
+    props: Source["props"];
+  };
+  props: Props;
+  attr: Attr;
   target: {
     id: string;
     props: Target["props"];
@@ -153,6 +191,7 @@ export interface BindingDetachProps<
   Source extends Resource,
   Target extends Resource,
   Props,
+  Attr,
 > {
   source: {
     id: string;
@@ -160,6 +199,7 @@ export interface BindingDetachProps<
     props: Source["props"];
   };
   props: Props;
+  attr: Attr | undefined;
   target: {
     id: string;
     props: Target["props"];
@@ -171,16 +211,30 @@ export type BindingService<
   Target extends Runtime = any,
   Source extends Resource = Resource,
   Props = any,
+  Attr extends Target["binding"] = any,
+  DiffReq = never,
+  PreReattachReq = never,
   AttachReq = never,
+  ReattachReq = never,
   DetachReq = never,
+  PostAttachReq = never,
 > = {
   diff?: (
     props: BindingDiffProps<Source, Target, Props>,
-  ) => Effect<Diff, never, never>;
+  ) => Effect<Diff, never, DiffReq>;
+  preattach?: (
+    props: BindingAttachProps<Source, Target, Props, Attr>,
+  ) => Effect<Partial<Target["attr"]>, never, PreReattachReq>;
   attach: (
-    props: BindingAttachProps<Source, Target, Props>,
-  ) =>
-    | Effect<Partial<Target["binding"]> | void, never, AttachReq>
-    | Partial<Target["binding"]>;
-  detach?: () => Effect<void, never, DetachReq> | void;
+    props: BindingAttachProps<Source, Target, Props, Attr>,
+  ) => Effect<Attr, never, AttachReq> | Attr;
+  postattach?: (
+    props: BindingAttachProps<Source, Target, Props, Attr>,
+  ) => Effect<Omit<Attr, keyof Target["binding"]>, never, PostAttachReq>;
+  reattach?: (
+    props: BindingReattachProps<Source, Target, Props, Attr>,
+  ) => Effect<Attr, never, ReattachReq> | Attr;
+  detach?: (
+    props: BindingDetachProps<Source, Target, Props, Attr>,
+  ) => Effect<void, never, DetachReq> | void;
 };

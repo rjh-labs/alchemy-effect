@@ -51,7 +51,7 @@ export function Policy<B extends AnyBinding[]>(
 >;
 export function Policy(...bindings: AnyBinding[]): any {
   return {
-    runtime: bindings[0]["runtime"],
+    runtime: bindings[0]?.["runtime"],
     capabilities: bindings.map((b) => b.capability),
     tags: bindings.map((b) => Context.Tag(b.tag as any)()),
     bindings,

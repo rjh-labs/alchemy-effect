@@ -4,11 +4,11 @@ import * as Alchemy from "alchemy-effect";
 import * as AWS from "alchemy-effect/aws";
 import { Layer } from "effect";
 import * as Effect from "effect/Effect";
-import { Consumer } from "./src/index.ts";
+import { Api, Consumer } from "./src/index.ts";
 
 const plan = Alchemy.plan({
   phase: process.argv.includes("--destroy") ? "destroy" : "update",
-  services: [Consumer],
+  services: [Api, Consumer],
 });
 
 const app = Alchemy.app({ name: "my-app", stage: "dev" });
@@ -37,5 +37,5 @@ const stack = await plan.pipe(
 );
 
 if (stack) {
-  console.log(stack.Consumer.functionUrl);
+  console.log(stack);
 }

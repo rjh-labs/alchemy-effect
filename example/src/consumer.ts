@@ -4,26 +4,6 @@ import * as SQS from "alchemy-effect/aws/sqs";
 import * as Effect from "effect/Effect";
 import { Messages } from "./messages.ts";
 
-const ____ = $(SQS.QueueEventSource(Messages));
-
-const __ = Lambda.consume("Consumer", {
-  queue: Messages,
-  handle: Effect.fn(function* (batch) {
-    for (const record of batch.Records) {
-      console.log(record);
-
-      // yield* SQS.sendMessage(Messages, {
-      //   id: 1,
-      //   value: "1",
-      // }).pipe(Effect.catchAll(() => Effect.void));
-    }
-  }),
-})({
-  main: import.meta.filename,
-  bindings: $(),
-  memory: 128,
-});
-
 // business logic
 export class Consumer extends Lambda.consume("Consumer", {
   queue: Messages,
@@ -44,7 +24,7 @@ export class Consumer extends Lambda.consume("Consumer", {
 }) {}
 
 // runtime handler
-// export default Consumer.pipe(
-//   Effect.provide(SQS.clientFromEnv()),
-//   Lambda.toHandler,
-// );
+export default Consumer.handler.pipe(
+  Effect.provide(SQS.clientFromEnv()),
+  Lambda.toHandler,
+);

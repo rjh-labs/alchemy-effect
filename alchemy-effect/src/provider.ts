@@ -45,7 +45,7 @@ export interface ProviderService<Res extends Resource = Resource> {
     news: Res["props"];
     output: Res["attr"];
   }): Effect.Effect<Diff | void, never, never>;
-  stub?(input: {
+  precreate?(input: {
     id: string;
     news: Res["props"];
     session: ScopedPlanStatusSession;
