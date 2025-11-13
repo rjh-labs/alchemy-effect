@@ -1,16 +1,17 @@
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
 
-import { App, type ProviderService } from "alchemy-effect";
+import type { EC2 } from "itty-aws/ec2";
+
+import { App } from "../../app.ts";
 import type { ScopedPlanStatusSession } from "../../apply.ts";
+import { somePropsAreDifferent } from "../../diff.ts";
+import type { ProviderService } from "../../provider.ts";
 import { createTagger, createTagsList } from "../../tags.ts";
 import { Account } from "../account.ts";
 import { Region } from "../region.ts";
 import { EC2Client } from "./client.ts";
 import { Vpc, type VpcAttrs, type VpcProps } from "./vpc.ts";
-
-import type { EC2 } from "itty-aws/ec2";
-import { somePropsAreDifferent } from "../../diff.ts";
 
 export const vpcProvider = () =>
   Vpc.provider.effect(

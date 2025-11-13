@@ -14,7 +14,6 @@ const logLevel = Logger.withMinimumLogLevel(
 );
 
 const aws = AWS.live;
-AWS.foo;
 
 test(
   "create, update, delete subnet",

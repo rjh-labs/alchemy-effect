@@ -1,11 +1,11 @@
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
 
-import { type ProviderService } from "alchemy-effect";
 import type { EC2 } from "itty-aws/ec2";
 
 import type { ScopedPlanStatusSession } from "../../apply.ts";
 import { somePropsAreDifferent } from "../../diff.ts";
+import type { ProviderService } from "../../provider.ts";
 import { createTagger, createTagsList } from "../../tags.ts";
 import { Account } from "../account.ts";
 import { Region } from "../region.ts";

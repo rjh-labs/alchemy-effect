@@ -3,8 +3,9 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schedule from "effect/Schedule";
 
-import { App, type Provider, type ProviderService } from "alchemy-effect";
 import type { TimeToLiveSpecification } from "itty-aws/dynamodb";
+import { App } from "../../app.ts";
+import type { Provider, ProviderService } from "../../provider.ts";
 import { createTagger, hasTags } from "../../tags.ts";
 import { Account } from "../account.ts";
 import { Region } from "../region.ts";
@@ -24,7 +25,6 @@ export const tableProvider = (): Layer.Layer<
   App | DynamoDBClient | Region | Account
 > =>
   Table.provider.effect(
-    // @ts-expect-error
     Effect.gen(function* () {
       const dynamodb = yield* DynamoDBClient;
       const app = yield* App;
