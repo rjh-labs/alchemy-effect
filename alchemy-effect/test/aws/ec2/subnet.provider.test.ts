@@ -1,6 +1,7 @@
 import * as AWS from "@/aws";
 import * as EC2 from "@/aws/ec2";
-import { apply, destroy } from "@/index";
+import type { Input } from "@/input";
+import { $, apply, destroy } from "@/index";
 import { test } from "@/test";
 import { expect } from "@effect/vitest";
 import { LogLevel } from "effect";
@@ -18,16 +19,14 @@ test(
   Effect.gen(function* () {
     const ec2 = yield* EC2.EC2Client;
 
-    // Create VPC and Subnet
     {
       class TestVpc extends EC2.Vpc("TestVpc", {
         cidrBlock: "10.0.0.0/16",
       }) {}
 
       class TestSubnet extends EC2.Subnet("TestSubnet", {
-        vpc: TestVpc,
+        vpc: TestVpc.out().vpcId,
         cidrBlock: "10.0.1.0/24",
-        mapPublicIpOnLaunch: false,
       }) {}
 
       const stack = yield* apply(TestVpc, TestSubnet);
@@ -51,7 +50,7 @@ test(
     }) {}
 
     class TestSubnet extends EC2.Subnet("TestSubnet", {
-      vpc: TestVpc,
+      vpc: TestVpc.out().vpcId,
       cidrBlock: "10.0.1.0/24",
       mapPublicIpOnLaunch: true,
     }) {}
@@ -59,7 +58,7 @@ test(
     const stack = yield* apply(TestVpc, TestSubnet);
 
     yield* expectSubnetAttribute({
-      SubnetId: stack.TestSubnet.subnetId,
+      SubnetId: stack.TestSubnet.vpcId,
       Attribute: "mapPublicIpOnLaunch",
       Value: true,
     });

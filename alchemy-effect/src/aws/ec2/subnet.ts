@@ -1,11 +1,12 @@
 import type * as EC2 from "itty-aws/ec2";
+import type { Input } from "../../input.ts";
 import { Resource } from "../../resource.ts";
 import type { AccountID } from "../account.ts";
 import type { RegionID } from "../region.ts";
-import type { Vpc } from "./vpc.ts";
+import type { VpcId } from "./index.ts";
 
 export const Subnet = Resource<{
-  <const ID extends string, const Props extends SubnetProps>(
+  <const ID extends string, const Props extends Input<SubnetProps>>(
     id: ID,
     props: Props,
   ): Subnet<ID, Props>;
@@ -13,14 +14,19 @@ export const Subnet = Resource<{
 
 export interface Subnet<
   ID extends string = string,
-  Props extends SubnetProps = SubnetProps,
-> extends Resource<"AWS.EC2.Subnet", ID, Props, SubnetAttrs<Props>> {}
+  Props extends Input<SubnetProps> = Input<SubnetProps>,
+> extends Resource<
+    "AWS.EC2.Subnet",
+    ID,
+    Props,
+    SubnetAttrs<Input.Resolve<Props, SubnetProps>>
+  > {}
 
 export interface SubnetProps {
   /**
    * The VPC to create the subnet in.
    */
-  vpc: Vpc;
+  vpc: VpcId;
 
   /**
    * The IPv4 network range for the subnet, in CIDR notation.
@@ -127,7 +133,7 @@ export interface SubnetAttrs<Props extends SubnetProps> {
   /**
    * The ID of the VPC the subnet is in.
    */
-  vpcId: string;
+  vpcId: Props["vpc"];
 
   /**
    * The Availability Zone of the subnet.

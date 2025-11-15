@@ -39,6 +39,7 @@ export const subnetProvider = () =>
 
         create: Effect.fn(function* ({ id, news, session }) {
           // 1. Get VPC ID from the VPC resource
+          // TODO(sam): i need to make it possible to pass Resources as input Props to Resources
           const vpcId = news.vpc.attr.vpcId;
 
           // 2. Prepare tags
