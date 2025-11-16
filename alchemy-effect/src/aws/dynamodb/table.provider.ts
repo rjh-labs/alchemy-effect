@@ -150,7 +150,7 @@ export const tableProvider = (): Layer.Layer<
           // 1. if you change ImportSourceSpecification
         }),
 
-        create: Effect.fn(function* ({ id, news, props, session }) {
+        create: Effect.fn(function* ({ id, news, session }) {
           const tableName = createTableName(id, news);
 
           const response = yield* dynamodb

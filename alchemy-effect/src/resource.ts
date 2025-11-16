@@ -14,8 +14,8 @@ export const isResource = (r: any): r is Resource => {
 export interface IResource<
   Type extends string = string,
   ID extends string = string,
-  Props = unknown,
-  Attrs = unknown,
+  Props = any,
+  Attrs = any,
 > {
   id: ID;
   type: Type;
@@ -55,7 +55,7 @@ export interface Resource<
   new (): Resource<Type, ID, Props, Attrs>;
 }
 
-export interface ResourceTags<R extends IResource> {
+export interface ResourceTags<R extends IResource<string, string, any, any>> {
   of<S extends ProviderService<R>>(service: S): S;
   tag: Context.TagClass<Provider<R>, R["type"], ProviderService<R>>;
   effect<Err, Req>(

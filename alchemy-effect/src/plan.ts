@@ -247,7 +247,9 @@ export const plan = <
                   Effect.fn(function* (node) {
                     const id = node.id;
                     const resource = node as IResource & {
-                      provider: ResourceTags<IResource>;
+                      provider: ResourceTags<
+                        IResource<string, string, any, any>
+                      >;
                     };
                     const news = resource.props;
 

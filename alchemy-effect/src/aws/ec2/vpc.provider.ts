@@ -3,6 +3,7 @@ import * as Schedule from "effect/Schedule";
 
 import type { EC2 } from "itty-aws/ec2";
 
+import type { VpcId } from "./vpc.ts";
 import { App } from "../../app.ts";
 import type { ScopedPlanStatusSession } from "../../apply.ts";
 import { somePropsAreDifferent } from "../../diff.ts";
@@ -66,7 +67,7 @@ export const vpcProvider = () =>
             DryRun: false,
           });
 
-          const vpcId = createResult.Vpc!.VpcId!;
+          const vpcId = createResult.Vpc!.VpcId! as VpcId;
           yield* session.note(`VPC created: ${vpcId}`);
 
           // 3. Modify DNS attributes if specified (separate API calls)
