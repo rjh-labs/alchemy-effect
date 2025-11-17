@@ -147,9 +147,9 @@ it.live("$(TestVpc).vpcArn.map(replace)", () =>
   }),
 );
 
-it.live("Output.concat($(TestVpc).vpcArn, $(TestVpc).vpcId)", () =>
+it.live("Output.all($(TestVpc).vpcArn, $(TestVpc).vpcId)", () =>
   Effect.gen(function* () {
-    const output = Output.concat($(TestVpc).vpcArn, $(TestVpc).vpcId);
+    const output = Output.all($(TestVpc).vpcArn, $(TestVpc).vpcId);
     const upstream = Output.upstream(output);
     const result = yield* Output.interpret(output, resources);
     expect(result).toEqual([vpcAttrs.vpcArn, vpcId]);
@@ -159,9 +159,9 @@ it.live("Output.concat($(TestVpc).vpcArn, $(TestVpc).vpcId)", () =>
   }),
 );
 
-it.live("Output.concat($(TestVpc).vpcArn, $(Bucket).name)", () =>
+it.live("Output.all($(TestVpc).vpcArn, $(Bucket).name)", () =>
   Effect.gen(function* () {
-    const output = Output.concat($(TestVpc).vpcArn, $(Bucket).name);
+    const output = Output.all($(TestVpc).vpcArn, $(Bucket).name);
     const upstream = Output.upstream(output);
     const result = yield* Output.interpret(output, resources);
     expect(result).toEqual([vpcAttrs.vpcArn, "test-bucket"]);

@@ -57,7 +57,7 @@ export type Expr<A = any, Src extends AnyResource = AnyResource, Req = never> =
   | MapExpr<any, A, Src, Req>
   | EffectExpr<A, any, Src, Req>
   | PropExpr<A, keyof A, Src, Req>
-  | ConcatExpr<Expr<A, Src, Req>[]>
+  | AllExpr<Expr<A, Src, Req>[]>
   | LiteralExpr<A>;
 
 export abstract class BaseExpr<A = any, Src extends Resource = any, Req = never>
@@ -188,12 +188,12 @@ export class EffectExpr<
   }
 }
 
-export const isConcatExpr = <Outs extends Expr[] = Expr[]>(
+export const isAllExpr = <Outs extends Expr[] = Expr[]>(
   node: any,
-): node is ConcatExpr<Outs> => node.kind === "ConcatExpr";
+): node is AllExpr<Outs> => node.kind === "AllExpr";
 
-export class ConcatExpr<Outs extends Expr[]> extends BaseExpr<Outs> {
-  readonly kind = "ConcatExpr";
+export class AllExpr<Outs extends Expr[]> extends BaseExpr<Outs> {
+  readonly kind = "AllExpr";
   constructor(public readonly outs: Outs) {
     super();
   }
@@ -233,7 +233,7 @@ export const interpret: <A, Upstream extends Resource, Req>(
     } else if (isEffectExpr(expr)) {
       // TODO(sam): the same effect shoudl be memoized so that it's not run multiple times
       return yield* expr.f(yield* interpret(expr.upstream, upstream));
-    } else if (isConcatExpr(expr)) {
+    } else if (isAllExpr(expr)) {
       return yield* Effect.all(
         expr.outs.map((out) => interpret(out, upstream)),
       );
@@ -259,11 +259,14 @@ export const upstream = <
   [Id in keyof Upstream<E>]: Upstream<E>[Id];
 } =>
   (isResourceExpr(expr)
-    ? { [expr.src.id]: expr.src }
+    ? {
+        [expr.src.id]: expr.src,
+      }
     : isPropExpr(expr)
-      ? // TODO: we want to know specif
+      ? // TODO(sam): build an AST of the upstream so we can do granular planning on properties
+        // this will also require an update the ProviderService lifecycle hooks to communicate which properties may change given input changes?
         upstream(expr.upstream)
-      : isConcatExpr(expr)
+      : isAllExpr(expr)
         ? Object.assign({}, ...expr.outs.map((out) => upstream(out)))
         : isEffectExpr(expr) || isMapExpr(expr)
           ? upstream(expr.upstream)
@@ -272,53 +275,52 @@ export const upstream = <
 export const interpolate = <Args extends any[]>(
   template: TemplateStringsArray,
   ...args: Args
-): ConcatOutputs<Args> extends Output<any, infer Src, infer Req>
+): All<Args> extends Output<any, infer Src, infer Req>
   ? Output<string, Src, Req>
   : never =>
-  concat(...args.map((arg) => (isOutput(arg) ? arg : literal(arg)))).map(
-    (args) =>
-      template
-        .map((str, i) => str + (args[i] == null ? "" : String(args[i])))
-        .join(""),
+  all(...args.map((arg) => (isOutput(arg) ? arg : literal(arg)))).map((args) =>
+    template
+      .map((str, i) => str + (args[i] == null ? "" : String(args[i])))
+      .join(""),
   ) as any;
 
-export const concat = <Outs extends Output[]>(...outs: Outs) =>
-  new ConcatExpr(outs as any) as unknown as ConcatOutputs<Outs>;
+export const all = <Outs extends Output[]>(...outs: Outs) =>
+  new AllExpr(outs as any) as unknown as All<Outs>;
 
-export type ConcatOutputs<Outs extends Output[]> = number extends Outs["length"]
+export type All<Outs extends Output[]> = number extends Outs["length"]
   ? [Outs[number]] extends [Output<infer V, infer Src, infer Req>]
     ? Output<V, Src, Req>
     : never
-  : ConcatOutputTuple<Outs>;
+  : Tuple<Outs>;
 
-export type ConcatOutputTuple<
+export type Tuple<
   Outs extends Output[],
   Values extends any[] = [],
   Src extends Resource = never,
   Req = never,
 > = Outs extends [infer H, ...infer Tail extends Output[]]
   ? H extends Output<infer V, infer Src2, infer Req2>
-    ? ConcatOutputTuple<Tail, [...Values, V], Src | Src2, Req | Req2>
+    ? Tuple<Tail, [...Values, V], Src | Src2, Req | Req2>
     : never
   : Output<Values, Src, Req>;
 
-export const filterOutputs = <Outs extends any[]>(...outs: Outs) =>
-  outs.filter(isOutput) as unknown as FilterOutputs<Outs>;
+export const filter = <Outs extends any[]>(...outs: Outs) =>
+  outs.filter(isOutput) as unknown as Filter<Outs>;
 
-export type FilterOutputs<Outs extends any[]> = number extends Outs["length"]
+export type Filter<Outs extends any[]> = number extends Outs["length"]
   ? Output<
       Extract<Outs[number], Output>["value"],
       Extract<Outs[number], Output>["src"],
       Extract<Outs[number], Output>["req"]
     >
-  : FilterOutputTuple<Outs>;
+  : FilterTuple<Outs>;
 
-export type FilterOutputTuple<
+export type FilterTuple<
   Outs extends Output[],
   Values extends any[] = [],
   Src extends Resource = never,
 > = Outs extends [infer H, ...infer Tail extends Output[]]
   ? H extends Output<infer V, infer Src2>
-    ? FilterOutputTuple<Tail, [...Values, V], Src | Src2>
-    : FilterOutputTuple<Tail, Values, Src>
+    ? FilterTuple<Tail, [...Values, V], Src | Src2>
+    : FilterTuple<Tail, Values, Src>
   : Output<Values, Src>;
