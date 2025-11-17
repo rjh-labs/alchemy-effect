@@ -1,5 +1,5 @@
 import type * as S from "effect/Schema";
-import type { Out, Output, IOut } from "./output.ts";
+import type { Out, Output } from "./output.ts";
 
 import type { AttributesSchema, TableProps } from "./aws/dynamodb/table.ts";
 

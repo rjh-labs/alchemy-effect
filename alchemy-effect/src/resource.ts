@@ -42,6 +42,8 @@ export interface Resource<
   parent: unknown;
   /** @internal phantom */
   attr: Attrs;
+  new (): Resource<Type, ID, Props, Attrs>;
+
   /** @internal phantom */
   // dependencies: Input.Dependencies<Props>;
 
@@ -57,7 +59,6 @@ export interface Resource<
   // >;
   // parent: unknown;
   // oxlint-disable-next-line no-misused-new
-  new (): Resource<Type, ID, Props, Attrs>;
 }
 
 export interface ResourceTags<R extends Resource<string, string, any, any>> {

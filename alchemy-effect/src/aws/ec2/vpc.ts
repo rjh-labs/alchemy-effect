@@ -17,9 +17,9 @@ export interface Vpc<
   Props extends Input<VpcProps> = Input<VpcProps>,
 > extends Resource<"AWS.EC2.VPC", ID, Props, VpcAttrs<Input.Resolve<Props>>> {}
 
-type vpc_id = `vpc-${string}`;
-export type VpcId<S extends vpc_id = vpc_id> = Brand<S, "AWS.EC2.VpcId">;
-export const VpcId = <S extends vpc_id>(value: S) => value as VpcId<S>;
+export type VpcId = `vpc-${string}`;
+export const VpcId = <const S extends string>(value: S): S & VpcId =>
+  value as S & VpcId;
 
 export interface VpcProps {
   /**
