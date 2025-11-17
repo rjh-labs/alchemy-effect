@@ -78,7 +78,7 @@ abstract class BaseNode<
           ? true
           : this[prop as keyof typeof this]
             ? this[prop as keyof typeof this]
-            : this.map((value: any) => value[prop as keyof typeof value]);
+            : this.map((value: any) => value?.[prop as keyof typeof value]);
       },
     });
   }

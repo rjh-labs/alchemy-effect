@@ -23,7 +23,15 @@ const vpcAttrs = {
   dhcpOptionsId: "dopt-1234567890",
   isDefault: false,
   ownerId: "1234567890",
-  cidrBlockAssociationSet: [],
+  cidrBlockAssociationSet: [
+    {
+      associationId: "vpc-assoc-1234567890",
+      cidrBlock: "10.0.0.0/16",
+      cidrBlockState: {
+        state: "associated",
+      },
+    },
+  ],
   ipv6CidrBlockAssociationSet: [],
   state: "available",
 } as const satisfies TestVpc["attr"];
@@ -49,6 +57,62 @@ it.live("$(TestVpc).vpcId", () =>
     const upstream = Output.upstream(output);
     const result = yield* Output.interpret(output, resources);
     expect(result).toEqual(vpcId);
+    expect(upstream).toEqual({
+      TestVpc,
+    });
+  }),
+);
+
+it.live("$(TestVpc).cidrBlockAssociationSet[0].associationId", () =>
+  Effect.gen(function* () {
+    // Output projection for deeply nested property
+    const output = $(TestVpc).cidrBlockAssociationSet[0].associationId;
+    const upstream = Output.upstream(output);
+    const result = yield* Output.interpret(output, resources);
+
+    expect(result).toEqual(vpcAttrs.cidrBlockAssociationSet[0].associationId);
+    expect(upstream).toEqual({
+      TestVpc,
+    });
+  }),
+);
+
+it.live("$(TestVpc).cidrBlockAssociationSet.map(c => c)[0].associationId", () =>
+  Effect.gen(function* () {
+    const output = $(TestVpc).cidrBlockAssociationSet.map((c) => c)[0]
+      .associationId;
+    const upstream = Output.upstream(output);
+    const result = yield* Output.interpret(output, resources);
+
+    expect(result).toEqual(vpcAttrs.cidrBlockAssociationSet[0].associationId);
+    expect(upstream).toEqual({
+      TestVpc,
+    });
+  }),
+);
+
+it.live("$(TestVpc).cidrBlockAssociationSet[1].associationId", () =>
+  Effect.gen(function* () {
+    // Output projection for deeply nested property
+    const output = $(TestVpc).cidrBlockAssociationSet[1].associationId;
+    const upstream = Output.upstream(output);
+    const result = yield* Output.interpret(output, resources);
+
+    expect(result).toEqual(undefined);
+    expect(upstream).toEqual({
+      TestVpc,
+    });
+  }),
+);
+
+it.live("$(TestVpc).cidrBlockAssociationSet.map(c => c)[1].associationId", () =>
+  Effect.gen(function* () {
+    const output = $(TestVpc).cidrBlockAssociationSet.map((c) => c)[1]
+      .associationId;
+    const upstream = Output.upstream(output);
+    const result = yield* Output.interpret(output, resources);
+
+    expect(result).toEqual(undefined);
     expect(upstream).toEqual({
       TestVpc,
     });
