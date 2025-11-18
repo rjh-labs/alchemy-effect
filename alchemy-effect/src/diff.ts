@@ -1,11 +1,19 @@
 export type Diff =
   | {
-      action: "update" | "noop";
+      action: "noop";
       deleteFirst?: undefined;
+      stables?: undefined;
+    }
+  | {
+      action: "update";
+      deleteFirst?: undefined;
+      /** properties that won't change as part of this update */
+      stables?: string[];
     }
   | {
       action: "replace";
       deleteFirst?: boolean;
+      stables?: undefined;
     };
 
 export const somePropsAreDifferent = <Props extends Record<string, any>>(

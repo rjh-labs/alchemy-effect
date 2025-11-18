@@ -86,27 +86,6 @@ export interface Table<
     TableAttrs<Input.Resolve<Props>>
   > {}
 
-type Tbl = Table<
-  "id",
-  TableProps<
-    { id: string; sk: string },
-    { id: S.Schema<string>; sk: S.Schema<string> },
-    "id",
-    "sk"
-  >
->;
-type Key = Table.Key<Tbl>;
-type Items = Table.Items<Tbl>;
-type PK = Table.PartitionKey<Tbl>;
-type SK = Table.SortKey<Tbl>;
-type __ = Tbl["props"]["sortKey"];
-type ___ = TableProps<
-  { id: string; sk: string },
-  { id: S.Schema<string>; sk: S.Schema<string> },
-  "id",
-  "sk"
->["sortKey"];
-
 export declare namespace Table {
   export type PartitionKey<T extends Table> = T["props"]["partitionKey"];
   export type SortKey<T extends Table> = T["props"]["sortKey"];

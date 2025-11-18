@@ -1,3 +1,5 @@
+import { assertNever } from "./assert-never.ts";
+import { CycleDetectedError } from "./errors.ts";
 import * as Context from "effect/Context";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
@@ -16,6 +18,7 @@ import type { AnyResource, Resource, ResourceTags } from "./resource.ts";
 import { isService, type IService, type Service } from "./service.ts";
 import { State, StateStoreError, type ResourceState } from "./state.ts";
 import * as Output from "./output.ts";
+import { isPrimitive } from "./primitive.ts";
 
 export type PlanError = never;
 
@@ -227,6 +230,66 @@ export const plan = <
         {} as Record<string, string[]>,
       );
 
+    // walks an object consisting of literal values and Output expressions
+    // any expressions that we know will not change are replaced with their literal values
+    // if a cycle is detected in the graph, then an error is emitted
+    const resolveUnmodifiedOutputs = (
+      source: AnyResource,
+      input: any,
+    ): Effect.Effect<any, CycleDetectedError | StateStoreError> =>
+      Effect.gen(function* () {
+        if (isPrimitive(input)) {
+          return input;
+        } else if (Output.isExpr(input)) {
+          if (Output.isLiteralExpr(input)) {
+            return input.value;
+          } else if (Output.isResourceExpr(input)) {
+            if (input.src.id === source.id) {
+              // while walking the graph, we encountered the resource we're currently processing
+              // this is a cycle, so we should error
+              return yield* Effect.die(
+                new CycleDetectedError({
+                  message: `Cycle detected in ${source.id}`,
+                  resourceId: source.id,
+                }),
+              );
+            }
+            const resourceState = yield* state.get(input.src.id);
+            if (!resourceState) {
+              // this resource does not exist in state, so it should remain a
+              return input;
+            }
+            return yield* resolveUnmodifiedOutputs(source, input.src);
+          } else if (Output.isPropExpr(input)) {
+            const props = yield* resolveUnmodifiedOutputs(source, input.prop);
+            return props[input.prop];
+          } else if (Output.isAllExpr(input)) {
+            return yield* Effect.all(
+              input.outs.map((out) => resolveUnmodifiedOutputs(source, out)),
+            );
+          } else if (Output.isEffectExpr(input)) {
+            return yield* input.f(
+              yield* resolveUnmodifiedOutputs(source, input.upstream),
+            );
+          } else if (Output.isMapExpr(input)) {
+            return input.f(
+              yield* resolveUnmodifiedOutputs(source, input.upstream),
+            );
+          } else {
+            return assertNever(input);
+          }
+        } else if (Array.isArray(input)) {
+          return input.map(resolveUnmodifiedOutputs);
+        } else if (typeof input === "object" || typeof input === "function") {
+          return Object.fromEntries(
+            Object.entries(input).map(([key, value]) => [
+              key,
+              resolveUnmodifiedOutputs(source, value),
+            ]),
+          );
+        }
+      });
+
     const resourceGraph =
       phase === "update"
         ? (Object.fromEntries(
@@ -253,15 +316,6 @@ export const plan = <
                       >;
                     };
                     const news = resource.props;
-                    const newsUpstream: {
-                      [Id in string]: Resource;
-                    } = Output.resolveUpstream(news);
-                    if (Object.keys(newsUpstream).length > 0) {
-                      // Ok, so we have upstream resources. That means there are Outputs in the news.
-                      // TODO(sam): how do we determine if we need to change based on changes to upstream resources?
-                      // -> we can no longer pass the literal properties to the provider.diff because they may be Outputs.
-                      // -> we need to know if an upstream property will change
-                    }
 
                     const oldState = yield* state.get(id);
                     const provider = yield* resource.provider.tag;

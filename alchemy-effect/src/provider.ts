@@ -36,7 +36,9 @@ export interface ProviderService<Res extends Resource = Resource> {
   diff?(input: {
     id: string;
     olds: Props<Res>;
-    news: Props<Res>;
+    // Note: we do not resolve (Props<Res>) here because diff runs during plan
+    // -> we need a way for the diff handlers to work with Outputs
+    news: Res["props"];
     output: Res["attr"];
   }): Effect.Effect<Diff | void, never, never>;
   precreate?(input: {

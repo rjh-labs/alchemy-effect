@@ -1,24 +1,15 @@
 import type * as S from "effect/Schema";
-import type { Output, OutputProxy } from "./output.ts";
-
+import type { Output } from "./output.ts";
+import type { Primitive } from "./data.ts";
 import type { AttributesSchema, TableProps } from "./aws/dynamodb/table.ts";
 
-type Primitive =
-  | never
-  | undefined
-  | null
-  | boolean
-  | number
-  | string
-  | bigint
-  | symbol;
-type Function = (...args: any[]) => any;
-type Constructor = new (...args: any[]) => any;
-type PolicyLike = { kind: "alchemy/Policy" };
+export type Function = (...args: any[]) => any;
+export type Constructor = new (...args: any[]) => any;
+export type PolicyLike = { kind: "alchemy/Policy" };
 
 export type Input<T> =
   | T
-  | OutputProxy<T>
+  | Output.Of<T>
   | (T extends Primitive
       ? never
       : T extends any[]

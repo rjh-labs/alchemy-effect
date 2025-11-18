@@ -17,6 +17,7 @@ import {
   type AnyTable,
   type TableAttrs,
   type TableProps,
+  type AttributesSchema,
 } from "./table.ts";
 
 // we add an explict type to simplify the Layer type errors because the Table interface has a lot of type args
@@ -54,8 +55,10 @@ export const tableProvider = (): Layer.Layer<
           : []),
       ];
 
-      const toAttributeDefinitions = (props: Input.ResolveProps<TableProps>) =>
-        Object.entries(props.attributes)
+      const toAttributeDefinitions = (
+        attributes: AttributesSchema<any, any, any>,
+      ) =>
+        Object.entries(attributes)
           .flatMap(([name, schema]) => {
             const type = toAttributeType(schema);
             if (isScalarAttributeType(type)) {
@@ -73,10 +76,10 @@ export const tableProvider = (): Layer.Layer<
           .sort((a, b) => a.AttributeName.localeCompare(b.AttributeName));
 
       const toAttributeDefinitionsMap = (
-        props: Input.ResolveProps<TableProps>,
+        attributes: AttributesSchema<any, any, any>,
       ) =>
         Object.fromEntries(
-          toAttributeDefinitions(props).map(
+          toAttributeDefinitions(attributes).map(
             (def) => [def.AttributeName, def.AttributeType] as const,
           ),
         );
@@ -122,29 +125,23 @@ export const tableProvider = (): Layer.Layer<
 
       return {
         diff: Effect.fn(function* ({ id, news, olds }) {
-          news.partitionKey;
-          const oldTableName = createTableName(id, olds);
-          const newTableName = createTableName(id, news);
-          if (oldTableName !== newTableName) {
-            // TODO(sam): if the name is hard-coded, REPLACE is impossible - we need a suffix
-            return { action: "replace" } as const;
-          }
-
           if (
+            // TODO(sam): if the name is hard-coded, REPLACE is impossible - we need a suffix
+            news.tableName !== olds.tableName ||
             olds.partitionKey !== news.partitionKey ||
             olds.sortKey !== news.sortKey
           ) {
             return { action: "replace" } as const;
           }
-          const oldAttributeDefinitions = toAttributeDefinitionsMap(olds);
-          const newAttributeDefinitions = toAttributeDefinitionsMap(news);
-          for (const [name, type] of Object.entries(oldAttributeDefinitions)) {
+
+          const oldAttrs = toAttributeDefinitionsMap(olds.attributes);
+          const newAttrs = toAttributeDefinitionsMap(news.attributes);
+          for (const [name, type] of Object.entries(oldAttrs)) {
             // CloudFormation requires that editing an existing AttributeDefinition is a replace
-            if (newAttributeDefinitions[name] !== type) {
+            if (newAttrs[name] !== type) {
               return { action: "replace" } as const;
             }
           }
-
           // TODO(sam):
           // Replacements:
           // 1. if you change ImportSourceSpecification
@@ -158,7 +155,7 @@ export const tableProvider = (): Layer.Layer<
               TableName: tableName,
               TableClass: news.tableClass,
               KeySchema: toKeySchema(news),
-              AttributeDefinitions: toAttributeDefinitions(news),
+              AttributeDefinitions: toAttributeDefinitions(news.attributes),
               BillingMode: news.billingMode ?? "PAY_PER_REQUEST",
               SSESpecification: news.sseSpecification,
               WarmThroughput: news.warmThroughput,
@@ -210,7 +207,7 @@ export const tableProvider = (): Layer.Layer<
           yield* dynamodb.updateTable({
             TableName: output.tableName,
             TableClass: news.tableClass,
-            AttributeDefinitions: toAttributeDefinitions(news),
+            AttributeDefinitions: toAttributeDefinitions(news.attributes),
             BillingMode: news.billingMode ?? "PAY_PER_REQUEST",
             SSESpecification: news.sseSpecification,
             WarmThroughput: news.warmThroughput,
