@@ -266,6 +266,7 @@ it.live("vpc.cidrBlockAssociationSet.map((c) => c.associationId)", () =>
     });
   }),
 );
+
 it.live(`vpc.cidrBlockAssociationSet.map(c => "c.associationId")`, () =>
   Effect.gen(function* () {
     const expr = vpc.cidrBlockAssociationSet.map((c) => "c.associationId");
@@ -276,6 +277,36 @@ it.live(`vpc.cidrBlockAssociationSet.map(c => "c.associationId")`, () =>
     expect(Output.upstream(expr)).toEqual({
       TestVpc,
     });
+  }),
+);
+
+it.live(`vpc.cidrBlockAssociationSet.map(c => bucket.name)`, () =>
+  Effect.gen(function* () {
+    const expr = vpc.cidrBlockAssociationSet.map((c) => bucket.name);
+    const value = yield* Output.evaluate(expr, resources);
+    expect(value).toEqual(
+      vpcAttrs.cidrBlockAssociationSet.map((c) => bucketAttrs.name),
+    );
+    expect(Output.upstream(expr)).toEqual({
+      TestVpc,
+      Bucket,
+    });
+  }),
+);
+it.live(`vpc.cidrBlockAssociationSet.map(c => ({name: bucket.name}))`, () =>
+  Effect.gen(function* () {
+    const expr = vpc.cidrBlockAssociationSet.map((c) => ({
+      name: bucket.name,
+    }));
+    const value = yield* Output.evaluate(expr, resources);
+    expect(value).toEqual(
+      vpcAttrs.cidrBlockAssociationSet.map((c) => ({ name: bucketAttrs.name })),
+    );
+    const upstream: {
+      TestVpc: TestVpc;
+      Bucket: Bucket;
+    } = Output.upstream(expr);
+    expect(upstream).toEqual({ TestVpc, Bucket });
   }),
 );
 
@@ -292,22 +323,106 @@ it.live("vpc.cidrBlockAssociationSet.flatMap(c => [c.associationId])", () =>
   }),
 );
 
-it.live(`vpc.cidrBlockAssociationSet.flatMap(c => ["c.associationId"])`, () =>
+it.live(`vpc.cidrBlockAssociationSet.flatMap(c => [bucket.name])`, () =>
   Effect.gen(function* () {
-    const expr = vpc.cidrBlockAssociationSet.flatMap((c) => [
-      "c.associationId",
-    ]);
+    const expr = vpc.cidrBlockAssociationSet.flatMap((c) => [bucket.name]);
     const value = yield* Output.evaluate(expr, resources);
     expect(value).toEqual(
-      vpcAttrs.cidrBlockAssociationSet.flatMap((c) => ["c.associationId"]),
+      vpcAttrs.cidrBlockAssociationSet.flatMap((c) => [bucketAttrs.name]),
     );
-    expect(Output.upstream(output)).toEqual({
+    const upstream: {
+      TestVpc: TestVpc;
+      Bucket: Bucket;
+    } = Output.upstream(expr);
+    expect(upstream).toEqual({ TestVpc, Bucket });
+  }),
+);
+
+it.live(
+  `vpc.cidrBlockAssociationSet.flatMap(c => ["c.associationId"]) foo`,
+  () =>
+    Effect.gen(function* () {
+      const expr = vpc.cidrBlockAssociationSet.flatMap((c) => [
+        "c.associationId",
+      ]);
+      const value = yield* Output.evaluate(expr, resources);
+      expect(value).toEqual(
+        vpcAttrs.cidrBlockAssociationSet.flatMap((c) => ["c.associationId"]),
+      );
+      const upstream: {
+        TestVpc: TestVpc;
+      } = Output.upstream(expr);
+      expect(upstream).toEqual({
+        TestVpc,
+      });
+    }),
+);
+
+it.live(`vpc.cidrBlockAssociationSet.flatMap(c => [bucket.name])`, () =>
+  Effect.gen(function* () {
+    const expr = vpc.cidrBlockAssociationSet.flatMap((c) => [bucket.name]);
+    const value = yield* Output.evaluate(expr, resources);
+    expect(value).toEqual(
+      vpcAttrs.cidrBlockAssociationSet.flatMap((c) => [bucketAttrs.name]),
+    );
+    const upstream: {
+      TestVpc: TestVpc;
+      Bucket: Bucket;
+    } = Output.upstream(expr);
+    expect(upstream).toEqual({
       TestVpc,
+      Bucket,
     });
   }),
 );
 
-it.live("vpc.vpcId.apply(foo => foo.toUpperCase())", () =>
+it.live(`vpc.cidrBlockAssociationSet.flatMap(c => [{name: bucket.name}])`, () =>
+  Effect.gen(function* () {
+    const expr = vpc.cidrBlockAssociationSet.flatMap((c) => [
+      { name: bucket.name },
+    ]);
+    const value = yield* Output.evaluate(expr, resources);
+    expect(value).toEqual(
+      vpcAttrs.cidrBlockAssociationSet.flatMap((c) => [
+        { name: bucketAttrs.name },
+      ]),
+    );
+    const upstream: {
+      TestVpc: TestVpc;
+      Bucket: Bucket;
+    } = Output.upstream(expr);
+    expect(upstream).toEqual({
+      TestVpc,
+      Bucket,
+    });
+  }),
+);
+
+it.live(
+  `vpc.cidrBlockAssociationSet.flatMap(c => [{nested: {name: bucket.name}}])`,
+  () =>
+    Effect.gen(function* () {
+      const expr = vpc.cidrBlockAssociationSet.flatMap((c) => [
+        { nested: { name: bucket.name } },
+      ]);
+      const value = yield* Output.evaluate(expr, resources);
+      expect(value).toEqual(
+        vpcAttrs.cidrBlockAssociationSet.flatMap((c) => [
+          { nested: { name: bucketAttrs.name } },
+        ]),
+      );
+      const upstream: {
+        TestVpc: TestVpc;
+        Bucket: Bucket;
+      } = Output.upstream(expr);
+      expect(upstream).toEqual({
+        TestVpc,
+        Bucket,
+      });
+    }),
+);
+
+it.live("vpc.vpcId.toUppercase()", () =>
   Effect.gen(function* () {
     const output = $(TestVpc).vpcId.toUpperCase();
     expect(Output.upstream(output)).toEqual({

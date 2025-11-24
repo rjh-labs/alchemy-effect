@@ -265,16 +265,12 @@ export const functionProvider = () =>
                   })
                   .pipe(
                     Effect.retry({
-                      while: (e) => {
-                        console.log({ e });
-                        return (
-                          e._tag === "ResourceConflictException" ||
-                          (e._tag === "InvalidParameterValueException" &&
-                            e.message?.includes(
-                              "The role defined for the function cannot be assumed by Lambda.",
-                            ))
-                        );
-                      },
+                      while: (e) =>
+                        e._tag === "ResourceConflictException" ||
+                        (e._tag === "InvalidParameterValueException" &&
+                          e.message?.includes(
+                            "The role defined for the function cannot be assumed by Lambda.",
+                          )),
                       schedule: Schedule.exponential(100),
                     }),
                   );
