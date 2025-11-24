@@ -9,7 +9,7 @@ export type PolicyLike = { kind: "alchemy/Policy" };
 
 export type Input<T> =
   | T
-  | Output.Of<T>
+  | Output.Of<T, any, any>
   | (T extends Primitive
       ? never
       : T extends any[]

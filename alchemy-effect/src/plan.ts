@@ -1,4 +1,4 @@
-import { assertNever } from "./assert-never.ts";
+import { assertNeverOrDie } from "./assert-never.ts";
 import { CycleDetectedError } from "./errors.ts";
 import * as Context from "effect/Context";
 import * as Data from "effect/Data";
@@ -18,7 +18,7 @@ import type { AnyResource, Resource, ResourceTags } from "./resource.ts";
 import { isService, type IService, type Service } from "./service.ts";
 import { State, StateStoreError, type ResourceState } from "./state.ts";
 import * as Output from "./output.ts";
-import { isPrimitive } from "./primitive.ts";
+import { isPrimitive } from "./data.ts";
 
 export type PlanError = never;
 
@@ -247,7 +247,7 @@ export const plan = <
             if (input.src.id === source.id) {
               // while walking the graph, we encountered the resource we're currently processing
               // this is a cycle, so we should error
-              return yield* Effect.die(
+              return yield* Effect.fail(
                 new CycleDetectedError({
                   message: `Cycle detected in ${source.id}`,
                   resourceId: source.id,
@@ -261,22 +261,26 @@ export const plan = <
             }
             return yield* resolveUnmodifiedOutputs(source, input.src);
           } else if (Output.isPropExpr(input)) {
-            const props = yield* resolveUnmodifiedOutputs(source, input.prop);
-            return props[input.prop];
+            const props = yield* resolveUnmodifiedOutputs(
+              source,
+              input.identifier,
+            );
+            return props[input.identifier];
           } else if (Output.isAllExpr(input)) {
             return yield* Effect.all(
               input.outs.map((out) => resolveUnmodifiedOutputs(source, out)),
             );
           } else if (Output.isEffectExpr(input)) {
             return yield* input.f(
-              yield* resolveUnmodifiedOutputs(source, input.upstream),
+              yield* resolveUnmodifiedOutputs(source, input.expr),
             );
-          } else if (Output.isMapExpr(input)) {
-            return input.f(
-              yield* resolveUnmodifiedOutputs(source, input.upstream),
-            );
+          } else if (Output.isApplyExpr(input)) {
+            return input.f(yield* resolveUnmodifiedOutputs(source, input.expr));
+          } else if (Output.isFlatMapArrayExpr(input)) {
+          } else if (Output.isMapArrayExpr(input)) {
+          } else if (Output.isCallExpr(input)) {
           } else {
-            return assertNever(input);
+            return yield* assertNeverOrDie(input);
           }
         } else if (Array.isArray(input)) {
           return input.map(resolveUnmodifiedOutputs);

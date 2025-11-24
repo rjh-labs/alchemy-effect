@@ -12,6 +12,8 @@ export const Subnet = Resource<{
   ): Subnet<ID, Props>;
 }>("AWS.EC2.Subnet");
 
+type _ = Input<SubnetProps>["enableResourceNameDnsAAAARecordOnLaunch"];
+
 export interface Subnet<
   ID extends string = string,
   Props extends Input<SubnetProps> = Input<SubnetProps>,
