@@ -164,6 +164,9 @@ export type Array<A extends any[], Src extends Resource, Req = any> = Output<
   map<B>(
     fn: (value: Output.Of<A[number], Src, Req>) => B,
   ): Array<Input.Resolve<B>[], Src | Sources<B>, Req | Requirements<B>>;
+  flatMap<B, Src2 extends AnyResource = never, Req2 = never>(
+    fn: (value: Output.Of<A[number], Src, Req>) => Output.Of<B[], Src2, Req2>,
+  ): Array<Input.Resolve<B>[], Src | Src2, Req | Req2>;
   flatMap<B>(
     fn: (value: Output.Of<A[number], Src, Req>) => B[],
   ): Array<Input.Resolve<B>[], Src | Sources<B>, Req | Requirements<B>>;
@@ -175,7 +178,9 @@ export type Array<A extends any[], Src extends Resource, Req = any> = Output<
 };
 
 export const isExpr = (value: any): value is Expr<any> =>
-  value && ExprSymbol in value;
+  value &&
+  (typeof value === "object" || typeof value === "function") &&
+  ExprSymbol in value;
 
 export type Expr<A = any, Src extends AnyResource = AnyResource, Req = any> =
   | AllExpr<Expr<A, Src, Req>[]>
@@ -188,22 +193,24 @@ export type Expr<A = any, Src extends AnyResource = AnyResource, Req = any> =
   | PropExpr<A, keyof A, Src, Req>
   | ResourceExpr<A, Src, Req>;
 
-const proxy = (self: any): any =>
-  new Proxy(
+const proxy = (self: any): any => {
+  const proxy = new Proxy(
     Object.assign(() => {}, self),
     {
       has: (_, prop) => (prop === ExprSymbol ? true : prop in self),
       get: (_, prop) =>
-        prop === ExprSymbol
-          ? self
-          : prop === "apply"
-            ? self[prop]
-            : self[prop as keyof typeof self]
-              ? typeof self[prop as keyof typeof self] === "function" &&
-                !("kind" in self)
-                ? new PropExpr(self, prop as never)
-                : self[prop as keyof typeof self]
-              : new PropExpr(self, prop as never),
+        prop === Symbol.toPrimitive
+          ? (hint: string) => (hint === "string" ? self.toString() : self)
+          : prop === ExprSymbol
+            ? self
+            : prop === "apply"
+              ? self[prop]
+              : self[prop as keyof typeof self]
+                ? typeof self[prop as keyof typeof self] === "function" &&
+                  !("kind" in self)
+                  ? new PropExpr(proxy, prop as never)
+                  : self[prop as keyof typeof self]
+                : new PropExpr(proxy, prop as never),
       apply: (_, thisArg, args) => {
         if (isPropExpr(self)) {
           if (self.identifier === "apply") {
@@ -216,14 +223,18 @@ const proxy = (self: any): any =>
             return new FlatMapArrayExpr(self.expr, args[0]);
           }
         }
-        return new CallExpr(self, thisArg, args);
+        return new CallExpr(proxy, thisArg, args);
       },
     },
   );
+  return proxy;
+};
 
-export abstract class BaseExpr<A = any, Src extends Resource = any, Req = any>
-  implements Output<A, Src, Req>
-{
+export abstract class BaseExpr<
+  A = any,
+  Src extends Resource = any,
+  Req = any,
+> implements Output<A, Src, Req> {
   declare readonly kind: any;
   declare readonly src: Src;
   declare readonly req: Req;
@@ -240,6 +251,9 @@ export abstract class BaseExpr<A = any, Src extends Resource = any, Req = any>
   public pipe(...fns: any[]): any {
     // @ts-expect-error
     return pipe(this, ...fns);
+  }
+  toString(): string {
+    return JSON.stringify(this, null, 2);
   }
 }
 
@@ -556,6 +570,17 @@ export const evaluate: <A, Upstream extends AnyResource, Req>(
     }
     return expr;
   }) as Effect.Effect<any>;
+
+export type ResolveUpstream<A> =
+  A extends Output<infer V, infer Up, infer Req>
+    ? Up
+    : A extends any[]
+      ? ResolveUpstream<A[number]>
+      : A extends Record<string, any>
+        ? {
+            [K in keyof A]: ResolveUpstream<A[K]>;
+          }[keyof A]
+        : never;
 
 export type Upstream<O extends Output<any, any, any>> =
   O extends Output<infer V, infer Up, infer Req>

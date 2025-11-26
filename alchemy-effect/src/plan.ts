@@ -14,11 +14,17 @@ import type { Diff } from "./diff.ts";
 import type { Phase } from "./phase.ts";
 import type { Instance } from "./policy.ts";
 import { type ProviderService } from "./provider.ts";
-import type { AnyResource, Resource, ResourceTags } from "./resource.ts";
+import type {
+  AnyResource,
+  Resource,
+  ResourceTags,
+  isResource,
+} from "./resource.ts";
 import { isService, type IService, type Service } from "./service.ts";
 import { State, StateStoreError, type ResourceState } from "./state.ts";
 import * as Output from "./output.ts";
 import { isPrimitive } from "./data.ts";
+import type { Provider } from "./provider.ts";
 
 export type PlanError = never;
 
@@ -179,26 +185,47 @@ export const plan = <
   type ServiceHosts = {
     [ID in ServiceIDs]: Extract<Services[number], Service<Extract<ID, string>>>;
   };
-  type UpstreamTags = {
+  type BoundTags = {
     [ID in ServiceIDs]: ServiceHosts[ID]["props"]["bindings"]["tags"][number];
   }[ServiceIDs];
-  type UpstreamResources = {
+  type BoundResources = {
     [ID in ServiceIDs]: Extract<
       ServiceHosts[ID]["props"]["bindings"]["capabilities"][number]["resource"],
       Resource
     >;
   }[ServiceIDs];
+  // type OutputResources = {
+  //   [ID in Resources[number]["id"]]: Output.ResolveUpstream<
+  //     Resources[number]["props"]
+  //   >;
+  // }[Resources[number]["id"]];
+  type OutputResources = ResolveOutputs<Resources[number]["props"], never>;
+
+  type ResolveOutputs<A, Found> =
+    // detect cycle, terminate
+    A extends Found
+      ? Found
+      : A extends Resource
+        ? ResolveOutputs<A["props"], A | Found>
+        : A extends any[]
+          ? ResolveOutputs<A[number], Found>
+          : A extends Record<string, any>
+            ? ResolveOutputs<A[keyof A], Found>
+            : A extends Record<string, infer V>
+              ? ResolveOutputs<V, Found>
+              : Found;
+
   type ExplicitResources = Resources[number];
   type ResourceGraph = {
     [ID in ServiceIDs]: Apply<Extract<Instance<ServiceHosts[ID]>, Resource>>;
   } & {
-    [ID in UpstreamResources["id"]]: Apply<
-      Extract<UpstreamResources, { id: ID }>
-    >;
+    [ID in BoundResources["id"]]: Apply<Extract<BoundResources, { id: ID }>>;
   } & {
     [ID in ExplicitResources["id"]]: Apply<
-      Extract<ExplicitResources, { id: ID }>
+      Instance<Extract<ExplicitResources, { id: ID }>>
     >;
+  } & {
+    [ID in OutputResources["id"]]: Apply<Extract<OutputResources, { id: ID }>>;
   };
 
   return Effect.gen(function* () {
@@ -230,69 +257,193 @@ export const plan = <
         {} as Record<string, string[]>,
       );
 
-    // walks an object consisting of literal values and Output expressions
-    // any expressions that we know will not change are replaced with their literal values
-    // if a cycle is detected in the graph, then an error is emitted
-    const resolveUnmodifiedOutputs = (
-      source: AnyResource,
-      input: any,
-    ): Effect.Effect<any, CycleDetectedError | StateStoreError> =>
+    type ResolveEffect<T> = Effect.Effect<T, ResolveErr, ResolveReq>;
+    type ResolveErr = StateStoreError;
+    type ResolveReq =
+      | Context.TagClass<
+          Provider<Resource<string, string, any, any>>,
+          string,
+          ProviderService<Resource<string, string, any, any>>
+        >
+      | State;
+
+    const resolvedResources: Record<
+      string,
+      ResolveEffect<{
+        [attr in string]: any;
+      }>
+    > = {};
+
+    const resolveResource = (
+      resourceExpr: Output.ResourceExpr<any, any, any>,
+    ) =>
       Effect.gen(function* () {
-        if (isPrimitive(input)) {
+        return yield* (resolvedResources[resourceExpr.src.id] ??=
+          yield* Effect.cached(
+            Effect.gen(function* () {
+              const resource = resourceExpr.src as Resource & {
+                provider: ResourceTags<Resource<string, string, any, any>>;
+              };
+              const provider = yield* resource.provider.tag;
+              const props = yield* resolveInput(resource.props);
+              const oldState = yield* state.get(resource.id);
+
+              if (!oldState) {
+                return resourceExpr;
+              }
+
+              const diff = yield* provider.diff
+                ? provider.diff({
+                    id: resource.id,
+                    olds: undefined,
+                    news: props,
+                    output: undefined,
+                  })
+                : Effect.succeed(undefined);
+
+              if (diff == null) {
+                if (arePropsChanged(oldState, props)) {
+                  // the props have changed but the provider did not provide any hints as to what is stable
+                  // so we must assume everything has changed
+                  return resourceExpr;
+                }
+              } else if (diff.action === "update") {
+                const output = oldState?.output;
+                if (diff.stables) {
+                  for (const stable of diff.stables) {
+                  }
+                }
+              } else if (diff.action === "replace") {
+              }
+              return oldState?.output;
+            }),
+          ));
+      });
+
+    const resolveInput = (input: any): ResolveEffect<any> =>
+      Effect.gen(function* () {
+        if (!input) {
           return input;
         } else if (Output.isExpr(input)) {
-          if (Output.isLiteralExpr(input)) {
-            return input.value;
-          } else if (Output.isResourceExpr(input)) {
-            if (input.src.id === source.id) {
-              // while walking the graph, we encountered the resource we're currently processing
-              // this is a cycle, so we should error
-              return yield* Effect.fail(
-                new CycleDetectedError({
-                  message: `Cycle detected in ${source.id}`,
-                  resourceId: source.id,
-                }),
-              );
-            }
-            const resourceState = yield* state.get(input.src.id);
-            if (!resourceState) {
-              // this resource does not exist in state, so it should remain a
-              return input;
-            }
-            return yield* resolveUnmodifiedOutputs(source, input.src);
-          } else if (Output.isPropExpr(input)) {
-            const props = yield* resolveUnmodifiedOutputs(
-              source,
-              input.identifier,
-            );
-            return props[input.identifier];
-          } else if (Output.isAllExpr(input)) {
-            return yield* Effect.all(
-              input.outs.map((out) => resolveUnmodifiedOutputs(source, out)),
-            );
-          } else if (Output.isEffectExpr(input)) {
-            return yield* input.f(
-              yield* resolveUnmodifiedOutputs(source, input.expr),
-            );
-          } else if (Output.isApplyExpr(input)) {
-            return input.f(yield* resolveUnmodifiedOutputs(source, input.expr));
-          } else if (Output.isFlatMapArrayExpr(input)) {
-          } else if (Output.isMapArrayExpr(input)) {
-          } else if (Output.isCallExpr(input)) {
-          } else {
-            return yield* assertNeverOrDie(input);
-          }
+          return yield* resolveOutput(input);
         } else if (Array.isArray(input)) {
-          return input.map(resolveUnmodifiedOutputs);
-        } else if (typeof input === "object" || typeof input === "function") {
+          return yield* Effect.all(input.map(resolveInput));
+        } else if (typeof input === "object") {
           return Object.fromEntries(
-            Object.entries(input).map(([key, value]) => [
-              key,
-              resolveUnmodifiedOutputs(source, value),
-            ]),
+            yield* Effect.all(
+              Object.entries(input).map(([key, value]) =>
+                resolveInput(value).pipe(Effect.map((value) => [key, value])),
+              ),
+            ),
           );
         }
+        return input;
       });
+
+    const resolveOutput = (expr: Output.Expr<any>): ResolveEffect<any> =>
+      Effect.gen(function* () {
+        if (Output.isResourceExpr(expr)) {
+          return yield* resolveResource(expr);
+        } else if (Output.isPropExpr(expr)) {
+          const upstream = yield* resolveOutput(expr.expr);
+          return upstream?.[expr.identifier];
+        } else if (Output.isApplyExpr(expr)) {
+          const upstream = yield* resolveOutput(expr.expr);
+          return Output.isOutput(upstream) ? expr : expr.f(upstream);
+        } else if (Output.isEffectExpr(expr)) {
+          const upstream = yield* resolveOutput(expr.expr);
+          return Output.isOutput(upstream) ? expr : yield* expr.f(upstream);
+        } else if (Output.isAllExpr(expr)) {
+          return yield* Effect.all(expr.outs.map(resolveOutput));
+        } else if (Output.isCallExpr(expr)) {
+          const [fn, args, thisType] = yield* Effect.all([
+            resolveOutput(expr.expr),
+            Effect.all(expr.args.map(resolveOutput)),
+            resolveOutput(expr.thisType),
+          ]);
+          if (
+            Output.isOutput(fn) ||
+            args.some(Output.isOutput) ||
+            Output.isOutput(thisType)
+          ) {
+            // if any of the arguments are outputs, we should assume it has changed
+            return expr;
+          }
+          return fn.bind(thisType)(...expr.args);
+        } else if (Output.isMapArrayExpr(expr)) {
+          const upstream: any[] = yield* resolveOutput(expr.expr);
+          return Output.isOutput(upstream)
+            ? expr
+            : yield* Effect.all(
+                upstream.map(
+                  Effect.fn(function* (item: any, index: number) {
+                    if (Output.isOutput(item)) {
+                      return item;
+                    } else {
+                      const output = expr.f(item, Output.literal(index));
+                      if (Output.isOutput(output)) {
+                        return yield* resolveOutput(
+                          output as Output.Expr<any>,
+                        ) as ResolveEffect<any>;
+                      } else {
+                        return output;
+                      }
+                    }
+                  }),
+                ),
+              );
+        } else if (Output.isFlatMapArrayExpr(expr)) {
+          const upstream: any[] = yield* resolveOutput(expr.expr);
+          return Output.isOutput(upstream)
+            ? expr
+            : (yield* Effect.all(
+                upstream.map(
+                  Effect.fn(function* (item: any, index: number) {
+                    if (Output.isOutput(item)) {
+                      return item;
+                    } else {
+                      const output = expr.f(item, Output.literal(index));
+                      if (Output.isOutput(output)) {
+                        return yield* resolveOutput(
+                          output as Output.Expr<any>,
+                        ) as ResolveEffect<any>;
+                      } else {
+                        return yield* Effect.all(
+                          output.map((item) =>
+                            Output.isOutput(item)
+                              ? resolveOutput(item as Output.Expr<any>)
+                              : Effect.succeed(item),
+                          ),
+                        );
+                      }
+                    }
+                  }),
+                ),
+              )).flat();
+        }
+        return yield* Effect.die(new Error("Not implemented yet"));
+      });
+
+    const resolveUpstream = (
+      value: any,
+    ): {
+      [ID in string]: Resource;
+    } => {
+      if (Output.isExpr(value)) {
+        return Output.upstream(value);
+      } else if (Array.isArray(value)) {
+        return Object.assign({}, ...value.map(resolveUpstream));
+      } else if (
+        value &&
+        (typeof value === "object" || typeof value === "function")
+      ) {
+        return Object.assign(
+          {},
+          ...Object.values(value).map((value) => resolveUpstream(value)),
+        );
+      }
+      return {};
+    };
 
     const resourceGraph =
       phase === "update"
@@ -305,6 +456,7 @@ export const plan = <
                         (cap: Capability) => cap.resource as Resource,
                       )
                     : []),
+                  ...Object.values(resolveUpstream(resource.props)),
                   resource,
                 ])
                 .filter(
@@ -319,7 +471,7 @@ export const plan = <
                         Resource<string, string, any, any>
                       >;
                     };
-                    const news = resource.props;
+                    const news = yield* resolveInput(resource.props);
 
                     const oldState = yield* state.get(id);
                     const provider = yield* resource.provider.tag;
@@ -496,7 +648,7 @@ export const plan = <
       };
     },
     never,
-    UpstreamTags | State
+    BoundTags | State
   >;
 };
 
