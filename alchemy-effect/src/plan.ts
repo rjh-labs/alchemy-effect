@@ -202,10 +202,9 @@ export const plan = <
   type OutputResources = ResolveOutputs<Resources[number]["props"], never>;
 
   type ResolveOutputs<A, Found> =
-    // detect cycle, terminate
-    A extends Found
-      ? Found
-      : A extends Resource
+    // check if we've already seen this resource, A
+    Extract<Found, A> extends never
+      ? A extends Resource
         ? ResolveOutputs<A["props"], A | Found>
         : A extends any[]
           ? ResolveOutputs<A[number], Found>
@@ -213,7 +212,9 @@ export const plan = <
             ? ResolveOutputs<A[keyof A], Found>
             : A extends Record<string, infer V>
               ? ResolveOutputs<V, Found>
-              : Found;
+              : Found
+      : // detected cycle, terminate
+        Found;
 
   type ExplicitResources = Resources[number];
   type ResourceGraph = {
@@ -295,9 +296,9 @@ export const plan = <
               const diff = yield* provider.diff
                 ? provider.diff({
                     id: resource.id,
-                    olds: undefined,
+                    olds: oldState.props,
                     news: props,
-                    output: undefined,
+                    output: oldState.output,
                   })
                 : Effect.succeed(undefined);
 
@@ -310,8 +311,15 @@ export const plan = <
               } else if (diff.action === "update") {
                 const output = oldState?.output;
                 if (diff.stables) {
-                  for (const stable of diff.stables) {
-                  }
+                  return new Output.ResourceExpr(
+                    resourceExpr.src,
+                    Object.fromEntries(
+                      diff.stables.map((stable) => [stable, output?.[stable]]),
+                    ),
+                  );
+                } else {
+                  // if there are no stable properties, treat every property as changed
+                  return resourceExpr;
                 }
               } else if (diff.action === "replace") {
               }

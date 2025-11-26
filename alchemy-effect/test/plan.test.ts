@@ -443,13 +443,156 @@ describe("Outputs should resolve to old values", () => {
   );
 });
 
-const typeOnlyTests = Effect.gen(function* () {
-  const p = yield* plan({
-    phase: "update",
-    resources: [MyFunction],
+describe("stable properties should not cause downstream changes", () => {
+  class A extends TestResource("A", {
+    string: "test-string",
+  }) {}
+
+  const test = (description: string, input: Input<TestResourceProps>) => {
+    class B extends TestResource("B", input) {}
+
+    _test(
+      description,
+      {
+        state: State.inMemory({
+          A: {
+            id: "A",
+            type: "Test.TestResource",
+            status: "created",
+            props: {
+              string: "test-string-old",
+            },
+            output: {
+              string: "test-string-old",
+              stableString: "A",
+              stableArray: ["A"],
+            },
+          },
+          B: {
+            id: "B",
+            type: "Test.TestResource",
+            status: "created",
+            props: Object.fromEntries(
+              Object.entries({
+                string: "A",
+                stringArray: ["A"],
+              }).filter(([key]) => key in input),
+            ),
+            output: {
+              stableString: "A",
+            },
+          },
+        }),
+      },
+      Effect.gen(function* () {
+        expect(
+          yield* plan({
+            phase: "update",
+            resources: [A, B],
+          }),
+        ).toMatchObject({
+          phase: "update",
+          resources: {
+            A: {
+              action: "update",
+              news: {
+                string: "test-string",
+              },
+            },
+            B: {
+              action: "noop",
+            },
+          },
+          deletions: expect.emptyObject(),
+        });
+      }).pipe(Effect.provide(TestLayers)),
+    );
+  };
+
+  test("A.stableString", {
+    string: Output.of(A).stableString,
   });
-  p.resources.MyFunction;
-  // transitive dependency detected via outputs
-  p.resources.MyQueue;
-  // TODO(sam): test multiple transitive hops
+
+  test("A.stableString.apply((string) => string.toUpperCase())", {
+    string: Output.of(A).stableString.apply((string) => string.toUpperCase()),
+  });
+
+  test("A.stableString.toUpperCase()", {
+    string: Output.of(A).stableString.toUpperCase(),
+  });
+
+  test(
+    "A.stableString.effect((string) => Effect.succeed(string.toUpperCase()))",
+    {
+      string: Output.of(A).stableString.effect((string) =>
+        Effect.succeed(string.toUpperCase()),
+      ),
+    },
+  );
+
+  test("A.stableArray", {
+    stringArray: Output.of(A).stableArray,
+  });
+
+  test("A.stableArray[0]", {
+    string: Output.of(A).stableArray[0],
+  });
+
+  test("A.stableArray[0].toUpperCase()", {
+    string: Output.of(A).stableArray[0].toUpperCase(),
+  });
+
+  test("A.stableArray.map(string => string.toUpperCase())[0]", {
+    string: Output.of(A).stableArray.map((string) => string.toUpperCase())[0],
+  });
+
+  test("A.stableArray.flatMap(string => [string.toUpperCase()])[0]", {
+    string: Output.of(A).stableArray.flatMap((string) => [
+      string.toUpperCase(),
+    ])[0],
+  });
+
+  test("A.stableArray[0].apply((string) => string.toUpperCase())", {
+    string: Output.of(A).stableArray[0].apply((string) => string.toUpperCase()),
+  });
+
+  test(
+    "A.stableArray[0].effect((string) => Effect.succeed(string.toUpperCase()))",
+    {
+      string: Output.of(A).stableArray[0].effect((string) =>
+        Effect.succeed(string.toUpperCase()),
+      ),
+    },
+  );
+});
+
+const typeOnlyTests = Effect.gen(function* () {
+  {
+    const p = yield* plan({
+      phase: "update",
+      resources: [MyFunction],
+    });
+    p.resources.MyFunction;
+    // transitive dependency detected via outputs
+    p.resources.MyQueue;
+    // TODO(sam): test multiple transitive hops
+  }
+  {
+    class A extends TestResource("A", {}) {}
+    class B extends TestResource("B", {
+      string: Output.of(A).string,
+    }) {}
+    class C extends TestResource("C", {
+      string: Output.of(B).string,
+    }) {}
+    const p = yield* plan({
+      phase: "update",
+      resources: [C],
+    });
+    p.resources.A;
+    p.resources.B;
+    p.resources.C;
+    // @ts-expect-error
+    p.resources.D;
+  }
 });

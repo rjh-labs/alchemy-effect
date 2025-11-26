@@ -131,13 +131,17 @@ type Sources<T> =
       ? never
       : T extends any[]
         ? ArraySources<T>
-        : {
-            [k in keyof T]: Sources<T[k]>;
-          }[keyof T];
+        : T extends object
+          ? {
+              [k in keyof T]: Sources<T[k]>;
+            }[keyof T]
+          : never;
 
 type ArraySources<T extends any[]> = T extends [infer H, ...infer Tail]
   ? [Sources<H>, ...ArraySources<Tail>]
   : [];
+
+type _ = unknown extends unknown ? true : false;
 
 type Requirements<T> =
   T extends Output<infer A, infer Src, infer Req>
@@ -146,9 +150,11 @@ type Requirements<T> =
       ? never
       : T extends any[]
         ? ArrayRequirements<T>
-        : {
-            [k in keyof T]: Requirements<T[k]>;
-          }[keyof T];
+        : T extends object
+          ? {
+              [k in keyof T]: Requirements<T[k]>;
+            }[keyof T]
+          : never;
 
 type ArrayRequirements<T extends any[]> = T extends [infer H, ...infer Tail]
   ? [Requirements<H>, ...ArrayRequirements<Tail>]
@@ -203,14 +209,16 @@ const proxy = (self: any): any => {
           ? (hint: string) => (hint === "string" ? self.toString() : self)
           : prop === ExprSymbol
             ? self
-            : prop === "apply"
-              ? self[prop]
-              : self[prop as keyof typeof self]
-                ? typeof self[prop as keyof typeof self] === "function" &&
-                  !("kind" in self)
-                  ? new PropExpr(proxy, prop as never)
-                  : self[prop as keyof typeof self]
-                : new PropExpr(proxy, prop as never),
+            : isResourceExpr(self) && self.stables && prop in self.stables
+              ? self.stables[prop as keyof typeof self.stables]
+              : prop === "apply"
+                ? self[prop]
+                : self[prop as keyof typeof self]
+                  ? typeof self[prop as keyof typeof self] === "function" &&
+                    !("kind" in self)
+                    ? new PropExpr(proxy, prop as never)
+                    : self[prop as keyof typeof self]
+                  : new PropExpr(proxy, prop as never),
       apply: (_, thisArg, args) => {
         if (isPropExpr(self)) {
           if (self.identifier === "apply") {
@@ -271,7 +279,10 @@ export class ResourceExpr<
   Req = never,
 > extends BaseExpr<Value, Src, Req> {
   readonly kind = "ResourceExpr";
-  constructor(public readonly src: Src) {
+  constructor(
+    public readonly src: Src,
+    readonly stables?: Record<string, any>,
+  ) {
     super();
     return proxy(this);
   }
@@ -570,17 +581,6 @@ export const evaluate: <A, Upstream extends AnyResource, Req>(
     }
     return expr;
   }) as Effect.Effect<any>;
-
-export type ResolveUpstream<A> =
-  A extends Output<infer V, infer Up, infer Req>
-    ? Up
-    : A extends any[]
-      ? ResolveUpstream<A[number]>
-      : A extends Record<string, any>
-        ? {
-            [K in keyof A]: ResolveUpstream<A[K]>;
-          }[keyof A]
-        : never;
 
 export type Upstream<O extends Output<any, any, any>> =
   O extends Output<infer V, infer Up, infer Req>

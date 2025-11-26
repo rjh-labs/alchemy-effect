@@ -4,7 +4,9 @@ import type { ScopedPlanStatusSession } from "./apply.ts";
 import type { Diff } from "./diff.ts";
 import type { Resource } from "./resource.ts";
 import type { Runtime } from "./runtime.ts";
-import type { Input } from "./input.ts";
+import type { Input, Inputs } from "./input.ts";
+import type { Output } from "./output.ts";
+import type { Primitive } from "./data.ts";
 
 export type Provider<R extends Resource> = Context.TagClass<
   Provider<R>,
@@ -38,7 +40,7 @@ export interface ProviderService<Res extends Resource = Resource> {
     olds: Props<Res>;
     // Note: we do not resolve (Props<Res>) here because diff runs during plan
     // -> we need a way for the diff handlers to work with Outputs
-    news: Res["props"];
+    news: Input.Of<Input.Resolve<Res["props"]>>;
     output: Res["attr"];
   }): Effect.Effect<Diff | void, never, never>;
   precreate?(input: {

@@ -78,6 +78,26 @@ export declare namespace Input {
           : T extends object
             ? { [K in keyof T]: Dependencies<T[K]> }[keyof T]
             : never;
+
+  export type Of<T> =
+    | T
+    | Output.Of<T, any, any>
+    | (T extends Primitive
+        ? never
+        : T extends any[]
+          ? number extends T["length"]
+            ? Of<T[number]>[]
+            : OfArray<T>
+          : T extends object
+            ? { [K in keyof T]: Of<T[K]> }
+            : never);
+
+  type OfArray<T extends any[], Out extends any[] = []> = T extends [
+    infer H,
+    ...infer T,
+  ]
+    ? OfArray<T, [...Out, Input<H>]>
+    : Out;
 }
 
 export type Inputs<T extends any[], Out extends any[] = []> = T extends [

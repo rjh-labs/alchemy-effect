@@ -130,14 +130,6 @@ export const functionProvider = Function.provider.succeed({
 export type TestResourceProps = {
   string?: string;
   stringArray?: string[];
-  object?: {
-    nested: {
-      string: string;
-    };
-  };
-  objectArray?: {
-    string: string;
-  }[];
 };
 
 export type TestResourceAttr<Props extends TestResourceProps> = {
@@ -145,12 +137,8 @@ export type TestResourceAttr<Props extends TestResourceProps> = {
   stringArray: Props["stringArray"] extends string[]
     ? Props["stringArray"]
     : string[];
-  object: Props["object"] extends { nested: { string: string } }
-    ? Props["object"]
-    : { nested: { string: string } };
-  objectArray: Props["objectArray"] extends { string: string }[]
-    ? Props["objectArray"]
-    : { string: string }[];
+  stableString: string;
+  stableArray: string[];
 };
 
 export interface TestResource<
@@ -171,13 +159,22 @@ export const TestResource = Resource<{
 }>("Test.TestResource");
 
 export const testResourceProvider = TestResource.provider.succeed({
-  diff: Effect.fn(function* ({ id, news, output }) {}),
+  diff: Effect.fn(function* ({ id, news, olds }) {
+    return news.string !== olds.string
+      ? {
+          action: "update",
+          stables: ["stableString", "stableArray"],
+        }
+      : {
+          action: "noop",
+        };
+  }),
   create: Effect.fn(function* ({ id, news }) {
     return {
       string: news.string ?? id,
       stringArray: news.stringArray ?? [],
-      object: news.object ?? { nested: { string: "" } },
-      objectArray: news.objectArray ?? [],
+      stableString: id,
+      stableArray: [id],
     };
   }),
   update: Effect.fn(function* ({ id, news, output }) {
