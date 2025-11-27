@@ -18,7 +18,8 @@
     "format:check": "bun run format -- --check",
     "bump": "bun ./scripts/bump.ts",
     "publish:npm": "bun run build && bun run --filter alchemy-effect publish:npm",
-    "prepare": "effect-language-service patch"
+    "prepare": "effect-language-service patch",
+    "test:benchmark": "bun run --filter alchemy-effect test:benchmark"
   },
   "workspaces": {
     "catalog": {
@@ -44,6 +45,7 @@
     ]
   },
   "devDependencies": {
+    "@ark/attest": "^0.55.0",
     "@effect/language-service": "^0.55.2",
     "@types/bun": "latest",
     "@types/node": "latest",

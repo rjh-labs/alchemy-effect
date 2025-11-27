@@ -1,5 +1,6 @@
 import * as Effect from "effect/Effect";
 import * as Output from "@/output";
+import { attest } from "@ark/attest";
 import {
   Bucket,
   Queue,
@@ -566,33 +567,47 @@ describe("stable properties should not cause downstream changes", () => {
   );
 });
 
-const typeOnlyTests = Effect.gen(function* () {
-  {
-    const p = yield* plan({
-      phase: "update",
-      resources: [MyFunction],
-    });
-    p.resources.MyFunction;
-    // transitive dependency detected via outputs
-    p.resources.MyQueue;
-    // TODO(sam): test multiple transitive hops
-  }
-  {
-    class A extends TestResource("A", {}) {}
-    class B extends TestResource("B", {
-      string: Output.of(A).string,
-    }) {}
-    class C extends TestResource("C", {
-      string: Output.of(B).string,
-    }) {}
-    const p = yield* plan({
-      phase: "update",
-      resources: [C],
-    });
-    p.resources.A;
-    p.resources.B;
-    p.resources.C;
-    // @ts-expect-error
-    p.resources.D;
-  }
+describe("type-only tests", () => {
+  test(
+    "infer transitive dependencies via outputs",
+    Effect.gen(function* () {
+      {
+        const p = yield* plan({
+          phase: "update",
+          resources: [MyFunction],
+        });
+        p.resources.MyFunction;
+        // transitive dependency detected via outputs
+        p.resources.MyQueue;
+        // TODO(sam): test multiple transitive hops
+      }
+      {
+        class A extends TestResource("A", {}) {}
+        class B extends TestResource("B", {
+          string: Output.of(A).string,
+        }) {}
+        class C extends TestResource("C", {
+          string: Output.of(B).string,
+        }) {}
+        const p = yield* plan({
+          phase: "update",
+          resources: [C],
+        });
+        p.resources.A;
+        p.resources.B;
+        p.resources.C;
+        // @ts-expect-error
+        p.resources.D;
+
+        // attest(
+        //   yield* plan({
+        //     phase: "update",
+        //     resources: [C],
+        //   }),
+        // );
+
+        // attest.instantiations([3500, "instantiations"]);
+      }
+    }).pipe(Effect.provide(TestLayers)),
+  );
 });
