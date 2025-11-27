@@ -165,9 +165,7 @@ export const testResourceProvider = TestResource.provider.succeed({
           action: "update",
           stables: ["stableString", "stableArray"],
         }
-      : {
-          action: "noop",
-        };
+      : undefined;
   }),
   create: Effect.fn(function* ({ id, news }) {
     return {
@@ -178,7 +176,12 @@ export const testResourceProvider = TestResource.provider.succeed({
     };
   }),
   update: Effect.fn(function* ({ id, news, output }) {
-    return output;
+    return {
+      string: news.string ?? id,
+      stringArray: news.stringArray ?? [],
+      stableString: id,
+      stableArray: [id],
+    };
   }),
   delete: Effect.fn(function* ({ output }) {
     return;

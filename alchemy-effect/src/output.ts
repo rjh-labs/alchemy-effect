@@ -617,7 +617,7 @@ const _upstream = (expr: any): any => {
       ...upstream(expr.expr),
       ...upstream(
         expr.f(
-          new ItemExpr(expr.expr) as unknown as Expr<A>,
+          new ItemExpr(expr.expr) as any,
           new IndexExpr(
             expr.expr,
             new LiteralExpr(0),
@@ -640,30 +640,25 @@ const toObject = <A, B>(acc: B, v: A) => ({
   ...v,
 });
 
-export type ResolveUpstream<A> = A extends
-  | undefined
-  | null
-  | boolean
-  | number
-  | string
-  | symbol
-  | bigint
-  ? {}
-  : IsAny<A> extends true
+export type ResolveUpstream<A> = unknown extends A
+  ? { [id: string]: Resource }
+  : A extends undefined | null | boolean | number | string | symbol | bigint
     ? {}
-    : A extends Output<any, infer Upstream, any>
-      ? {
-          [Id in Upstream["id"]]: Extract<Upstream, { id: Id }>;
-        }
-      : A extends readonly any[] | any[]
-        ? ResolveUpstream<A[number]>
-        : A extends Record<string, any>
-          ? {
-              [Id in keyof UnionToIntersection<
-                ResolveUpstream<A[keyof A]>
-              >]: UnionToIntersection<ResolveUpstream<A[keyof A]>>[Id];
-            }
-          : {};
+    : IsAny<A> extends true
+      ? {}
+      : A extends Output<any, infer Upstream, any>
+        ? {
+            [Id in Upstream["id"]]: Extract<Upstream, { id: Id }>;
+          }
+        : A extends readonly any[] | any[]
+          ? ResolveUpstream<A[number]>
+          : A extends Record<string, any>
+            ? {
+                [Id in keyof UnionToIntersection<
+                  ResolveUpstream<A[keyof A]>
+                >]: UnionToIntersection<ResolveUpstream<A[keyof A]>>[Id];
+              }
+            : {};
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 

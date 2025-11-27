@@ -530,7 +530,7 @@ export const plan = <
                         })()
                       : undefined;
 
-                    if (!diff && arePropsChanged(oldState, resource.props)) {
+                    if (!diff && arePropsChanged(oldState, news)) {
                       return Node<Update<Resource>>({
                         action: "update",
                         olds: oldState.props,

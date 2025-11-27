@@ -1,5 +1,6 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Output from "./output.ts";
 import * as Option from "effect/Option";
 import type { Simplify } from "effect/Types";
 import { PlanReviewer, type PlanRejected } from "./approve.ts";
@@ -90,6 +91,18 @@ export const applyPlan = <P extends Plan, Err, Req>(
         ): Effect.Effect<T, Err, Req> =>
           Effect.isEffect(effect) ? effect : Effect.succeed(effect);
 
+        const resolveUpstream = Effect.fn(function* (resourceId: string) {
+          const upstreamNode = plan.resources[resourceId];
+          const upstreamAttr = upstreamNode
+            ? yield* apply(upstreamNode)
+            : yield* Effect.dieMessage(`Resource ${resourceId} not found`);
+          return {
+            resourceId,
+            upstreamAttr,
+            upstreamNode,
+          };
+        });
+
         const resolveBindingUpstream = Effect.fn(function* ({
           node,
           resource,
@@ -104,10 +117,8 @@ export const applyPlan = <P extends Plan, Err, Req>(
           const provider = yield* binding.Tag;
 
           const resourceId: string = node.binding.capability.resource.id;
-          const upstreamNode = plan.resources[resourceId];
-          const upstreamAttr = resource
-            ? yield* apply(upstreamNode)
-            : yield* Effect.dieMessage(`Resource ${resourceId} not found`);
+          const { upstreamAttr, upstreamNode } =
+            yield* resolveUpstream(resourceId);
 
           return {
             resourceId,
@@ -275,14 +286,33 @@ export const applyPlan = <P extends Plan, Err, Req>(
                   attr: any;
                   phase: "create" | "update";
                 }) {
+                  const news = yield* Output.evaluate(
+                    node.news,
+                    Object.fromEntries(
+                      yield* Effect.all(
+                        Object.entries(Output.resolveUpstream(node.news)).map(
+                          ([id, resource]) =>
+                            resolveUpstream(id).pipe(
+                              Effect.map(({ upstreamAttr }) => [
+                                id,
+                                upstreamAttr,
+                              ]),
+                            ),
+                        ),
+                      ),
+                    ),
+                  );
+
                   yield* report(phase === "create" ? "creating" : "updating");
+
+                  // TODO(sam): resolve outputs
 
                   let bindingOutputs = yield* attachBindings({
                     resource,
                     bindings: node.bindings,
                     target: {
                       id,
-                      props: node.news,
+                      props: news,
                       attr,
                     },
                   });
@@ -293,7 +323,7 @@ export const applyPlan = <P extends Plan, Err, Req>(
                       : node.provider.update
                   )({
                     id,
-                    news: node.news,
+                    news,
                     bindings: bindingOutputs,
                     session: scopedSession,
                     ...(node.action === "update"
@@ -316,7 +346,7 @@ export const applyPlan = <P extends Plan, Err, Req>(
                     bindingOutputs,
                     target: {
                       id,
-                      props: node.news,
+                      props: news,
                       attr,
                     },
                   });
