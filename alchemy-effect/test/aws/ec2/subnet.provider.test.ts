@@ -60,7 +60,7 @@ test(
     const stack = yield* apply(TestVpc, TestSubnet);
 
     yield* expectSubnetAttribute({
-      SubnetId: stack.TestSubnet.vpcId,
+      SubnetId: stack.TestSubnet.subnetId,
       Attribute: "mapPublicIpOnLaunch",
       Value: true,
     });
