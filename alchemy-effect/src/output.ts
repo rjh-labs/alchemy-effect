@@ -110,9 +110,11 @@ const proxy = (self: any): any => {
   return proxy;
 };
 
-export abstract class BaseExpr<A = any, Src extends Resource = any, Req = any>
-  implements Output<A, Src, Req>
-{
+export abstract class BaseExpr<
+  A = any,
+  Src extends Resource = any,
+  Req = any,
+> implements Output<A, Src, Req> {
   declare readonly kind: any;
   declare readonly src: Src;
   declare readonly req: Req;
@@ -276,15 +278,13 @@ export class UnexpectedExprError extends Data.TaggedError(
 export const evaluate: <A, Upstream extends AnyResource, Req>(
   expr: Output<A, Upstream, Req>,
   upstream: {
-    [Id in Upstream["id"]]: Effect.Effect<
-      Extract<Upstream, { id: Id }>["attr"]
-    >;
+    [Id in Upstream["id"]]: Extract<Upstream, { id: Id }>["attr"];
   },
 ) => Effect.Effect<A> = (expr, upstream) =>
   Effect.gen(function* () {
     if (isResourceExpr(expr)) {
       const srcId = expr.src.id;
-      const src = yield* upstream[srcId as keyof typeof upstream];
+      const src = upstream[srcId as keyof typeof upstream];
       if (!src) {
         // type-safety should prevent this but let the caller decide how to handle it
         return yield* Effect.die(

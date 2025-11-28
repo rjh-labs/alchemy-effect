@@ -14,7 +14,6 @@ import { App } from "../../app.ts";
 import { DotAlchemy } from "../../dot-alchemy.ts";
 import type { ProviderService } from "../../provider.ts";
 import { createTagger, createTagsList, hasTags } from "../../tags.ts";
-import { isUnknown } from "../../unknown.ts";
 import { Account } from "../account.ts";
 import * as IAM from "../iam.ts";
 import { Region } from "../region.ts";
@@ -462,9 +461,6 @@ export const functionProvider = () =>
             olds.url !== news.url
           ) {
             return { action: "replace" };
-          }
-          if (isUnknown(news.main) || isUnknown(news.handler)) {
-            return { action: "update" };
           }
           if (
             output.code.hash !==

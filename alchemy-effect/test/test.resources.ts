@@ -1,8 +1,8 @@
 import type { Input, InputProps } from "@/input";
 import { Resource } from "@/resource";
+import { isUnknown } from "@/unknown";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { isUnknown } from "../src/unknown.ts";
 
 // Bucket
 export type BucketProps = {
@@ -94,12 +94,12 @@ export interface Function<
   ID extends string = string,
   Props extends InputProps<FunctionProps> = InputProps<FunctionProps>,
 > extends Resource<
-    "Test.Function",
-    ID,
-    Props,
-    FunctionAttr<Input.Resolve<Props>>,
-    Function
-  > {}
+  "Test.Function",
+  ID,
+  Props,
+  FunctionAttr<Input.Resolve<Props>>,
+  Function
+> {}
 
 export const Function = Resource<{
   <const ID extends string, const Props extends InputProps<FunctionProps>>(
@@ -147,12 +147,12 @@ export interface TestResource<
   ID extends string = string,
   Props extends InputProps<TestResourceProps> = InputProps<TestResourceProps>,
 > extends Resource<
-    "Test.TestResource",
-    ID,
-    Props,
-    TestResourceAttr<Input.Resolve<Props>>,
-    TestResource
-  > {}
+  "Test.TestResource",
+  ID,
+  Props,
+  TestResourceAttr<Input.Resolve<Props>>,
+  TestResource
+> {}
 
 export const TestResource = Resource<{
   <const ID extends string, const Props extends InputProps<TestResourceProps>>(
@@ -163,11 +163,15 @@ export const TestResource = Resource<{
 
 export const testResourceProvider = TestResource.provider.succeed({
   diff: Effect.fn(function* ({ id, news, olds }) {
+    if (isUnknown(news.stringArray)) {
+      news.stringArray;
+    }
     return isUnknown(news.string) ||
       isUnknown(news.stringArray) ||
       news.string !== olds.string ||
       news.stringArray?.length !== olds.stringArray?.length ||
       !!news.stringArray !== !!olds.stringArray ||
+      news.stringArray?.some(isUnknown) ||
       news.stringArray?.some((s, i) => s !== olds.stringArray?.[i])
       ? {
           action: "update",

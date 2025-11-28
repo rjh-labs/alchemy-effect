@@ -47,8 +47,8 @@ const bucketAttrs = {
 } as const satisfies Bucket["attr"];
 
 const resources = {
-  TestVpc: Effect.succeed(vpcAttrs),
-  Bucket: Effect.succeed(bucketAttrs),
+  TestVpc: vpcAttrs,
+  Bucket: bucketAttrs,
 } as const;
 
 const output = Output.of(TestVpc);

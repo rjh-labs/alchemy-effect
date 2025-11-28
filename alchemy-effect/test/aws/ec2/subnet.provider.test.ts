@@ -20,6 +20,8 @@ test(
   Effect.gen(function* () {
     const ec2 = yield* EC2.EC2Client;
 
+    yield* destroy();
+
     {
       class TestVpc extends EC2.Vpc("TestVpc", {
         cidrBlock: "10.0.0.0/16",

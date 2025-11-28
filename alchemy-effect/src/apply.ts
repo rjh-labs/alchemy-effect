@@ -293,22 +293,20 @@ export const applyPlan = <P extends IPlan, Err = never, Req = never>(
                   attr: any;
                   phase: "create" | "update";
                 }) {
-                  const news = yield* Output.evaluate(
-                    node.news,
-                    Object.fromEntries(
-                      yield* Effect.all(
-                        Object.entries(Output.resolveUpstream(node.news)).map(
-                          ([id, resource]) =>
-                            resolveUpstream(id).pipe(
-                              Effect.map(({ upstreamAttr }) => [
-                                id,
-                                upstreamAttr,
-                              ]),
-                            ),
-                        ),
+                  const upstream = Object.fromEntries(
+                    yield* Effect.all(
+                      Object.entries(Output.resolveUpstream(node.news)).map(
+                        ([id, resource]) =>
+                          resolveUpstream(id).pipe(
+                            Effect.map(({ upstreamAttr }) => [
+                              id,
+                              upstreamAttr,
+                            ]),
+                          ),
                       ),
                     ),
                   );
+                  const news = yield* Output.evaluate(node.news, upstream);
 
                   yield* report(phase === "create" ? "creating" : "updating");
 

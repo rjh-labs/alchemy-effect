@@ -1,13 +1,6 @@
+import { type Output, isOutput } from "./output.ts";
 import type { Input } from "./input.ts";
 
-export type MaybeUnknown<T> = {
-  [k in keyof T]: true extends Input.IsOut<T[k]>
-    ? Input.Resolve<T[k]> | Unknown
-    : T[k];
-};
-export interface Unknown {
-  /** @internal */
-  __alchemy_unknown: true;
-}
-export const isUnknown = (value: unknown): value is Unknown =>
-  typeof value === "object" && value !== null && "__alchemy_unknown" in value;
+// @ts-expect-error - we want to allow any value to be checked for unknown
+export const isUnknown = <V>(value: V): value is Output<Input.Resolve<V>> =>
+  isOutput(value);

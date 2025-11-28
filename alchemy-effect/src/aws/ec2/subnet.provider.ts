@@ -54,25 +54,33 @@ export const subnetProvider = () =>
           const allTags = { ...alchemyTags, ...userTags };
 
           // 3. Call CreateSubnet
-          const createResult = yield* ec2.createSubnet({
-            VpcId: vpcId,
-            CidrBlock: news.cidrBlock,
-            Ipv6CidrBlock: news.ipv6CidrBlock,
-            AvailabilityZone: news.availabilityZone,
-            AvailabilityZoneId: news.availabilityZoneId,
-            Ipv4IpamPoolId: news.ipv4IpamPoolId,
-            Ipv4NetmaskLength: news.ipv4NetmaskLength,
-            Ipv6IpamPoolId: news.ipv6IpamPoolId,
-            Ipv6NetmaskLength: news.ipv6NetmaskLength,
-            Ipv6Native: false, // Explicitly set to false for now
-            TagSpecifications: [
-              {
-                ResourceType: "subnet",
-                Tags: createTagsList(allTags),
-              },
-            ],
-            DryRun: false,
-          });
+          const createResult = yield* ec2
+            .createSubnet({
+              VpcId: vpcId,
+              CidrBlock: news.cidrBlock,
+              Ipv6CidrBlock: news.ipv6CidrBlock,
+              AvailabilityZone: news.availabilityZone,
+              AvailabilityZoneId: news.availabilityZoneId,
+              Ipv4IpamPoolId: news.ipv4IpamPoolId,
+              Ipv4NetmaskLength: news.ipv4NetmaskLength,
+              Ipv6IpamPoolId: news.ipv6IpamPoolId,
+              Ipv6NetmaskLength: news.ipv6NetmaskLength,
+              Ipv6Native: false, // Explicitly set to false for now
+              TagSpecifications: [
+                {
+                  ResourceType: "subnet",
+                  Tags: createTagsList(allTags),
+                },
+              ],
+              DryRun: false,
+            })
+            .pipe(
+              Effect.retry({
+                // @ts-expect-error - this is unknown to itty-aws
+                while: (e) => e._tag === "InvalidVpcID.NotFound",
+                schedule: Schedule.exponential(100),
+              }),
+            );
 
           const subnetId = createResult.Subnet!.SubnetId! as SubnetId;
           yield* session.note(`Subnet created: ${subnetId}`);
