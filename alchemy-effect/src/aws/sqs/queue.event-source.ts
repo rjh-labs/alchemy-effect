@@ -28,12 +28,12 @@ export interface QueueEventSource<
   Q extends Queue,
   Props extends QueueEventSourceProps,
 > extends Binding<
-    Function,
-    Consume<From<Q>>,
-    Props,
-    QueueEventSourceAttr,
-    "QueueEventSource"
-  > {}
+  Function,
+  Consume<From<Q>>,
+  Props,
+  QueueEventSourceAttr,
+  "QueueEventSource"
+> {}
 
 export const QueueEventSource = Binding<
   <Q extends Queue, const Props extends QueueEventSourceProps>(
@@ -44,7 +44,6 @@ export const QueueEventSource = Binding<
 
 export const queueEventSourceProvider = () =>
   QueueEventSource.provider.effect(
-    // @ts-expect-error
     Effect.gen(function* () {
       const region = yield* Region;
       const accountId = yield* Account;
@@ -133,26 +132,25 @@ export const queueEventSourceProvider = () =>
       });
 
       return {
-        attach: ({ source: queue }) => {
-          console.log("attaching queue event source", queue.id);
-          return {
-            // we need the policies to be present before the event source mapping is created
-            policyStatements: [
-              {
-                Sid: "AWS.SQS.Consume",
-                Effect: "Allow" as const,
-                Action: [
-                  "sqs:ReceiveMessage",
-                  "sqs:DeleteMessage",
-                  "sqs:ChangeMessageVisibility",
-                  "sqs:GetQueueAttributes",
-                  "sqs:GetQueueUrl",
-                ],
-                Resource: [queue.attr.queueArn],
-              },
-            ],
-          };
-        },
+        attach: ({ source: queue, attr }) => ({
+          // TODO(sam): bit of a broken model here - we can't know the UUID until post-attach
+          uuid: attr?.uuid ?? undefined!,
+          // we need the policies to be present before the event source mapping is created
+          policyStatements: [
+            {
+              Sid: "AWS.SQS.Consume",
+              Effect: "Allow" as const,
+              Action: [
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage",
+                "sqs:ChangeMessageVisibility",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+              ],
+              Resource: [queue.attr.queueArn],
+            },
+          ],
+        }),
         postattach: Effect.fn(function* ({
           source: queue,
           props: { batchSize, maxBatchingWindow, scalingConfig } = {},
@@ -161,11 +159,6 @@ export const queueEventSourceProvider = () =>
             attr: { functionName },
           },
         }) {
-          console.log(
-            "postattaching queue event source",
-            queue.id,
-            functionName,
-          );
           const config:
             | Lambda.CreateEventSourceMappingRequest
             | Lambda.UpdateEventSourceMappingRequest = {
@@ -221,10 +214,11 @@ export const queueEventSourceProvider = () =>
                 ),
               schedule: Schedule.exponential(100),
             }),
+            Effect.orDie,
           );
           return {
             ...attr,
-            uuid: eventSourceMapping.UUID,
+            uuid: eventSourceMapping.UUID!,
           };
         }),
         detach: Effect.fn(function* ({

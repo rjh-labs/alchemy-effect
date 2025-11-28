@@ -26,7 +26,6 @@ test(
       }) {}
 
       class TestSubnet extends EC2.Subnet("TestSubnet", {
-        // PropExpr(ResourceExpr(TestVpc), "vpcId")
         vpcId: Output.of(TestVpc).vpcId,
         cidrBlock: "10.0.1.0/24",
       }) {}
