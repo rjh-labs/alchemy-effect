@@ -1,22 +1,26 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Output from "./output.ts";
 import * as Option from "effect/Option";
 import type { Simplify } from "effect/Types";
 import { PlanReviewer, type PlanRejected } from "./approve.ts";
 import type { AnyBinding, BindingService } from "./binding.ts";
 import type { ApplyEvent, ApplyStatus } from "./event.ts";
+import * as Output from "./output.ts";
 import {
   plan,
   type BindNode,
   type Create,
   type CRUD,
   type Delete,
+  type IPlan,
   type Plan,
   type Update,
+  type DerivePlan,
+  type BindingTags,
 } from "./plan.ts";
-import type { Resource } from "./resource.ts";
-import type { Service } from "./service.ts";
+import type { Instance } from "./policy.ts";
+import type { AnyResource, Resource } from "./resource.ts";
+import type { AnyService, Service } from "./service.ts";
 import { State } from "./state.ts";
 
 export interface PlanStatusSession {
@@ -31,40 +35,45 @@ export interface ScopedPlanStatusSession extends PlanStatusSession {
 export class PlanStatusReporter extends Context.Tag("PlanStatusReporter")<
   PlanStatusReporter,
   {
-    start(plan: Plan): Effect.Effect<PlanStatusSession, never>;
+    start(plan: IPlan): Effect.Effect<PlanStatusSession, never>;
   }
 >() {}
 
-export const apply: typeof applyPlan &
-  typeof applyResources &
-  typeof applyResourcesPhase = (...args: any[]): any =>
-  Effect.isEffect(args[0])
-    ? applyPlan(args[0] as any)
-    : args.length === 1 && "phase" in args[0]
-      ? applyResourcesPhase(args[0])
-      : applyResources(...args);
+export type ApplyEffect<
+  P extends IPlan,
+  Err = never,
+  Req = never,
+> = Effect.Effect<
+  {
+    [k in keyof AppliedPlan<P>]: AppliedPlan<P>[k];
+  },
+  Err | PlanRejected,
+  Req
+>;
 
-export const applyResourcesPhase = <
-  const Phase extends "update" | "destroy",
-  const Resources extends (Service | Resource)[],
->(props: {
-  resources: Resources;
-  phase: Phase;
-}) => applyPlan(plan(props));
+export type AppliedPlan<P extends IPlan> = {
+  [id in keyof P["resources"]]: P["resources"][id] extends
+    | Delete<Resource>
+    | undefined
+    | never
+    ? never
+    : Simplify<P["resources"][id]["resource"]["attr"]>;
+};
 
-export const applyResources = <const Resources extends (Service | Resource)[]>(
+export const apply = <
+  const Resources extends (AnyService | AnyResource)[] = never,
+>(
   ...resources: Resources
-) =>
-  applyPlan(
-    plan({
-      phase: "update",
-      resources,
-    }),
-  );
+): ApplyEffect<
+  DerivePlan<Instance<Resources[number]>>,
+  never,
+  State | BindingTags<Instance<Resources[number]>>
+  // TODO(sam): don't cast to any
+> => applyPlan(plan(...resources)) as any;
 
-export const applyPlan = <P extends Plan, Err, Req>(
+export const applyPlan = <P extends IPlan, Err = never, Req = never>(
   plan: Effect.Effect<P, Err, Req>,
-) =>
+): ApplyEffect<P, Err, Req> =>
   plan.pipe(
     Effect.flatMap((plan) =>
       Effect.gen(function* () {
@@ -394,11 +403,7 @@ export const applyPlan = <P extends Plan, Err, Req>(
                   yield* Effect.all(
                     node.downstream.map((dep) =>
                       dep in plan.resources
-                        ? apply(
-                            plan.resources[
-                              dep
-                            ] as P["resources"][keyof P["resources"]],
-                          )
+                        ? apply(plan.resources[dep] as any)
                         : Effect.void,
                     ),
                   );
@@ -487,20 +492,4 @@ export const applyPlan = <P extends Plan, Err, Req>(
         return resources;
       }),
     ),
-  ) as Effect.Effect<
-    "update" extends P["phase"]
-      ?
-          | {
-              [id in keyof P["resources"]]: P["resources"][id] extends
-                | Delete<Resource>
-                | undefined
-                | never
-                ? never
-                : Simplify<P["resources"][id]["resource"]["attr"]>;
-            }
-          // union distribution isn't happening, so we gotta add this additional void here just in case
-          | ("destroy" extends P["phase"] ? void : never)
-      : void,
-    Err | PlanRejected,
-    Req
-  >;
+  ) as ApplyEffect<P>;

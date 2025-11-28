@@ -25,15 +25,15 @@ export interface GetItem<
   T = unknown,
   Constraint extends GetItemConstraint | unknown = unknown,
 > extends Capability<"AWS.DynamoDB.GetItem", T, Constraint> {
-  Constructor: GetItem;
-  Reduce: GetItem<
-    this["resource"],
-    {
-      [k in keyof Capability.Constraint.Simplify<
-        this["constraint"]
-      >]: Capability.Constraint.Simplify<this["constraint"]>[k];
-    }
-  >;
+  // Constructor: GetItem;
+  // Reduce: GetItem<
+  //   this["resource"],
+  //   {
+  //     [k in keyof Capability.Constraint.Simplify<
+  //       this["constraint"]
+  //     >]: Capability.Constraint.Simplify<this["constraint"]>[k];
+  //   }
+  // >;
 }
 
 export const GetItem = Binding<

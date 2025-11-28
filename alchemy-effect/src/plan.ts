@@ -1,5 +1,3 @@
-import { assertNeverOrDie } from "./assert-never.ts";
-import { CycleDetectedError } from "./errors.ts";
 import * as Context from "effect/Context";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
@@ -11,20 +9,13 @@ import type {
 } from "./binding.ts";
 import type { Capability } from "./capability.ts";
 import type { Diff } from "./diff.ts";
-import type { Phase } from "./phase.ts";
+import * as Output from "./output.ts";
 import type { Instance } from "./policy.ts";
+import type { Provider } from "./provider.ts";
 import { type ProviderService } from "./provider.ts";
-import type {
-  AnyResource,
-  Resource,
-  ResourceTags,
-  isResource,
-} from "./resource.ts";
+import type { AnyResource, Resource, ResourceTags } from "./resource.ts";
 import { isService, type IService, type Service } from "./service.ts";
 import { State, StateStoreError, type ResourceState } from "./state.ts";
-import * as Output from "./output.ts";
-import { isPrimitive } from "./data.ts";
-import type { Provider } from "./provider.ts";
 
 export type PlanError = never;
 
@@ -160,76 +151,95 @@ export type Replace<R extends Resource = AnyResource> = {
   deleteFirst?: boolean;
 };
 
-export type Plan = {
-  phase: Phase;
+export type ResourceGraph<Resources extends Service | Resource> = ToGraph<
+  TraverseResources<Resources>
+>;
+
+export type TraverseResources<Resources extends Service | Resource> =
+  | Resources
+  | BoundResources<Resources>
+  | TransitiveResources<Resources>;
+
+type ToGraph<Resources extends Service | Resource> = {
+  [ID in Resources["id"]]: Apply<Extract<Resources, { id: ID }>>;
+};
+
+export type BoundResources<Resources extends Service | Resource> = NeverUnknown<
+  Extract<
+    Resources,
+    IService
+  >["props"]["bindings"]["capabilities"][number]["resource"]
+>;
+
+// finds transitive dependencies at most two levels deep
+// TODO(sam): figure out an efficient way to do arbitrary depth
+export type TransitiveResources<
+  Resources extends Service | Resource,
+  Found extends Service | Resource = never,
+> = Extract<
+  | Found
+  | {
+      [prop in keyof Resources["props"]]: Resources["props"][prop] extends Output.Output<
+        any,
+        infer Src,
+        any
+      >
+        ? Src extends Found
+          ? Found
+          : TransitiveResources<Src, Src | Found>
+        : {
+            [p in keyof Resources["props"][prop]]: Resources["props"][prop][p] extends Output.Output<
+              any,
+              infer Src,
+              any
+            >
+              ? Src extends Found
+                ? Found
+                : TransitiveResources<Src, Src | Found>
+              : Found;
+          }[keyof Resources["props"][prop]];
+    }[keyof Resources["props"]],
+  Service | Resource
+>;
+
+export type Providers<Res extends Service | Resource> = Res extends any
+  ? Provider<Extract<Res["base"], Service | Resource>>
+  : never;
+
+export type BindingTags<Resources extends Service | Resource> = NeverUnknown<
+  Extract<Resources, Service>["props"]["bindings"]["tags"][number]
+>;
+
+type NeverUnknown<T> = unknown extends T ? never : T;
+
+export type DerivePlan<Resources extends Service | Resource> = {
   resources: {
-    [id in string]: CRUD;
+    [ID in keyof ResourceGraph<Resources>]: ResourceGraph<Resources>[ID];
+  };
+  deletions: {
+    [ID in string]: Delete<AnyResource>;
+  };
+};
+
+export type IPlan = {
+  resources: {
+    [id in string]: CRUD<any>;
   };
   deletions: {
     [id in string]?: Delete<Resource>;
   };
 };
 
-export const plan = <
-  const Phase extends "update" | "destroy",
-  const Resources extends (Service | Resource)[],
->({
-  phase,
-  resources,
-}: {
-  phase: Phase;
-  resources: Resources;
-}) => {
-  type Services = Extract<Resources[number], IService>[];
-  type ServiceIDs = Services[number]["id"];
-  type ServiceHosts = {
-    [ID in ServiceIDs]: Extract<Services[number], Service<Extract<ID, string>>>;
-  };
-  type BoundTags = {
-    [ID in ServiceIDs]: ServiceHosts[ID]["props"]["bindings"]["tags"][number];
-  }[ServiceIDs];
-  type BoundResources = {
-    [ID in ServiceIDs]: Extract<
-      ServiceHosts[ID]["props"]["bindings"]["capabilities"][number]["resource"],
-      Resource
-    >;
-  }[ServiceIDs];
-  // type OutputResources = {
-  //   [ID in Resources[number]["id"]]: Output.ResolveUpstream<
-  //     Resources[number]["props"]
-  //   >;
-  // }[Resources[number]["id"]];
-  type OutputResources = ResolveOutputs<Resources[number]["props"], never>;
+export type Plan<Resources extends Service | Resource> = Effect.Effect<
+  DerivePlan<Resources>,
+  never,
+  BindingTags<Resources> | Providers<Resources> | State
+>;
 
-  type ResolveOutputs<A, Found> =
-    // check if we've already seen this resource, A
-    Extract<Found, A> extends never
-      ? A extends Resource
-        ? ResolveOutputs<A["props"], A | Found>
-        : A extends any[]
-          ? ResolveOutputs<A[number], Found>
-          : A extends Record<string, any>
-            ? ResolveOutputs<A[keyof A], Found>
-            : A extends Record<string, infer V>
-              ? ResolveOutputs<V, Found>
-              : Found
-      : // detected cycle, terminate
-        Found;
-
-  type ExplicitResources = Resources[number];
-  type ResourceGraph = {
-    [ID in ServiceIDs]: Apply<Extract<Instance<ServiceHosts[ID]>, Resource>>;
-  } & {
-    [ID in BoundResources["id"]]: Apply<Extract<BoundResources, { id: ID }>>;
-  } & {
-    [ID in ExplicitResources["id"]]: Apply<
-      Instance<Extract<ExplicitResources, { id: ID }>>
-    >;
-  } & {
-    [ID in OutputResources["id"]]: Apply<Extract<OutputResources, { id: ID }>>;
-  };
-
-  return Effect.gen(function* () {
+export const plan = <const Resources extends (Service | Resource)[]>(
+  ...resources: Resources
+): Plan<Instance<Resources[number]>> =>
+  Effect.gen(function* () {
     const state = yield* State;
 
     const resourceIds = yield* state.list();
@@ -363,71 +373,6 @@ export const plan = <
           return Output.isOutput(upstream) ? expr : yield* expr.f(upstream);
         } else if (Output.isAllExpr(expr)) {
           return yield* Effect.all(expr.outs.map(resolveOutput));
-        } else if (Output.isCallExpr(expr)) {
-          const [fn, args, thisType] = yield* Effect.all([
-            resolveOutput(expr.expr),
-            Effect.all(expr.args.map(resolveOutput)),
-            resolveOutput(expr.thisType),
-          ]);
-          if (
-            Output.isOutput(fn) ||
-            args.some(Output.isOutput) ||
-            Output.isOutput(thisType)
-          ) {
-            // if any of the arguments are outputs, we should assume it has changed
-            return expr;
-          }
-          return fn.bind(thisType)(...expr.args);
-        } else if (Output.isMapArrayExpr(expr)) {
-          const upstream: any[] = yield* resolveOutput(expr.expr);
-          return Output.isOutput(upstream)
-            ? expr
-            : yield* Effect.all(
-                upstream.map(
-                  Effect.fn(function* (item: any, index: number) {
-                    if (Output.isOutput(item)) {
-                      return item;
-                    } else {
-                      const output = expr.f(item, Output.literal(index));
-                      if (Output.isOutput(output)) {
-                        return yield* resolveOutput(
-                          output as Output.Expr<any>,
-                        ) as ResolveEffect<any>;
-                      } else {
-                        return output;
-                      }
-                    }
-                  }),
-                ),
-              );
-        } else if (Output.isFlatMapArrayExpr(expr)) {
-          const upstream: any[] = yield* resolveOutput(expr.expr);
-          return Output.isOutput(upstream)
-            ? expr
-            : (yield* Effect.all(
-                upstream.map(
-                  Effect.fn(function* (item: any, index: number) {
-                    if (Output.isOutput(item)) {
-                      return item;
-                    } else {
-                      const output = expr.f(item, Output.literal(index));
-                      if (Output.isOutput(output)) {
-                        return yield* resolveOutput(
-                          output as Output.Expr<any>,
-                        ) as ResolveEffect<any>;
-                      } else {
-                        return yield* Effect.all(
-                          output.map((item) =>
-                            Output.isOutput(item)
-                              ? resolveOutput(item as Output.Expr<any>)
-                              : Effect.succeed(item),
-                          ),
-                        );
-                      }
-                    }
-                  }),
-                ),
-              )).flat();
         }
         return yield* Effect.die(new Error("Not implemented yet"));
       });
@@ -453,133 +398,122 @@ export const plan = <
       return {};
     };
 
-    const resourceGraph =
-      phase === "update"
-        ? (Object.fromEntries(
-            (yield* Effect.all(
-              resources
-                .flatMap((resource) => [
-                  ...(isService(resource)
-                    ? resource.props.bindings.capabilities.map(
-                        (cap: Capability) => cap.resource as Resource,
-                      )
-                    : []),
-                  ...Object.values(resolveUpstream(resource.props)),
-                  resource,
-                ])
-                .filter(
-                  (node, i, arr) =>
-                    arr.findIndex((n) => n.id === node.id) === i,
+    const resourceGraph = Object.fromEntries(
+      (yield* Effect.all(
+        resources
+          .flatMap((resource) => [
+            ...(isService(resource)
+              ? resource.props.bindings.capabilities.map(
+                  (cap: Capability) => cap.resource as Resource,
                 )
-                .map(
-                  Effect.fn(function* (node) {
-                    const id = node.id;
-                    const resource = node as Resource & {
-                      provider: ResourceTags<
-                        Resource<string, string, any, any>
-                      >;
-                    };
-                    const news = yield* resolveInput(resource.props);
+              : []),
+            ...Object.values(resolveUpstream(resource.props)),
+            resource,
+          ])
+          .filter(
+            (node, i, arr) => arr.findIndex((n) => n.id === node.id) === i,
+          )
+          .map(
+            Effect.fn(function* (node) {
+              const id = node.id;
+              const resource = node as Resource & {
+                provider: ResourceTags<Resource<string, string, any, any>>;
+              };
+              const news = yield* resolveInput(resource.props);
 
-                    const oldState = yield* state.get(id);
-                    const provider = yield* resource.provider.tag;
+              const oldState = yield* state.get(id);
+              const provider = yield* resource.provider.tag;
 
-                    const bindings = isService(node)
-                      ? yield* diffBindings({
-                          oldState,
-                          bindings: (
-                            node.props.bindings as unknown as {
-                              bindings: AnyBinding[];
-                            }
-                          ).bindings,
-                          target: {
-                            id: node.id,
-                            props: node.props,
-                            oldAttr: oldState?.output,
-                            oldProps: oldState?.props,
-                          },
-                        })
-                      : []; // TODO(sam): return undefined instead of empty array
+              const bindings = isService(node)
+                ? yield* diffBindings({
+                    oldState,
+                    bindings: (
+                      node.props.bindings as unknown as {
+                        bindings: AnyBinding[];
+                      }
+                    ).bindings,
+                    target: {
+                      id: node.id,
+                      props: node.props,
+                      oldAttr: oldState?.output,
+                      oldProps: oldState?.props,
+                    },
+                  })
+                : []; // TODO(sam): return undefined instead of empty array
 
-                    if (
-                      oldState === undefined ||
-                      oldState.status === "creating"
-                    ) {
-                      return Node<Create<Resource>>({
-                        action: "create",
-                        news,
-                        provider,
-                        resource,
-                        bindings,
-                        // phantom
-                        attributes: undefined!,
-                      });
-                    }
+              if (oldState === undefined || oldState.status === "creating") {
+                return Node<Create<Resource>>({
+                  action: "create",
+                  news,
+                  provider,
+                  resource,
+                  bindings,
+                  // phantom
+                  attributes: undefined!,
+                });
+              }
 
-                    const diff = provider.diff
-                      ? yield* (() => {
-                          const diff = provider.diff({
-                            id,
-                            olds: oldState.props,
-                            news,
-                            output: oldState.output,
-                          });
-                          return Effect.isEffect(diff)
-                            ? diff
-                            : Effect.succeed(diff);
-                        })()
-                      : undefined;
+              const diff = provider.diff
+                ? yield* (() => {
+                    const diff = provider.diff({
+                      id,
+                      olds: oldState.props,
+                      news,
+                      output: oldState.output,
+                    });
+                    return Effect.isEffect(diff) ? diff : Effect.succeed(diff);
+                  })()
+                : undefined;
 
-                    if (!diff && arePropsChanged(oldState, news)) {
-                      return Node<Update<Resource>>({
-                        action: "update",
-                        olds: oldState.props,
-                        news,
-                        output: oldState.output,
-                        provider,
-                        resource,
-                        bindings,
-                        // phantom
-                        attributes: undefined!,
-                      });
-                    } else if (diff?.action === "replace") {
-                      return Node<Replace<Resource>>({
-                        action: "replace",
-                        olds: oldState.props,
-                        news,
-                        output: oldState.output,
-                        provider,
-                        resource,
-                        bindings,
-                        // phantom
-                        attributes: undefined!,
-                      });
-                    } else if (diff?.action === "update") {
-                      return Node<Update<Resource>>({
-                        action: "update",
-                        olds: oldState.props,
-                        news,
-                        output: oldState.output,
-                        provider,
-                        resource,
-                        bindings,
-                        // phantom
-                        attributes: undefined!,
-                      });
-                    } else {
-                      return Node<NoopUpdate<Resource>>({
-                        action: "noop",
-                        resource,
-                        bindings,
-                        // phantom
-                        attributes: undefined!,
-                      });
-                    }
-                  }),
-                ),
-            )).map((update) => [update.resource.id, update]),
-          ) as Plan["resources"])
-        : ({} as Plan["resources"]);
+              if (!diff && arePropsChanged(oldState, news)) {
+                return Node<Update<Resource>>({
+                  action: "update",
+                  olds: oldState.props,
+                  news,
+                  output: oldState.output,
+                  provider,
+                  resource,
+                  bindings,
+                  // phantom
+                  attributes: undefined!,
+                });
+              } else if (diff?.action === "replace") {
+                return Node<Replace<Resource>>({
+                  action: "replace",
+                  olds: oldState.props,
+                  news,
+                  output: oldState.output,
+                  provider,
+                  resource,
+                  bindings,
+                  // phantom
+                  attributes: undefined!,
+                });
+              } else if (diff?.action === "update") {
+                return Node<Update<Resource>>({
+                  action: "update",
+                  olds: oldState.props,
+                  news,
+                  output: oldState.output,
+                  provider,
+                  resource,
+                  bindings,
+                  // phantom
+                  attributes: undefined!,
+                });
+              } else {
+                return Node<NoopUpdate<Resource>>({
+                  action: "noop",
+                  resource,
+                  bindings,
+                  // phantom
+                  attributes: undefined!,
+                });
+              }
+            }),
+          ),
+      )).map((update) => [update.resource.id, update]),
+    ) as IPlan["resources"];
 
     const deletions = Object.fromEntries(
       (yield* Effect.all(
@@ -611,7 +545,6 @@ export const plan = <
                   bindings: [],
                   resource: {
                     id: id,
-                    parent: undefined,
                     type: oldState.type,
                     attr: oldState.output,
                     props: oldState.props,
@@ -641,24 +574,10 @@ export const plan = <
     }
 
     return {
-      phase,
       resources: resourceGraph,
       deletions,
-    } satisfies Plan as Plan;
-  }) as any as Effect.Effect<
-    {
-      phase: Phase;
-      resources: {
-        [ID in keyof ResourceGraph]: ResourceGraph[ID];
-      };
-      deletions: {
-        [id in Exclude<string, keyof ResourceGraph>]?: Delete<Resource>;
-      };
-    },
-    never,
-    BoundTags | State
-  >;
-};
+    } satisfies IPlan as IPlan;
+  }) as any;
 
 class DeleteResourceHasDownstreamDependencies extends Data.TaggedError(
   "DeleteResourceHasDownstreamDependencies",

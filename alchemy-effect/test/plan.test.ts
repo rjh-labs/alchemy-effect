@@ -1,20 +1,18 @@
-import * as Effect from "effect/Effect";
+import type { Input, InputProps } from "@/input";
 import * as Output from "@/output";
-import { attest } from "@ark/attest";
+import { plan, type TransitiveResources } from "@/plan";
+import * as State from "@/state";
+import { test } from "@/test";
+import { describe, expect } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import {
   Bucket,
+  Function,
   Queue,
   TestLayers,
-  Function,
   TestResource,
   type TestResourceProps,
 } from "./test.resources";
-import { it, expect, describe } from "@effect/vitest";
-import { $ } from "@/index";
-import { plan } from "@/plan";
-import { test } from "@/test";
-import * as State from "@/state";
-import type { Input } from "@/input";
 
 const _test = test;
 
@@ -39,13 +37,7 @@ test(
     state: State.inMemory({}),
   },
   Effect.gen(function* () {
-    expect(
-      yield* plan({
-        phase: "update",
-        resources: [MyBucket, MyQueue],
-      }),
-    ).toMatchObject({
-      phase: "update",
+    expect(yield* plan(MyBucket, MyQueue)).toMatchObject({
       resources: {
         MyBucket: {
           action: "create",
@@ -90,13 +82,7 @@ test(
     }),
   },
   Effect.gen(function* () {
-    expect(
-      yield* plan({
-        phase: "update",
-        resources: [MyBucket, MyQueue],
-      }),
-    ).toMatchObject({
-      phase: "update",
+    expect(yield* plan(MyBucket, MyQueue)).toMatchObject({
       resources: {
         MyBucket: {
           action: "noop",
@@ -150,13 +136,7 @@ test(
     }),
   },
   Effect.gen(function* () {
-    expect(
-      yield* plan({
-        phase: "update",
-        resources: [MyQueue],
-      }),
-    ).toMatchObject({
-      phase: "update",
+    expect(yield* plan(MyQueue)).toMatchObject({
       resources: {
         MyQueue: {
           action: "noop",
@@ -188,13 +168,7 @@ test(
 test(
   "lazy Output queue.queueUrl to Function.env",
   Effect.gen(function* () {
-    expect(
-      yield* plan({
-        phase: "update",
-        resources: [MyFunction],
-      }),
-    ).toMatchObject({
-      phase: "update",
+    expect(yield* plan(MyFunction)).toMatchObject({
       resources: {
         MyFunction: {
           action: "create",
@@ -232,13 +206,7 @@ test(
     }),
   },
   Effect.gen(function* () {
-    expect(
-      yield* plan({
-        phase: "update",
-        resources: [MyFunction],
-      }),
-    ).toMatchObject({
-      phase: "update",
+    expect(yield* plan(MyFunction)).toMatchObject({
       resources: {
         MyFunction: {
           action: "create",
@@ -279,7 +247,6 @@ describe("Outputs should resolve to old values", () => {
     stringArray: ["test-string"],
   }) {}
   const expected = (news: TestResourceProps) => ({
-    phase: "update",
     resources: {
       A: {
         action: "noop",
@@ -296,13 +263,10 @@ describe("Outputs should resolve to old values", () => {
     deletions: expect.emptyObject(),
   });
 
-  const createPlan = (props: Input<TestResourceProps>) =>
-    plan({
-      phase: "update",
-      resources: [class B extends TestResource("B", props) {}],
-    });
+  const createPlan = (props: InputProps<TestResourceProps>) =>
+    plan(class B extends TestResource("B", props) {});
 
-  const test = <const I extends Input<TestResourceProps>>(
+  const test = <const I extends InputProps<TestResourceProps>>(
     description: string,
     input: I,
     output: Input.Resolve<I>,
@@ -348,54 +312,6 @@ describe("Outputs should resolve to old values", () => {
   );
 
   test(
-    "string.toUpperCase()",
-    {
-      string: Output.of(A).string.toUpperCase(),
-    },
-    {
-      string: "TEST-STRING",
-    },
-  );
-
-  test(
-    "stringArray.map(string => string.toUpperCase())",
-    {
-      string: "test-string",
-      stringArray: Output.of(A).stringArray.map((string) =>
-        string.toUpperCase(),
-      ),
-    },
-    {
-      string: "test-string",
-      stringArray: ["TEST-STRING"],
-    },
-  );
-
-  test(
-    "stringArray.map(string => Output.of(A).string)",
-    {
-      string: "test-string",
-      stringArray: Output.of(A).stringArray.map(
-        (string) => Output.of(A).string,
-      ),
-    },
-    {
-      string: "test-string",
-      stringArray: ["test-string"],
-    },
-  );
-
-  test(
-    "stringArray[0].toUpperCase()",
-    {
-      string: Output.of(A).stringArray[0].toUpperCase(),
-    },
-    {
-      string: "TEST-STRING",
-    },
-  );
-
-  test(
     "stringArray[0].toUpperCase()",
     {
       string: Output.of(A).stringArray[0].apply((string) =>
@@ -406,42 +322,6 @@ describe("Outputs should resolve to old values", () => {
       string: "TEST-STRING",
     },
   );
-
-  test(
-    "stringArray.flatMap(string => [string.toUpperCase()])",
-    {
-      stringArray: Output.of(A).stringArray.flatMap((string) => [
-        string.toUpperCase(),
-      ]),
-    },
-    {
-      stringArray: ["TEST-STRING"],
-    },
-  );
-
-  test(
-    "stringArray.flatMap(string => Output.of(A).string)",
-    {
-      stringArray: Output.of(A).stringArray.flatMap((string) => [
-        Output.of(A).string,
-      ]),
-    },
-    {
-      stringArray: ["test-string"],
-    },
-  );
-
-  test(
-    "stringArray.flatMap(string => Output.of(A).stringArray.map(string => string.toUpperCase()))",
-    {
-      stringArray: Output.of(A).stringArray.flatMap((string) =>
-        Output.of(A).stringArray.map((string) => string.toUpperCase()),
-      ),
-    },
-    {
-      stringArray: ["TEST-STRING"],
-    },
-  );
 });
 
 describe("stable properties should not cause downstream changes", () => {
@@ -449,7 +329,7 @@ describe("stable properties should not cause downstream changes", () => {
     string: "test-string",
   }) {}
 
-  const test = (description: string, input: Input<TestResourceProps>) => {
+  const test = (description: string, input: InputProps<TestResourceProps>) => {
     class B extends TestResource("B", input) {}
 
     _test(
@@ -486,13 +366,7 @@ describe("stable properties should not cause downstream changes", () => {
         }),
       },
       Effect.gen(function* () {
-        expect(
-          yield* plan({
-            phase: "update",
-            resources: [A, B],
-          }),
-        ).toMatchObject({
-          phase: "update",
+        expect(yield* plan(A, B)).toMatchObject({
           resources: {
             A: {
               action: "update",
@@ -518,10 +392,6 @@ describe("stable properties should not cause downstream changes", () => {
     string: Output.of(A).stableString.apply((string) => string.toUpperCase()),
   });
 
-  test("A.stableString.toUpperCase()", {
-    string: Output.of(A).stableString.toUpperCase(),
-  });
-
   test(
     "A.stableString.effect((string) => Effect.succeed(string.toUpperCase()))",
     {
@@ -539,20 +409,6 @@ describe("stable properties should not cause downstream changes", () => {
     string: Output.of(A).stableArray[0],
   });
 
-  test("A.stableArray[0].toUpperCase()", {
-    string: Output.of(A).stableArray[0].toUpperCase(),
-  });
-
-  test("A.stableArray.map(string => string.toUpperCase())[0]", {
-    string: Output.of(A).stableArray.map((string) => string.toUpperCase())[0],
-  });
-
-  test("A.stableArray.flatMap(string => [string.toUpperCase()])[0]", {
-    string: Output.of(A).stableArray.flatMap((string) => [
-      string.toUpperCase(),
-    ])[0],
-  });
-
   test("A.stableArray[0].apply((string) => string.toUpperCase())", {
     string: Output.of(A).stableArray[0].apply((string) => string.toUpperCase()),
   });
@@ -567,15 +423,43 @@ describe("stable properties should not cause downstream changes", () => {
   );
 });
 
+const g = Effect.gen(function* () {
+  {
+    const p = yield* plan(MyFunction);
+    p.resources.MyFunction;
+    // transitive dependency detected via outputs
+    p.resources.MyQueue;
+    // TODO(sam): test multiple transitive hops
+  }
+  {
+    class A extends TestResource("A", {}) {}
+    class B extends TestResource("B", {
+      string: Output.of(A).string,
+    }) {}
+    class C extends TestResource("C", {
+      string: Output.of(B).string,
+    }) {}
+    const p = yield* plan(C);
+    p.resources.A;
+    p.resources.B;
+    p.resources.C;
+    // @ts-expect-error
+    p.resources.D;
+
+    // attest(
+    //   yield* plan(C),
+    // );
+
+    // attest.instantiations([3500, "instantiations"]);
+  }
+}).pipe(Effect.provide(TestLayers));
+
 describe("type-only tests", () => {
   test(
     "infer transitive dependencies via outputs",
     Effect.gen(function* () {
       {
-        const p = yield* plan({
-          phase: "update",
-          resources: [MyFunction],
-        });
+        const p = yield* plan(MyFunction);
         p.resources.MyFunction;
         // transitive dependency detected via outputs
         p.resources.MyQueue;
@@ -589,10 +473,8 @@ describe("type-only tests", () => {
         class C extends TestResource("C", {
           string: Output.of(B).string,
         }) {}
-        const p = yield* plan({
-          phase: "update",
-          resources: [C],
-        });
+        const p = yield* plan(C);
+
         p.resources.A;
         p.resources.B;
         p.resources.C;
@@ -600,10 +482,7 @@ describe("type-only tests", () => {
         p.resources.D;
 
         // attest(
-        //   yield* plan({
-        //     phase: "update",
-        //     resources: [C],
-        //   }),
+        //   yield* plan(C),
         // );
 
         // attest.instantiations([3500, "instantiations"]);

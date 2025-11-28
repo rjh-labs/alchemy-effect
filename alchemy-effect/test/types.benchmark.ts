@@ -1,20 +1,19 @@
+import * as Alchemy from "@/index";
+
+import * as DynamoDB from "@/aws/dynamodb";
+import * as Lambda from "@/aws/lambda";
+import * as SQS from "@/aws/sqs";
+import { $, type, Policy } from "@/index";
 import { bench } from "@ark/attest";
-import { $ } from "@/index";
 import { FetchHttpClient } from "@effect/platform";
 import { NodeContext } from "@effect/platform-node";
-import * as Alchemy from "alchemy-effect";
 import * as AWS from "alchemy-effect/aws";
 import * as CLI from "alchemy-effect/cli";
 import { Layer, Logger } from "effect";
 import * as Effect from "effect/Effect";
-import * as Lambda from "@/aws/lambda";
+import * as S from "effect/Schema";
 
-// Combinatorial template literals often result in expensive types- let's benchmark this one!
-type makeComplexType<s extends string> = s extends `${infer head}${infer tail}`
-  ? head | tail | makeComplexType<tail>
-  : s;
-
-bench("bench type", () => {
+bench("Lambda.serve with no bindings", () => {
   class Api extends Lambda.serve("Api", {
     fetch: Effect.fn(function* (event) {
       return {
@@ -25,8 +24,117 @@ bench("bench type", () => {
     main: import.meta.filename,
     bindings: $(),
   }) {}
+}).types([11, "instantiations"]);
 
-  // select your underlying platform
+bench("Lambda.serve with a SQS.Queue binding", () => {
+  class Queue extends SQS.Queue("Queue", {
+    fifo: true,
+    schema: S.String,
+  }) {}
+  class Api extends Lambda.serve("Api", {
+    fetch: Effect.fn(function* (event) {
+      yield* SQS.sendMessage(Queue, "hello").pipe(
+        Effect.catchAll(() => Effect.void),
+      );
+      return {
+        body: JSON.stringify({ message: "Hello, world!" }),
+      };
+    }),
+  })({
+    main: import.meta.filename,
+    bindings: $(SQS.SendMessage(Queue)),
+  }) {}
+}).types([19, "instantiations"]);
+
+bench("Lambda.serve with a DynamoDB.Table binding", () => {
+  class Table extends DynamoDB.Table("Table", {
+    partitionKey: "id",
+    sortKey: "name",
+    items: type<{ id: string; name: string }>,
+    attributes: {
+      id: S.String,
+      name: S.String,
+    },
+  }) {}
+
+  class Api extends Lambda.serve("Api", {
+    fetch: Effect.fn(function* (event) {
+      const item = yield* DynamoDB.getItem({
+        table: Table,
+        key: {
+          id: "1",
+          name: "hello",
+        },
+      }).pipe(Effect.catchAll(() => Effect.void));
+      return {
+        body: JSON.stringify(item?.Item),
+      };
+    }),
+  })({
+    main: import.meta.filename,
+    bindings: $(
+      DynamoDB.GetItem(Table, {
+        leadingKeys: $.anyOf("1"),
+      }),
+    ),
+  }) {}
+}).types([19, "instantiations"]);
+
+bench("plan apply a Lambda.serve with a DynamoDB.Table binding", () => {
+  const platform = Layer.mergeAll(
+    NodeContext.layer,
+    FetchHttpClient.layer,
+    Logger.pretty,
+  );
+
+  class Table extends DynamoDB.Table("Table", {
+    partitionKey: "id",
+    sortKey: "name",
+    items: type<{ id: string; name: string }>,
+    attributes: {
+      id: S.String,
+      name: S.String,
+    },
+  }) {}
+
+  class Api extends Lambda.serve("Api", {
+    fetch: Effect.fn(function* (event) {
+      const item = yield* DynamoDB.getItem({
+        table: Table,
+        key: {
+          id: "1",
+          name: "hello",
+        },
+      }).pipe(Effect.catchAll(() => Effect.void));
+      return {
+        body: JSON.stringify(item?.Item),
+      };
+    }),
+  })({
+    main: import.meta.filename,
+    bindings: $(
+      DynamoDB.GetItem(Table, {
+        leadingKeys: $.anyOf("1"),
+      }),
+    ),
+  }) {}
+
+  Alchemy.apply(Api).pipe(
+    Effect.tap((stack) =>
+      Effect.log({
+        url: stack?.Api.functionUrl,
+        // @ts-expect-error - does not exist in stack
+        queueUrl: stack?.Messages.queueUrl,
+      }),
+    ),
+  );
+}).types([363, "instantiations"]);
+
+bench("AWS.providers", () => {
+  const provider = AWS.providers;
+}).types([40419, "instantiations"]);
+
+bench("platform and provider layers", () => {
   const platform = Layer.mergeAll(
     NodeContext.layer,
     FetchHttpClient.layer,
@@ -36,7 +144,6 @@ bench("bench type", () => {
   // select your providers
   const providers = Layer.mergeAll(AWS.live);
 
-  // override alchemy state store, CLI/reporting and dotAlchemy
   const alchemy = Layer.mergeAll(
     Alchemy.State.localFs,
     CLI.layer,
@@ -44,41 +151,72 @@ bench("bench type", () => {
     Alchemy.dotAlchemy,
   );
 
-  // define your app
   const app = Alchemy.app({ name: "my-app", stage: "dev" });
 
   const layers = Layer.provideMerge(
     Layer.provideMerge(providers, alchemy),
     Layer.mergeAll(platform, app),
   );
+}).types([61897, "instantiations"]);
 
-  function _() {
-    Alchemy.apply({
-      phase: process.argv.includes("--destroy") ? "destroy" : "update",
-      resources: [Api, Consumer],
-    }).pipe(
-      Effect.provide(layers),
-      Effect.tap((stack) =>
-        Effect.log({
-          url: stack?.Consumer.functionUrl,
-          queueUrl: stack?.Messages.queueUrl,
-        }),
-      ),
-      Effect.runPromiseExit,
-    );
-  }
+class Table extends DynamoDB.Table("Table", {
+  partitionKey: "id",
+  sortKey: "name",
+  items: type<{ id: string; name: string }>,
+  attributes: {
+    id: S.String,
+    name: S.String,
+  },
+}) {}
 
-  // This is an inline snapshot that will be populated or compared when you run the file
-}).types([169, "instantiations"]);
+// TODO(sam): why is this 0?
+class Api extends Lambda.serve("Api", {
+  fetch: Effect.fn(function* (event) {
+    const item = yield* DynamoDB.getItem({
+      table: Table,
+      key: {
+        id: "1",
+        name: "hello",
+      },
+    }).pipe(Effect.catchAll(() => Effect.void));
+    return {
+      body: JSON.stringify(item?.Item),
+    };
+  }),
+})({
+  main: import.meta.filename,
+  bindings: $(
+    DynamoDB.GetItem(Table, {
+      leadingKeys: undefined! as Policy.AnyOf<"1">,
+    }),
+  ),
+}) {}
 
-// bench(
-//   "bench runtime and type",
-//   () => {
-//     return {} as makeComplexType<"antidisestablishmentarianism">;
-//   },
-//   {},
-// )
-//   // Average time it takes the function execute
-//   .mean([2, "ms"])
-//   // Seems like our type is O(n) with respect to the length of the input- not bad!
-//   .types([337, "instantiations"]);
+// TODO(sam): why is this 0? I don't trust it
+bench("plan", () => {
+  const plan = Alchemy.plan(Api);
+}).types([19, "instantiations"]);
+
+bench("apply", () => {
+  Alchemy.apply(Api).pipe(
+    Effect.tap((stack) =>
+      Effect.log({
+        url: stack?.Api.functionUrl,
+        // @ts-expect-error - does not exist in stack
+        queueUrl: stack?.Messages.queueUrl,
+      }),
+    ),
+  );
+}).types([30, "instantiations"]);
+
+bench("applyPlan", () => {
+  Alchemy.applyPlan(Alchemy.plan(Api)).pipe(
+    Effect.tap((stack) =>
+      Effect.log({
+        url: stack?.Api.functionUrl,
+        // @ts-expect-error - does not exist in stack
+        queueUrl: stack?.Messages.queueUrl,
+      }),
+    ),
+  );
+}).types([30, "instantiations"]);

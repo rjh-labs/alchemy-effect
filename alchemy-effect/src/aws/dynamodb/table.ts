@@ -9,11 +9,8 @@ import type * as DynamoDB from "itty-aws/dynamodb";
 
 export interface TableProps<
   Items extends any = any,
-  Attributes extends AttributesSchema<
-    Items,
-    PartitionKey,
-    SortKey
-  > = AttributesSchema<Items, keyof Items, keyof Items | undefined>,
+  Attributes extends AttributesSchema<Items, PartitionKey, SortKey> =
+    AttributesSchema<Items, keyof Items, keyof Items | undefined>,
   PartitionKey extends keyof Items = keyof Items,
   SortKey extends keyof Items | undefined = keyof Items | undefined,
 > {
@@ -21,15 +18,15 @@ export interface TableProps<
   attributes: Attributes;
   partitionKey: PartitionKey;
   sortKey?: SortKey;
-  tableName?: Input<string | undefined>;
-  billingMode?: Input<DynamoDB.BillingMode>;
-  deletionProtectionEnabled?: Input<boolean>;
-  onDemandThroughput?: Input<DynamoDB.OnDemandThroughput>;
-  provisionedThroughput?: Input<DynamoDB.ProvisionedThroughput>;
-  sseSpecification?: Input<DynamoDB.SSESpecification>;
-  timeToLiveSpecification?: Input<DynamoDB.TimeToLiveSpecification>;
-  warmThroughput?: Input<DynamoDB.WarmThroughput>;
-  tableClass?: Input<DynamoDB.TableClass>;
+  tableName?: string | undefined;
+  billingMode?: DynamoDB.BillingMode;
+  deletionProtectionEnabled?: boolean;
+  onDemandThroughput?: DynamoDB.OnDemandThroughput;
+  provisionedThroughput?: DynamoDB.ProvisionedThroughput;
+  sseSpecification?: DynamoDB.SSESpecification;
+  timeToLiveSpecification?: DynamoDB.TimeToLiveSpecification;
+  warmThroughput?: DynamoDB.WarmThroughput;
+  tableClass?: DynamoDB.TableClass;
 }
 
 export interface TableAttrs<Props extends Input.Resolve<TableProps>> {
@@ -80,11 +77,12 @@ export interface Table<
   ID extends string = string,
   Props extends TableProps<any, any, any, any> = TableProps<any, any, any, any>,
 > extends Resource<
-    "AWS.DynamoDB.Table",
-    ID,
-    Props,
-    TableAttrs<Input.Resolve<Props>>
-  > {}
+  "AWS.DynamoDB.Table",
+  ID,
+  Props,
+  TableAttrs<Input.Resolve<Props>>,
+  Table
+> {}
 
 export declare namespace Table {
   export type PartitionKey<T extends Table> = T["props"]["partitionKey"];

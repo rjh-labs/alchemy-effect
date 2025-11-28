@@ -6,29 +6,28 @@ import type { RegionID } from "../region.ts";
 import type { VpcId } from "./index.ts";
 
 export const Subnet = Resource<{
-  <const ID extends string, const Props extends Input<SubnetProps>>(
+  <const ID extends string, const Props extends SubnetProps>(
     id: ID,
     props: Props,
   ): Subnet<ID, Props>;
 }>("AWS.EC2.Subnet");
 
-type _ = Input<SubnetProps>["enableResourceNameDnsAAAARecordOnLaunch"];
-
 export interface Subnet<
   ID extends string = string,
-  Props extends Input<SubnetProps> = Input<SubnetProps>,
+  Props extends SubnetProps = SubnetProps,
 > extends Resource<
-    "AWS.EC2.Subnet",
-    ID,
-    Props,
-    SubnetAttrs<Input.Resolve<Props>>
-  > {}
+  "AWS.EC2.Subnet",
+  ID,
+  Props,
+  SubnetAttrs<Input.Resolve<Props>>,
+  Subnet
+> {}
 
 export interface SubnetProps {
   /**
    * The VPC to create the subnet in.
    */
-  vpcId: VpcId;
+  vpcId: Input<VpcId>;
 
   /**
    * The IPv4 network range for the subnet, in CIDR notation.
@@ -66,7 +65,7 @@ export interface SubnetProps {
   /**
    * The ID of an IPv6 IPAM pool which will be used to allocate this subnet an IPv6 CIDR.
    */
-  ipv6IpamPoolId?: string;
+  ipv6IpamPoolId?: Input<string>;
 
   /**
    * The netmask length of the IPv6 CIDR you want to allocate to this subnet from an IPAM pool.
@@ -113,7 +112,7 @@ export interface SubnetProps {
    * Tags to assign to the subnet.
    * These will be merged with alchemy auto-tags (alchemy::app, alchemy::stage, alchemy::id).
    */
-  tags?: Record<string, string>;
+  tags?: Record<string, Input<string>>;
 }
 
 export type SubnetId<ID extends string = string> = `subnet-${ID}`;

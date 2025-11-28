@@ -49,6 +49,7 @@ export type WorkerAttr<Props extends WorkerProps<any>> = {
 };
 
 export interface Worker extends Runtime<WorkerType> {
+  base: Worker;
   props: WorkerProps<any>;
   attr: WorkerAttr<Extract<this["props"], WorkerProps<any>>>;
   binding: {

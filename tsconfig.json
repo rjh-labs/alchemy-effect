@@ -8,11 +8,11 @@
     { "path": "./examples/cloudflare/tsconfig.json" },
   ],
   "compilerOptions": {
-    "plugins": [
-      // ... other LSPs (if any) and as last
-      {
-        "name": "@effect/language-service"
-      }
-    ]
+    // "plugins": [
+    //   // ... other LSPs (if any) and as last
+    //   {
+    //     "name": "@effect/language-service"
+    //   }
+    // ]
   }
 }

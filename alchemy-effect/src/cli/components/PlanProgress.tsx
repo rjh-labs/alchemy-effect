@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { Box, Text } from "ink";
 import type { ApplyStatus, StatusChangeEvent } from "../../event.ts";
-import type { Plan } from "../../plan.ts";
+import type { IPlan } from "../../plan.ts";
 import type { ProgressEventSource } from "../progress.tsx";
 import { useGlobalSpinner } from "../spinner.ts";
 
@@ -15,7 +15,7 @@ interface PlanTask
 
 export interface PlanProgressProps {
   source: ProgressEventSource;
-  plan: Plan;
+  plan: IPlan;
 }
 
 export function PlanProgress(props: PlanProgressProps): React.JSX.Element {

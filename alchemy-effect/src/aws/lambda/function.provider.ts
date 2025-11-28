@@ -14,6 +14,7 @@ import { App } from "../../app.ts";
 import { DotAlchemy } from "../../dot-alchemy.ts";
 import type { ProviderService } from "../../provider.ts";
 import { createTagger, createTagsList, hasTags } from "../../tags.ts";
+import { isUnknown } from "../../unknown.ts";
 import { Account } from "../account.ts";
 import * as IAM from "../iam.ts";
 import { Region } from "../region.ts";
@@ -157,7 +158,10 @@ export const functionProvider = () =>
 
       const bundleCode = Effect.fn(function* (
         id: string,
-        props: FunctionProps<any>,
+        props: {
+          main: string;
+          handler?: string;
+        },
       ) {
         const handler = props.handler ?? "default";
         let file = path.relative(process.cwd(), props.main);
@@ -458,7 +462,17 @@ export const functionProvider = () =>
             olds.url !== news.url
           ) {
             return { action: "replace" };
-          } else if (output.code.hash !== (yield* bundleCode(id, news)).hash) {
+          }
+          if (isUnknown(news.main) || isUnknown(news.handler)) {
+            return { action: "update" };
+          }
+          if (
+            output.code.hash !==
+            (yield* bundleCode(id, {
+              main: news.main,
+              handler: news.handler,
+            })).hash
+          ) {
             // code changed
             return { action: "update" };
           }

@@ -15,7 +15,13 @@ export const queueProvider = () =>
       const app = yield* App;
       const region = yield* Region;
       const accountId = yield* Account;
-      const createQueueName = (id: string, props: QueueProps) =>
+      const createQueueName = (
+        id: string,
+        props: {
+          queueName?: string | undefined;
+          fifo?: boolean;
+        },
+      ) =>
         props.queueName ??
         `${app.name}-${id}-${app.stage}${props.fifo ? ".fifo" : ""}`;
       const createAttributes = (props: QueueProps) => ({

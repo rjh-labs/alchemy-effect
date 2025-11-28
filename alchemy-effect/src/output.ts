@@ -1,13 +1,9 @@
-import * as Effect from "effect/Effect";
-import { pipe, Effectable, Utils } from "effect";
-import type { Resource, AnyResource } from "./resource.ts";
-import type { From } from "./policy.ts";
-import { Table } from "./aws/dynamodb/table.ts";
+import { pipe } from "effect";
 import * as Data from "effect/Data";
-import type { Pipeable } from "effect/Pipeable";
-import { isPrimitive, type Primitive } from "./data.ts";
-import type { Input, Inputs } from "./input.ts";
-import { assertNeverOrDie } from "./assert-never.ts";
+import * as Effect from "effect/Effect";
+import { isPrimitive } from "./data.ts";
+import type { From } from "./policy.ts";
+import type { AnyResource, Resource } from "./resource.ts";
 
 // a special symbol only used at runtime to probe the Output proxy
 const ExprSymbol = Symbol.for("alchemy/Expr");
@@ -38,83 +34,17 @@ export declare namespace Output {
   export type Of<A, Src extends Resource = any, Req = never> = [
     Extract<A, object>,
   ] extends [never]
-    ? [A] extends [string] | [string | undefined]
-      ? String<Extract<A, string | undefined>, Src, Req>
-      : [A] extends [number] | [number | undefined]
-        ? Number<Extract<A, number | undefined>, Src, Req>
-        : [A] extends [bigint] | [bigint | undefined]
-          ? BigInt<Extract<A, bigint | undefined>, Src, Req>
-          : Output<A, Src, Req>
-    : [A] extends [(...args: infer Args) => infer Return]
-      ? (...args: Args) => Output.Of<Awaited<Return>, Src, Req>
-      : [Extract<A, any[]>] extends [never]
-        ? Object<
-            {
-              [attr in keyof A]: A[attr];
-            },
-            Src,
-            Req
-          >
-        : Array<Extract<A, any[]>, Src, Req>;
+    ? Output<A, Src, Req>
+    : [Extract<A, any[]>] extends [never]
+      ? Object<
+          {
+            [attr in keyof A]: A[attr];
+          },
+          Src,
+          Req
+        >
+      : Array<Extract<A, any[]>, Src, Req>;
 }
-
-export type String<
-  Val extends string | undefined = string | undefined,
-  Src extends Resource = AnyResource,
-  Req = never,
-> = Output<Val, Src, Req> & {
-  [method in keyof string]: string[method] extends (
-    ...args: infer A extends any[]
-  ) => infer Return
-    ? <args extends Args<A>>(
-        ...args: args
-      ) => Output.Of<
-        Return | Extract<Val, undefined>,
-        Extract<args[number], Output>["src"] | Src,
-        Extract<args[number], Output>["req"] | Req
-      >
-    : never;
-};
-
-export type Number<
-  Val extends number | undefined = number | undefined,
-  Src extends Resource = AnyResource,
-  Req = never,
-> = Output<Val, Src, Req> & {
-  [method in keyof number]: number[method] extends (
-    ...args: infer A extends any[]
-  ) => infer Return
-    ? <args extends Args<A>>(
-        ...args: args
-      ) => Output.Of<
-        Return | Extract<Val, undefined>,
-        Extract<args[number], Output>["src"] | Src,
-        Extract<args[number], Output>["req"] | Req
-      >
-    : never;
-};
-
-export type BigInt<
-  Val extends bigint | undefined = bigint | undefined,
-  Src extends Resource = AnyResource,
-  Req = never,
-> = Output<Val, Src, Req> & {
-  [method in keyof bigint]: bigint[method] extends (
-    ...args: infer A extends any[]
-  ) => infer Return
-    ? <args extends Args<A>>(
-        ...args: args
-      ) => Output.Of<
-        Return | Extract<Val, undefined>,
-        Extract<args[number], Output>["src"] | Src,
-        Extract<args[number], Output>["req"] | Req
-      >
-    : never;
-};
-
-type Args<T extends any[]> = T extends [infer H, ...infer Tail]
-  ? [Input<H>, ...Args<Tail>]
-  : [];
 
 export type Object<A, Src extends Resource, Req = any> = Output<A, Src, Req> & {
   [Prop in keyof Exclude<A, undefined>]-?: Output.Of<
@@ -124,63 +54,12 @@ export type Object<A, Src extends Resource, Req = any> = Output<A, Src, Req> & {
   >;
 };
 
-type Sources<T> =
-  T extends Output<infer A, infer Src, infer Req>
-    ? Src
-    : T extends Primitive
-      ? never
-      : T extends any[]
-        ? ArraySources<T>
-        : T extends object
-          ? {
-              [k in keyof T]: Sources<T[k]>;
-            }[keyof T]
-          : never;
-
-type ArraySources<T extends any[]> = T extends [infer H, ...infer Tail]
-  ? [Sources<H>, ...ArraySources<Tail>]
-  : [];
-
-type _ = unknown extends unknown ? true : false;
-
-type Requirements<T> =
-  T extends Output<infer A, infer Src, infer Req>
-    ? Req
-    : T extends Primitive
-      ? never
-      : T extends any[]
-        ? ArrayRequirements<T>
-        : T extends object
-          ? {
-              [k in keyof T]: Requirements<T[k]>;
-            }[keyof T]
-          : never;
-
-type ArrayRequirements<T extends any[]> = T extends [infer H, ...infer Tail]
-  ? [Requirements<H>, ...ArrayRequirements<Tail>]
-  : [];
-
 export type Array<A extends any[], Src extends Resource, Req = any> = Output<
   A,
   Src,
   Req
 > & {
   [i in Extract<keyof A, number>]: Output.Of<A[i], Src, Req>;
-} & {
-  map<B>(
-    fn: (value: Output.Of<A[number], Src, Req>) => B,
-  ): Array<Input.Resolve<B>[], Src | Sources<B>, Req | Requirements<B>>;
-  flatMap<B, Src2 extends AnyResource = never, Req2 = never>(
-    fn: (value: Output.Of<A[number], Src, Req>) => Output.Of<B[], Src2, Req2>,
-  ): Array<Input.Resolve<B>[], Src | Src2, Req | Req2>;
-  flatMap<B>(
-    fn: (value: Output.Of<A[number], Src, Req>) => B[],
-  ): Array<Input.Resolve<B>[], Src | Sources<B>, Req | Requirements<B>>;
-  filter<Src2 extends AnyResource = never, Req2 = never>(
-    predicate: (
-      value: Output.Of<A[number], Src, Req>,
-    ) => Output<boolean, Src2, Req2> | boolean,
-  ): Array<A, Src | Src2, Req | Req2>;
 };
 
 export const isExpr = (value: any): value is Expr<any> =>
@@ -191,11 +70,8 @@ export const isExpr = (value: any): value is Expr<any> =>
 export type Expr<A = any, Src extends AnyResource = AnyResource, Req = any> =
   | AllExpr<Expr<A, Src, Req>[]>
   | ApplyExpr<any, A, Src, Req>
-  | CallExpr<any, A, Src, Req>
   | EffectExpr<any, A, Src, Req>
   | LiteralExpr<A>
-  | MapArrayExpr<any, A, Src, Req>
-  | FlatMapArrayExpr<any, A, Src, Req>
   | PropExpr<A, keyof A, Src, Req>
   | ResourceExpr<A, Src, Req>;
 
@@ -225,13 +101,9 @@ const proxy = (self: any): any => {
             return new ApplyExpr(self.expr, args[0]);
           } else if (self.identifier === "effect") {
             return new EffectExpr(self.expr, args[0]);
-          } else if (self.identifier === "map") {
-            return new MapArrayExpr(self.expr, args[0]);
-          } else if (self.identifier === "flatMap") {
-            return new FlatMapArrayExpr(self.expr, args[0]);
           }
         }
-        return new CallExpr(proxy, thisArg, args);
+        throw new Error("Not callable");
       },
     },
   );
@@ -326,31 +198,6 @@ export class LiteralExpr<A> extends BaseExpr<A, never> {
   }
 }
 
-export const isItemExpr = <A = any>(node: any): node is ItemExpr<A> =>
-  node.kind === "ItemExpr";
-
-export class ItemExpr<A> extends BaseExpr<A, never> {
-  readonly kind = "ItemExpr";
-  constructor(public readonly expr: Expr<A>) {
-    super();
-    return proxy(this);
-  }
-}
-
-export const isIndexExpr = <A = any>(node: any): node is IndexExpr<A> =>
-  node.kind === "IndexExpr";
-
-export class IndexExpr<A> extends BaseExpr<A, never> {
-  readonly kind = "IndexExpr";
-  constructor(
-    public readonly expr: Expr<A>,
-    public readonly index: Expr<number>,
-  ) {
-    super();
-    return proxy(this);
-  }
-}
-
 //Output.ApplyExpr<any, any, AnyResource, any>
 export const isApplyExpr = <
   In = any,
@@ -404,88 +251,6 @@ export class EffectExpr<
   }
 }
 
-export const isCallExpr = <
-  In = any,
-  Out = any,
-  Src extends AnyResource = AnyResource,
-  Req = any,
->(
-  node: any,
-): node is CallExpr<In, Out, Src, Req> => node.kind === "CallExpr";
-
-export class CallExpr<
-  A,
-  B,
-  Src extends AnyResource,
-  Req = never,
-> extends BaseExpr<B, Src, Req> {
-  readonly kind = "CallExpr";
-  constructor(
-    public readonly expr: Expr<A, Src, Req>,
-    public readonly thisType: Expr,
-    public readonly args: Expr[],
-  ) {
-    super();
-    return proxy(this);
-  }
-}
-
-export const isMapArrayExpr = <
-  In = any,
-  Out = any,
-  Src extends AnyResource = AnyResource,
-  Req = any,
->(
-  node: Output<Out, Src, Req>,
-): node is MapArrayExpr<In, Out, Src, Req> => node.kind === "MapArrayExpr";
-
-export class MapArrayExpr<
-  A,
-  B,
-  Src extends AnyResource,
-  Req = never,
-> extends BaseExpr<B, Src, Req> {
-  readonly kind = "MapArrayExpr";
-  constructor(
-    public readonly expr: Expr<A>,
-    public readonly f: (
-      item: Expr<A>,
-      index: Expr<number>,
-    ) => Expr<B, Src, Req> | B,
-  ) {
-    super();
-    return proxy(this);
-  }
-}
-
-export const isFlatMapArrayExpr = <
-  In = any,
-  Out = any,
-  Src extends AnyResource = AnyResource,
-  Req = any,
->(
-  node: any,
-): node is FlatMapArrayExpr<In, Out, Src, Req> =>
-  node.kind === "FlatMapArrayExpr";
-
-export class FlatMapArrayExpr<
-  A,
-  B,
-  Src extends AnyResource,
-  Req = never,
-> extends BaseExpr<B, Src, Req> {
-  readonly kind = "FlatMapArrayExpr";
-  constructor(
-    public readonly expr: Expr<A>,
-    public readonly f: (
-      item: Expr<A>,
-      index: Expr<number>,
-    ) => Expr<B[], Src, Req> | (B | Expr<B, Src, Req>)[],
-  ) {
-    super();
-    return proxy(this);
-  }
-}
 export const isAllExpr = <Outs extends Expr[] = Expr[]>(
   node: any,
 ): node is AllExpr<Outs> => node.kind === "AllExpr";
@@ -536,31 +301,6 @@ export const evaluate: <A, Upstream extends AnyResource, Req>(
       return expr.value;
     } else if (isApplyExpr(expr)) {
       return expr.f(yield* evaluate(expr.expr, upstream));
-    } else if (isMapArrayExpr(expr)) {
-      return yield* Effect.all(
-        (yield* evaluate(expr.expr, upstream))
-          .map(expr.f)
-          .map((item: any) => evaluate(item, upstream)),
-      );
-    } else if (isFlatMapArrayExpr(expr)) {
-      return yield* Effect.all(
-        (yield* evaluate(expr.expr, upstream))
-          .flatMap(expr.f)
-          .map((item: any) => evaluate(item, upstream)),
-      );
-    } else if (isCallExpr(expr)) {
-      const [fn, args, thisType] = yield* Effect.all([
-        evaluate(expr.expr, upstream),
-        Effect.all(expr.args.map((expr) => evaluate(expr, upstream))),
-        evaluate(expr.thisType, upstream),
-      ]);
-      if (typeof fn === "function") {
-        return fn.bind(thisType)(...expr.args);
-      } else {
-        return yield* Effect.die(
-          new Error(`Invalid function: ${JSON.stringify(fn)}`),
-        );
-      }
     } else if (isEffectExpr(expr)) {
       // TODO(sam): the same effect shoudl be memoized so that it's not run multiple times
       return yield* expr.f(yield* evaluate(expr.expr, upstream));
@@ -606,25 +346,6 @@ const _upstream = (expr: any): any => {
     return Object.assign({}, ...expr.outs.map((out) => upstream(out)));
   } else if (isEffectExpr(expr) || isApplyExpr(expr)) {
     return upstream(expr.expr);
-  } else if (isCallExpr(expr)) {
-    return Object.assign(
-      {},
-      ...expr.args.map((arg) => upstream(arg)),
-      upstream(expr.thisType),
-    );
-  } else if (isMapArrayExpr(expr) || isFlatMapArrayExpr(expr)) {
-    return {
-      ...upstream(expr.expr),
-      ...upstream(
-        expr.f(
-          new ItemExpr(expr.expr) as any,
-          new IndexExpr(
-            expr.expr,
-            new LiteralExpr(0),
-          ) as unknown as Expr<number>,
-        ),
-      ),
-    };
   } else if (Array.isArray(expr)) {
     return expr.map(_upstream).reduce(toObject, {});
   } else if (typeof expr === "object" && expr !== null) {

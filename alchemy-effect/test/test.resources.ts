@@ -1,7 +1,8 @@
-import * as Effect from "effect/Effect";
+import type { Input, InputProps } from "@/input";
 import { Resource } from "@/resource";
-import type { Input } from "@/input";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import { isUnknown } from "../src/unknown.ts";
 
 // Bucket
 export type BucketProps = {
@@ -15,7 +16,7 @@ export type BucketAttr<Props extends BucketProps> = {
 export interface Bucket<
   ID extends string = string,
   Props extends BucketProps = BucketProps,
-> extends Resource<"Test.Bucket", ID, Props, BucketAttr<Props>> {}
+> extends Resource<"Test.Bucket", ID, Props, BucketAttr<Props>, Bucket> {}
 
 export const Bucket = Resource<{
   <const ID extends string, const Props extends Input<BucketProps>>(
@@ -52,7 +53,7 @@ export type QueueAttr<Props extends QueueProps> = {
 export interface Queue<
   ID extends string = string,
   Props extends QueueProps = QueueProps,
-> extends Resource<"Test.Queue", ID, Props, QueueAttr<Props>> {}
+> extends Resource<"Test.Queue", ID, Props, QueueAttr<Props>, Queue> {}
 
 export const Queue = Resource<{
   <const ID extends string, const Props extends Input<QueueProps>>(
@@ -91,16 +92,17 @@ export type FunctionAttr<Props extends FunctionProps> = {
 
 export interface Function<
   ID extends string = string,
-  Props extends Input<FunctionProps> = Input<FunctionProps>,
+  Props extends InputProps<FunctionProps> = InputProps<FunctionProps>,
 > extends Resource<
   "Test.Function",
   ID,
   Props,
-  FunctionAttr<Input.Resolve<Props>>
+  FunctionAttr<Input.Resolve<Props>>,
+  Function
 > {}
 
 export const Function = Resource<{
-  <const ID extends string, const Props extends Input<FunctionProps>>(
+  <const ID extends string, const Props extends InputProps<FunctionProps>>(
     id: ID,
     props?: Props,
   ): Function<ID, Props>;
@@ -143,16 +145,17 @@ export type TestResourceAttr<Props extends TestResourceProps> = {
 
 export interface TestResource<
   ID extends string = string,
-  Props extends Input<TestResourceProps> = Input<TestResourceProps>,
+  Props extends InputProps<TestResourceProps> = InputProps<TestResourceProps>,
 > extends Resource<
   "Test.TestResource",
   ID,
   Props,
-  TestResourceAttr<Input.Resolve<Props>>
+  TestResourceAttr<Input.Resolve<Props>>,
+  TestResource
 > {}
 
 export const TestResource = Resource<{
-  <const ID extends string, const Props extends Input<TestResourceProps>>(
+  <const ID extends string, const Props extends InputProps<TestResourceProps>>(
     id: ID,
     props?: Props,
   ): TestResource<ID, Props>;
@@ -160,7 +163,12 @@ export const TestResource = Resource<{
 
 export const testResourceProvider = TestResource.provider.succeed({
   diff: Effect.fn(function* ({ id, news, olds }) {
-    return news.string !== olds.string
+    return isUnknown(news.string) ||
+      isUnknown(news.stringArray) ||
+      news.string !== olds.string ||
+      news.stringArray?.length !== olds.stringArray?.length ||
+      !!news.stringArray !== !!olds.stringArray ||
+      news.stringArray?.some((s, i) => s !== olds.stringArray?.[i])
       ? {
           action: "update",
           stables: ["stableString", "stableArray"],

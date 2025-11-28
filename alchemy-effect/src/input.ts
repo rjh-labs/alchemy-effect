@@ -1,7 +1,6 @@
 import type * as S from "effect/Schema";
-import type { Output } from "./output.ts";
 import type { Primitive } from "./data.ts";
-import type { AttributesSchema, TableProps } from "./aws/dynamodb/table.ts";
+import type { Output } from "./output.ts";
 
 export type Function = (...args: any[]) => any;
 export type Constructor = new (...args: any[]) => any;
@@ -9,16 +8,26 @@ export type PolicyLike = { kind: "alchemy/Policy" };
 
 export type Input<T> =
   | T
-  | Output<T, any, any>
-  | (T extends Primitive
+  | (T extends S.Schema<any>
       ? never
-      : T extends any[]
-        ? number extends T["length"]
-          ? Input<T[number]>[]
-          : Inputs<T>
-        : T extends object
-          ? { [K in keyof T]: Input<T[K]> }
-          : never);
+      :
+          | Output<T, any, any>
+          | (T extends Primitive
+              ? never
+              : T extends any[]
+                ? number extends T["length"]
+                  ? Input<T[number]>[]
+                  : Inputs<T>
+                : T extends object
+                  ? { [K in keyof T]: Input<T[K]> }
+                  : never));
+
+export type InputProps<
+  T extends Record<string, any>,
+  Static extends keyof T = never,
+> = {
+  [K in keyof T]: K extends Static ? T[K] : Input<T[K]>;
+};
 
 export declare namespace Input {
   export type Resolve<T> =
@@ -59,7 +68,7 @@ export declare namespace Input {
     // use true extends IsOut to avoid distribution in the case where we have an Out<T>
     // because T is a clean type, e.g. Input<SubnetProps> should just be SubnetProps (don't bother resolving the recursive input type variants)
     true extends IsOut<T> ? ResolveOut<T> : Resolve<T>;
-  type IsOut<T> = T extends Output<infer U> ? true : never;
+  export type IsOut<T> = T extends Output<infer U> ? true : never;
 
   export type ResolveOut<T> = T extends Output<infer U> ? U : never;
 
@@ -79,25 +88,7 @@ export declare namespace Input {
             ? { [K in keyof T]: Dependencies<T[K]> }[keyof T]
             : never;
 
-  export type Of<T> =
-    | T
-    | Output.Of<T, any, any>
-    | (T extends Primitive
-        ? never
-        : T extends any[]
-          ? number extends T["length"]
-            ? Of<T[number]>[]
-            : OfArray<T>
-          : T extends object
-            ? { [K in keyof T]: Of<T[K]> }
-            : never);
-
-  type OfArray<T extends any[], Out extends any[] = []> = T extends [
-    infer H,
-    ...infer T,
-  ]
-    ? OfArray<T, [...Out, Input<H>]>
-    : Out;
+  export type Of<T> = T | Output.Of<T, any, any>;
 }
 
 export type Inputs<T extends any[], Out extends any[] = []> = T extends [

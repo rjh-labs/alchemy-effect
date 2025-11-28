@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 
 import { Box, Text } from "ink";
 import type { Capability } from "../../capability.ts";
-import type { Plan as AlchemyPlan, BindNode, CRUD } from "../../plan.ts";
+import type { IPlan as AlchemyPlan, BindNode, CRUD } from "../../plan.ts";
 
 export interface PlanProps {
   plan: AlchemyPlan;

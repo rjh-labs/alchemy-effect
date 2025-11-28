@@ -46,7 +46,7 @@ export interface Runtime<
   Type extends string = string,
   Handler = unknown,
   Props = unknown,
-> extends Resource<Type, string, Props, unknown> {
+> extends Resource<Type, string, Props> {
   type: Type;
   props: Props;
   handler: Handler;

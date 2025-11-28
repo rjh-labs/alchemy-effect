@@ -7,13 +7,13 @@ import * as Layer from "effect/Layer";
 import { render } from "ink";
 
 import { PlanRejected, PlanReviewer } from "../approve.ts";
-import type { Plan } from "../plan.ts";
+import type { IPlan } from "../plan.ts";
 import { ApprovePlan } from "./components/ApprovePlan.tsx";
 
 export const requireApproval = Layer.succeed(
   PlanReviewer,
   PlanReviewer.of({
-    approve: <P extends Plan>(plan: P) =>
+    approve: <P extends IPlan>(plan: P) =>
       Effect.gen(function* () {
         let approved = false;
 

@@ -7,6 +7,7 @@ import type { ScopedPlanStatusSession } from "../../apply.ts";
 import { DotAlchemy } from "../../dot-alchemy.ts";
 import { ESBuild } from "../../esbuild.ts";
 import { sha256 } from "../../sha256.ts";
+import { isUnknown } from "../../unknown.ts";
 import { CloudflareAccountId, CloudflareApi } from "../api.ts";
 import { Assets } from "./assets.provider.ts";
 import { Worker, type WorkerAttr, type WorkerProps } from "./worker.ts";
@@ -46,10 +47,8 @@ export const workerProvider = () =>
         yield* Effect.logDebug("setWorkerSubdomain", subdomain);
       });
 
-      const createWorkerName = (
-        id: string,
-        props: WorkerProps<any> | undefined,
-      ) => props?.name ?? `${app.name}-${id}-${app.stage}`.toLowerCase();
+      const createWorkerName = (id: string, name: string | undefined) =>
+        name ?? `${app.name}-${id}-${app.stage}`.toLowerCase();
 
       const prepareAssets = Effect.fnUntraced(function* (
         assets: WorkerProps["assets"],
@@ -123,7 +122,10 @@ export const workerProvider = () =>
         output: WorkerAttr<WorkerProps<any>> | undefined,
         session: ScopedPlanStatusSession,
       ) {
-        const name = createWorkerName(id, news);
+        if (isUnknown(news)) {
+          return yield* Effect.fail(new Error("Worker props are unknown"));
+        }
+        const name = createWorkerName(id, news.name);
         const [assets, bundle, metadata] = yield* Effect.all([
           prepareAssets(news.assets),
           prepareBundle(id, news.main),
@@ -192,7 +194,7 @@ export const workerProvider = () =>
           if (output.accountId !== accountId) {
             return { action: "replace" };
           }
-          const workerName = createWorkerName(id, news);
+          const workerName = createWorkerName(id, news.name);
           if (workerName !== output.name) {
             return { action: "replace" };
           }
@@ -208,7 +210,7 @@ export const workerProvider = () =>
           }
         }),
         create: Effect.fnUntraced(function* ({ id, news, bindings, session }) {
-          const name = createWorkerName(id, news);
+          const name = createWorkerName(id, news.name);
           const existing = yield* api.workers.beta.workers
             .get(name, {
               account_id: accountId,

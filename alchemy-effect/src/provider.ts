@@ -2,17 +2,24 @@ import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import type { ScopedPlanStatusSession } from "./apply.ts";
 import type { Diff } from "./diff.ts";
+import type { Input } from "./input.ts";
 import type { Resource } from "./resource.ts";
 import type { Runtime } from "./runtime.ts";
-import type { Input, Inputs } from "./input.ts";
-import type { Output } from "./output.ts";
-import type { Primitive } from "./data.ts";
+import type { Service } from "./service.ts";
+import type { MaybeUnknown } from "./unknown.ts";
 
-export type Provider<R extends Resource> = Context.TagClass<
+export interface Provider<
+  R extends Resource | Service,
+> extends Context.TagClass<
   Provider<R>,
   R["type"],
-  ProviderService<R>
->;
+  ProviderService<any>
+  // TODO(sam): we are using any here because the R["type"] is enough and gaining access to the sub type (e.g. SQS.Queue)
+  // is currently not possible in the current approach
+
+  // preferred:
+  // ProviderService<R>
+> {}
 
 type BindingData<Res extends Resource> = [Res] extends [Runtime]
   ? Res["binding"][]
@@ -24,7 +31,6 @@ export interface ProviderService<Res extends Resource = Resource> {
   // tail();
   // watch();
   // replace(): Effect.Effect<void, never, never>;
-
   // different interface that is persistent, watching, reloads
   // run?() {}
   read?(input: {
@@ -40,7 +46,11 @@ export interface ProviderService<Res extends Resource = Resource> {
     olds: Props<Res>;
     // Note: we do not resolve (Props<Res>) here because diff runs during plan
     // -> we need a way for the diff handlers to work with Outputs
-    news: Input.Of<Input.Resolve<Res["props"]>>;
+    news: {
+      [prop in keyof MaybeUnknown<Res["props"]>]: MaybeUnknown<
+        Res["props"]
+      >[prop];
+    };
     output: Res["attr"];
   }): Effect.Effect<Diff | void, never, never>;
   precreate?(input: {

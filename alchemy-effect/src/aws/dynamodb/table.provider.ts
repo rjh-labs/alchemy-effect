@@ -15,9 +15,9 @@ import { DynamoDBClient } from "./client.ts";
 import {
   Table,
   type AnyTable,
+  type AttributesSchema,
   type TableAttrs,
   type TableProps,
-  type AttributesSchema,
 } from "./table.ts";
 
 // we add an explict type to simplify the Layer type errors because the Table interface has a lot of type args
@@ -124,7 +124,7 @@ export const tableProvider = (): Layer.Layer<
           );
 
       return {
-        diff: Effect.fn(function* ({ id, news, olds }) {
+        diff: Effect.fn(function* ({ news, olds }) {
           if (
             // TODO(sam): if the name is hard-coded, REPLACE is impossible - we need a suffix
             news.tableName !== olds.tableName ||
@@ -133,7 +133,6 @@ export const tableProvider = (): Layer.Layer<
           ) {
             return { action: "replace" } as const;
           }
-
           const oldAttrs = toAttributeDefinitionsMap(olds.attributes);
           const newAttrs = toAttributeDefinitionsMap(news.attributes);
           for (const [name, type] of Object.entries(oldAttrs)) {

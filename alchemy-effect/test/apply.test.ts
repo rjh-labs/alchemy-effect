@@ -1,12 +1,12 @@
 import * as Effect from "effect/Effect";
 
-import { test } from "@/test";
-import * as Output from "@/output";
-import { TestLayers, TestResource } from "./test.resources.ts";
 import { apply } from "@/apply";
 import { destroy } from "@/destroy";
-import { expect } from "@effect/vitest";
+import * as Output from "@/output";
 import { State } from "@/state";
+import { test } from "@/test";
+import { expect } from "@effect/vitest";
+import { TestLayers, TestResource } from "./test.resources.ts";
 
 test(
   "apply should create when non-existent and update when props change",
@@ -79,7 +79,7 @@ test(
     {
       class B extends TestResource("B", {
         string: Output.of(A)
-          .string.toUpperCase()
+          .string.apply((string) => string.toUpperCase())
           .apply((string) => string + "-CALL-EXPR"),
       }) {}
 
@@ -107,7 +107,9 @@ test(
 
     {
       class B extends TestResource("B", {
-        string: Output.of(A).stringArray[0].toUpperCase(),
+        string: Output.of(A).stringArray[0].apply((string) =>
+          string.toUpperCase(),
+        ),
       }) {}
 
       const stack = yield* apply(B);
@@ -116,8 +118,8 @@ test(
 
     {
       class B extends TestResource("B", {
-        stringArray: Output.of(A).stringArray.map((string) =>
-          string.toUpperCase(),
+        stringArray: Output.of(A).stringArray.apply((string) =>
+          string.map((string) => string.toUpperCase()),
         ),
       }) {}
 
@@ -127,16 +129,15 @@ test(
 
     {
       class B extends TestResource("B", {
-        stringArray: Output.of(A).stringArray.flatMap((string) => [
-          string.toUpperCase(),
-          string.toUpperCase(),
-        ]),
+        stringArray: Output.of(A).stringArray.apply((stringArray) =>
+          stringArray.flatMap((string) => [string, string]),
+        ),
       }) {}
 
       const stack = yield* apply(B);
       expect(stack.B.stringArray).toEqual([
-        "TEST-STRING-ARRAY",
-        "TEST-STRING-ARRAY",
+        "test-string-array",
+        "test-string-array",
       ]);
     }
   }).pipe(Effect.provide(TestLayers)),

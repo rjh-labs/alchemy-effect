@@ -4,8 +4,10 @@ import type * as IAM from "../iam.ts";
 
 export type { Context } from "aws-lambda";
 
-export interface FunctionProps<Req = unknown>
-  extends RuntimeProps<Function, Req> {
+export interface FunctionProps<Req = unknown> extends RuntimeProps<
+  Function,
+  Req
+> {
   functionName?: string;
   functionArn?: string;
   main: string;
@@ -43,5 +45,6 @@ export interface Function extends Runtime<"AWS.Lambda.Function"> {
   props: FunctionProps<any>;
   attr: FunctionAttr<Extract<this["props"], FunctionProps<any>>>;
   binding: FunctionBinding;
+  base: Function;
 }
 export const Function = Runtime("AWS.Lambda.Function")<Function>();
