@@ -28,12 +28,12 @@ export interface QueueEventSource<
   Q extends Queue,
   Props extends QueueEventSourceProps,
 > extends Binding<
-  Function,
-  Consume<From<Q>>,
-  Props,
-  QueueEventSourceAttr,
-  "QueueEventSource"
-> {}
+    Function,
+    Consume<From<Q>>,
+    Props,
+    QueueEventSourceAttr,
+    "QueueEventSource"
+  > {}
 
 export const QueueEventSource = Binding<
   <Q extends Queue, const Props extends QueueEventSourceProps>(

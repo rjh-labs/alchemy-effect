@@ -312,8 +312,6 @@ export const applyPlan = <P extends IPlan, Err = never, Req = never>(
 
                   yield* report(phase === "create" ? "creating" : "updating");
 
-                  // TODO(sam): resolve outputs
-
                   let bindingOutputs = yield* attachBindings({
                     resource,
                     bindings: node.bindings,

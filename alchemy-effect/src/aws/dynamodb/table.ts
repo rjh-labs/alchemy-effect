@@ -9,8 +9,11 @@ import type * as DynamoDB from "itty-aws/dynamodb";
 
 export interface TableProps<
   Items extends any = any,
-  Attributes extends AttributesSchema<Items, PartitionKey, SortKey> =
-    AttributesSchema<Items, keyof Items, keyof Items | undefined>,
+  Attributes extends AttributesSchema<
+    Items,
+    PartitionKey,
+    SortKey
+  > = AttributesSchema<Items, keyof Items, keyof Items | undefined>,
   PartitionKey extends keyof Items = keyof Items,
   SortKey extends keyof Items | undefined = keyof Items | undefined,
 > {
@@ -77,12 +80,12 @@ export interface Table<
   ID extends string = string,
   Props extends TableProps<any, any, any, any> = TableProps<any, any, any, any>,
 > extends Resource<
-  "AWS.DynamoDB.Table",
-  ID,
-  Props,
-  TableAttrs<Input.Resolve<Props>>,
-  Table
-> {}
+    "AWS.DynamoDB.Table",
+    ID,
+    Props,
+    TableAttrs<Input.Resolve<Props>>,
+    Table
+  > {}
 
 export declare namespace Table {
   export type PartitionKey<T extends Table> = T["props"]["partitionKey"];

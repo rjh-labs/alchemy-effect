@@ -7,7 +7,6 @@ import type { ScopedPlanStatusSession } from "../../apply.ts";
 import { DotAlchemy } from "../../dot-alchemy.ts";
 import { ESBuild } from "../../esbuild.ts";
 import { sha256 } from "../../sha256.ts";
-import { isUnknown } from "../../unknown.ts";
 import { CloudflareAccountId, CloudflareApi } from "../api.ts";
 import { Assets } from "./assets.provider.ts";
 import { Worker, type WorkerAttr, type WorkerProps } from "./worker.ts";
@@ -122,9 +121,6 @@ export const workerProvider = () =>
         output: WorkerAttr<WorkerProps<any>> | undefined,
         session: ScopedPlanStatusSession,
       ) {
-        if (isUnknown(news)) {
-          return yield* Effect.fail(new Error("Worker props are unknown"));
-        }
         const name = createWorkerName(id, news.name);
         const [assets, bundle, metadata] = yield* Effect.all([
           prepareAssets(news.assets),
