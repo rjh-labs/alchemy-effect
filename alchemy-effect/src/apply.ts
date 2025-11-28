@@ -241,23 +241,21 @@ export const applyPlan = <P extends IPlan, Err = never, Req = never>(
           node,
         ) =>
           Effect.gen(function* () {
-            const checkpoint = <Out, Err>(
-              effect: Effect.Effect<Out, Err, never>,
-            ) => effect.pipe(Effect.flatMap((output) => saveState({ output })));
-
             const saveState = <Output>({
               output,
               bindings = node.bindings,
+              news,
             }: {
               output: Output;
               bindings?: BindNode[];
+              news: any;
             }) =>
               state
                 .set(node.resource.id, {
                   id: node.resource.id,
                   type: node.resource.type,
                   status: node.action === "create" ? "created" : "updated",
-                  props: node.resource.props,
+                  props: news,
                   output,
                   bindings,
                 })
@@ -361,6 +359,7 @@ export const applyPlan = <P extends IPlan, Err = never, Req = never>(
                   });
 
                   yield* saveState({
+                    news,
                     output,
                     bindings: node.bindings.map((binding, i) => ({
                       ...binding,
@@ -434,29 +433,30 @@ export const applyPlan = <P extends IPlan, Err = never, Req = never>(
                   });
                   const create = Effect.gen(function* () {
                     yield* report("creating");
-                    return yield* (
-                      node.provider
-                        .create({
-                          id,
-                          news: node.news,
-                          // TODO(sam): these need to only include attach actions
-                          bindings: yield* attachBindings({
-                            resource,
-                            bindings: node.bindings,
-                            target: {
-                              id,
-                              props: node.news,
-                              attr: node.attributes,
-                            },
-                          }),
-                          session: scopedSession,
-                        })
-                        // TODO(sam): delete and create will conflict here, we need to extend the state store for replace
-                        .pipe(
-                          checkpoint,
-                          Effect.tap(() => report("created")),
-                        )
-                    );
+
+                    // TODO(sam): delete and create will conflict here, we need to extend the state store for replace
+                    return yield* node.provider
+                      .create({
+                        id,
+                        news: node.news,
+                        // TODO(sam): these need to only include attach actions
+                        bindings: yield* attachBindings({
+                          resource,
+                          bindings: node.bindings,
+                          target: {
+                            id,
+                            // TODO(sam): resolve the news
+                            props: node.news,
+                            attr: node.attributes,
+                          },
+                        }),
+                        session: scopedSession,
+                      })
+                      .pipe(
+                        Effect.tap((output) =>
+                          saveState({ news: node.news, output }),
+                        ),
+                      );
                   });
                   if (!node.deleteFirst) {
                     yield* destroy;

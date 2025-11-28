@@ -71,24 +71,6 @@ export declare namespace Input {
   export type IsOut<T> = T extends Output<infer U> ? true : never;
 
   export type ResolveOut<T> = T extends Output<infer U> ? U : never;
-
-  export type Dependencies<T> =
-    T extends Output<any, infer S>
-      ? S
-      : T extends
-            | Primitive
-            | Constructor
-            | Function
-            | S.Schema<any>
-            | PolicyLike
-        ? never
-        : T extends any[]
-          ? Dependencies<T[number]>
-          : T extends object
-            ? { [K in keyof T]: Dependencies<T[K]> }[keyof T]
-            : never;
-
-  export type Of<T> = T | Output.Of<T, any, any>;
 }
 
 export type Inputs<T extends any[], Out extends any[] = []> = T extends [

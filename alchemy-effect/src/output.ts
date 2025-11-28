@@ -143,7 +143,7 @@ export const isResourceExpr = <
   Req = any,
 >(
   node: Expr<Value, Src, Req> | any,
-): node is ResourceExpr<Value, Src, Req> => node.kind === "ResourceExpr";
+): node is ResourceExpr<Value, Src, Req> => node?.kind === "ResourceExpr";
 
 export class ResourceExpr<
   Value,
@@ -167,7 +167,7 @@ export const isPropExpr = <
   Req = any,
 >(
   node: any,
-): node is PropExpr<A, Prop, Src, Req> => node.kind === "PropExpr";
+): node is PropExpr<A, Prop, Src, Req> => node?.kind === "PropExpr";
 
 export class PropExpr<
   A = any,
@@ -188,7 +188,7 @@ export class PropExpr<
 export const literal = <A>(value: A) => new LiteralExpr(value);
 
 export const isLiteralExpr = <A = any>(node: any): node is LiteralExpr<A> =>
-  node.kind === "LiteralExpr";
+  node?.kind === "LiteralExpr";
 
 export class LiteralExpr<A> extends BaseExpr<A, never> {
   readonly kind = "LiteralExpr";
@@ -206,7 +206,7 @@ export const isApplyExpr = <
   Req = any,
 >(
   node: Output<Out, Src, Req>,
-): node is ApplyExpr<In, Out, Src, Req> => node.kind === "ApplyExpr";
+): node is ApplyExpr<In, Out, Src, Req> => node?.kind === "ApplyExpr";
 
 export class ApplyExpr<
   A,
@@ -232,7 +232,7 @@ export const isEffectExpr = <
   Req2 = any,
 >(
   node: any,
-): node is EffectExpr<In, Out, Src, Req, Req2> => node.kind === "EffectExpr";
+): node is EffectExpr<In, Out, Src, Req, Req2> => node?.kind === "EffectExpr";
 
 export class EffectExpr<
   A,
@@ -253,7 +253,7 @@ export class EffectExpr<
 
 export const isAllExpr = <Outs extends Expr[] = Expr[]>(
   node: any,
-): node is AllExpr<Outs> => node.kind === "AllExpr";
+): node is AllExpr<Outs> => node?.kind === "AllExpr";
 
 export class AllExpr<Outs extends Expr[]> extends BaseExpr<Outs> {
   readonly kind = "AllExpr";
