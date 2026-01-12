@@ -43,7 +43,15 @@ export const bindings = () =>
     S3.deleteObjectFromLambdaFunction(),
     S3.getObjectFromLambdaFunction(),
     S3.putObjectFromLambdaFunction(),
+    SQS.changeMessageVisibilityBatchFromLambdaFunction(),
+    SQS.changeMessageVisibilityFromLambdaFunction(),
+    SQS.deleteMessageBatchFromLambdaFunction(),
+    SQS.deleteMessageFromLambdaFunction(),
+    SQS.getQueueAttributesFromLambdaFunction(),
+    SQS.purgeQueueFromLambdaFunction(),
     SQS.queueEventSourceProvider(),
+    SQS.receiveMessageFromLambdaFunction(),
+    SQS.sendMessageBatchFromLambdaFunction(),
     SQS.sendMessageFromLambdaFunction(),
   );
 
