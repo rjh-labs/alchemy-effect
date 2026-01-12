@@ -17,6 +17,7 @@ export const resources = () =>
     DynamoDB.tableProvider(),
     EC2.egressOnlyInternetGatewayProvider(),
     EC2.eipProvider(),
+    EC2.instanceProvider(),
     EC2.internetGatewayProvider(),
     EC2.natGatewayProvider(),
     EC2.networkAclAssociationProvider(),
