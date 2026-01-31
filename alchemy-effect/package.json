@@ -30,6 +30,11 @@
       "bun": "./src/output.ts",
       "import": "./lib/output.js"
     },
+    "./aspect": {
+      "types": "./lib/aspect/index.d.ts",
+      "bun": "./src/aspect/index.ts",
+      "import": "./lib/aspect/index.js"
+    },
     "./aws": {
       "types": "./lib/aws/index.d.ts",
       "bun": "./src/aws/index.ts",
@@ -136,9 +141,10 @@
     "cloudflare": "catalog:",
     "distilled-aws": "catalog:",
     "esbuild": "^0.25.12",
-    "fast-xml-parser": "^5.2.5",
+    "fast-xml-parser": "catalog:",
     "ignore": "^7.0.5",
     "jszip": "^3.10.1",
+    "web-tree-sitter": "catalog:",
     "yaml": "^2.0.0"
   },
   "devDependencies": {

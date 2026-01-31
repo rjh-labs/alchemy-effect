@@ -3,7 +3,7 @@ import {
   type Aspect,
   type AspectName,
   type IAspect,
-  type Ref,
+  type Pointer,
 } from "./aspect.ts";
 
 export const deriveGraph = <A extends IAspect>(agent: A): AspectGraph<A> => {
@@ -57,7 +57,7 @@ export type AspectSet<A extends IAspect = any> =
   | Visit<A["references"][number], FQN<A>>;
 
 type Visit<Value, Seen extends string = never> =
-  Ref.Resolve<Value> extends infer A
+  Pointer.Resolve<Value> extends infer A
     ? A extends {
         type: string;
         id: AspectName;

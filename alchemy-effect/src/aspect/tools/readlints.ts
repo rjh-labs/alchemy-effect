@@ -4,15 +4,15 @@ import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import { AspectConfig } from "../config.ts";
 import { formatDiagnostic } from "../lsp/diagnostics.ts";
-import { LSPManager } from "../lsp/index.ts";
-import { input, output, Tool } from "../tool.ts";
+import { LSPManager } from "../lsp/manager.ts";
+import { param, result, Tool } from "../tool.ts";
 
-const paths = input(
+const paths = param(
   "paths",
   S.optional(S.Array(S.String)),
 )`Optional array of paths to files or directories to read linter errors for. If not provided, returns diagnostics for all files in the workspace.`;
 
-const diagnostics = output(
+const diagnostics = result(
   "diagnostics",
 )`The linter errors and diagnostics for the specified paths.`;
 

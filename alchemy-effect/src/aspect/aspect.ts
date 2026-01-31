@@ -4,9 +4,9 @@ import * as S from "effect/Schema";
 import type { ContextPlugin, ContextPluginService } from "./context/plugin.ts";
 import type { TuiPluginService } from "./tui/plugin.ts";
 
-export type Ref<T> = T | (() => T);
+export type Pointer<T> = T | (() => T);
 
-export declare namespace Ref {
+export declare namespace Pointer {
   export type Resolve<R> = R extends () => infer T ? T : R;
 }
 

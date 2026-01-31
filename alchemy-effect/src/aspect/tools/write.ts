@@ -7,20 +7,20 @@ import {
   formatDiagnostics,
   getDiagnosticsIfAvailable,
 } from "../lsp/diagnostics.ts";
-import { input, output, Tool } from "../tool.ts";
+import { param, result, Tool } from "../tool.ts";
 
-const filePath = input(
+const filePath = param(
   "filePath",
 )`The path to the file to write. Use relative paths from the current working directory (e.g., "src/index.ts", "test/fixtures/math.test.ts"). Do NOT use paths starting with "/" - use relative paths instead.`;
 
-const content = input("content")`The content to write to the file.`;
+const content = param("content")`The content to write to the file.`;
 
-const result = output(
+const output = result(
   "result",
 )`The result of the write operation, including any diagnostics from LSP.`;
 
 export const write = Tool("write")`Writes a file to the local filesystem.
-Returns the ${result} of the operation.
+Returns the ${output} of the operation.
 
 Given a ${filePath} and ${content}:
 - Use relative paths from the current working directory (e.g., "src/index.ts", "test/fixtures/math.test.ts")

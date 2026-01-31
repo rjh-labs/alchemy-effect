@@ -6,22 +6,22 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { AspectConfig } from "../config.ts";
 import { cwd } from "../cwd.ts";
-import { input, output, Tool } from "../tool.ts";
+import { param, result, Tool } from "../tool.ts";
 import { CommandValidator } from "../util/command-validator.ts";
 
-const command = input("command")`The command to execute`;
+const command = param("command")`The command to execute`;
 
-const timeout = input(
+const timeout = param(
   "timeout",
   S.optional(S.Number),
 )`Optional timeout in milliseconds`;
 
-const workdir = input(
+const workdir = param(
   "workdir",
   S.optional(S.String),
 )`The working directory to run the command in. Defaults to ${cwd}. Use this instead of 'cd' commands.`;
 
-const description = input(
+const description = param(
   "description",
 )`Clear, concise description of what this command does in 5-10 words. Examples:
 Input: ls
@@ -36,8 +36,8 @@ Output: Installs package dependencies
 Input: mkdir foo
 Output: Creates directory 'foo'`;
 
-const exitCode = output("exitCode", S.Number)`The exit code of the command.`;
-const success = output("output", S.String)`Containing both stdout and stderr.`;
+const exitCode = result("exitCode", S.Number)`The exit code of the command.`;
+const success = result("output", S.String)`Containing both stdout and stderr.`;
 
 export const bash = Tool("bash", {
   alias: (model) => (model?.includes("claude") ? "AnthropicBash" : undefined),

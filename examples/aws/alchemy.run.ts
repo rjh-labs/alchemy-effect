@@ -1,10 +1,14 @@
-import { defineStack, defineStages, USER } from "alchemy-effect";
+import {
+  defineStack,
+  defineStages,
+  USER,
+  defineOrganization,
+} from "alchemy-effect";
 import { Api } from "./src/api.ts";
 import { Consumer } from "./src/consumer.ts";
 import { FileApi } from "./src/file-api.ts";
 import { TableConsumer } from "./src/table-consumer.ts";
 import * as AWS from "alchemy-effect/aws";
-import * as Layer from "effect/Layer";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import { Credentials } from "distilled-aws";
@@ -36,18 +40,19 @@ const stages = defineStages(
   }),
 );
 
-export const App = stages.ref<typeof stack>("my-aws-app").as({
+export const App = stages.ref<typeof myApp>("my-aws-app").as({
   prod: "prod",
   staging: "staging",
   preview: (pr: number) => `preview_${pr.toString()}`,
   dev: (user: USER = USER) => `dev_${user}`,
 });
 
-const stack = defineStack({
+const myApp = defineStack({
   name: "my-aws-app",
   stages,
   resources: [Api, Consumer, FileApi, TableConsumer],
   providers: AWS.providers(),
 });
 
-export default stack;
+export default defineOrganization("alchemy-effect")`
+This is an example organization with the following stack: ${myApp}`;

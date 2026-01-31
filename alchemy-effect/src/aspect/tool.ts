@@ -34,40 +34,40 @@ export const io =
     references,
   });
 
-export const isInput = (artifact: any): artifact is Input =>
-  artifact?.type === "input";
+export const isParam = (artifact: any): artifact is Param =>
+  artifact?.type === "param";
 
-export type Input<
+export type Param<
   ID extends string = string,
   S extends S.Struct.Field = typeof S.String,
   References extends any[] = any[],
-> = IO<"input", ID, S, References>;
+> = IO<"param", ID, S, References>;
 
-export declare namespace Input {
+export declare namespace Param {
   export type Of<
     References extends any[],
     Fields extends S.Struct.Fields = {},
   > = References extends []
     ? S.Struct<Fields>["Type"]
     : References extends [infer Artifact, ...infer Rest]
-      ? Artifact extends Input<infer Name extends string, infer Field, any[]>
-        ? Input.Of<Rest, Fields & { [name in Name]: Field }>
-        : Input.Of<Rest, Fields>
+      ? Artifact extends Param<infer Name extends string, infer Field, any[]>
+        ? Param.Of<Rest, Fields & { [name in Name]: Field }>
+        : Param.Of<Rest, Fields>
       : [];
 }
 
-export const input = io("input");
+export const param = io("param");
 
-export const isOutput = (artifact: any): artifact is Output =>
-  artifact?.type === "output";
+export const isResult = (artifact: any): artifact is Result =>
+  artifact?.type === "result";
 
-export type Output<
+export type Result<
   ID extends string = string,
   S extends S.Schema<any> = typeof S.String,
   References extends any[] = any[],
-> = IO<"output", ID, S, References>;
+> = IO<"result", ID, S, References>;
 
-export declare namespace Output {
+export declare namespace Result {
   export type Of<
     References extends readonly any[],
     Outputs = never,
@@ -78,11 +78,11 @@ export declare namespace Output {
       : Outputs | Primitives
     : References extends readonly [infer Ref, ...infer Rest]
       ? Ref extends {
-          type: "output";
+          type: "result";
           schema: infer Schema;
           id: infer Name extends string;
         }
-        ? Output.Of<
+        ? Result.Of<
             Rest,
             (IsNever<Outputs> extends true ? {} : Outputs) & {
               [name in Name]: S.Schema.Type<Schema>;
@@ -90,19 +90,12 @@ export declare namespace Output {
             Primitives
           >
         : Ref extends S.Schema<infer T>
-          ? Output.Of<Rest, Outputs, Primitives | T>
-          : Output.Of<Rest, Outputs, Primitives>
+          ? Result.Of<Rest, Outputs, Primitives | T>
+          : Result.Of<Rest, Outputs, Primitives>
       : never;
 }
 
-export const output = io("output");
-const references = [
-  output("output")`The output of the tool`,
-  output("error")`The output of the tool`,
-  S.String,
-] as const;
-
-type _ = Output.Of<typeof references>;
+export const result = io("result");
 
 export const isTool = (artifact: any): artifact is Tool =>
   artifact?.type === "tool";
@@ -140,12 +133,12 @@ export const Tool =
   ) =>
   <Eff extends YieldWrap<Effect.Effect<any, any, any>>>(
     execute: (
-      input: Input.Of<References>,
-    ) => Generator<Eff, NoInfer<Output.Of<References>>, never>,
+      input: Param.Of<References>,
+    ) => Generator<Eff, NoInfer<Result.Of<References>>, never>,
   ): Tool<
     ID,
-    Input.Of<References>,
-    Output.Of<References>,
+    Param.Of<References>,
+    Result.Of<References>,
     References,
     [Eff] extends [never]
       ? never
@@ -164,11 +157,11 @@ export const Tool =
       template,
       references,
       alias: options?.alias,
-      input: deriveSchema(references, isInput) as any as S.Schema<
-        Input.Of<References>
+      input: deriveSchema(references, isParam) as any as S.Schema<
+        Param.Of<References>
       >,
-      output: (deriveSchema(references, isOutput) ?? S.Any) as any as S.Schema<
-        Output.Of<References>
+      output: (deriveSchema(references, isResult) ?? S.Any) as any as S.Schema<
+        Result.Of<References>
       >,
       execute: Effect.fn(id)(execute),
     }) as any;
@@ -198,7 +191,7 @@ const deriveSchema = (
   );
 };
 
-const command = input("command")`The command to execute`;
+const command = param("command")`The command to execute`;
 
 export class bash extends Tool("bash")`
 A tool that can run bash ${command}s returning a ${S.String}.

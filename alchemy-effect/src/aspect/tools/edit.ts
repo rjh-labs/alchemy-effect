@@ -8,30 +8,30 @@ import {
   formatDiagnostics,
   getDiagnosticsIfAvailable,
 } from "../lsp/diagnostics.ts";
-import { input, output, Tool } from "../tool.ts";
+import { param, result, Tool } from "../tool.ts";
 import { replace } from "../util/replace.ts";
 
-const filePath = input("filePath")`The absolute path to the file to modify`;
+const filePath = param("filePath")`The absolute path to the file to modify`;
 
-const oldString = input(
+const oldString = param(
   "oldString",
 )`The text to replace. Use an empty string "" to create a new file.`;
 
-const newString = input(
+const newString = param(
   "newString",
 )`The text to replace it with (must be different from oldString)`;
 
-const replaceAll = input(
+const replaceAll = param(
   "replaceAll",
   S.Boolean,
 )`Replace all occurrences of oldString (default false). Use this when renaming variables or updating repeated patterns.`;
 
-const result = output(
+const output = result(
   "result",
 )`The result of the edit operation, including any diagnostics from LSP.`;
 
 export const edit = Tool("edit")`Performs exact string replacements in files.
-Returns the ${result} of the operation.
+Returns the ${output} of the operation.
 
 Given a ${filePath}, ${oldString}, and ${newString}:
 - Replaces the first occurrence of ${oldString} with ${newString}

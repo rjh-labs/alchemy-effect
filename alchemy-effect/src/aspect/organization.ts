@@ -5,4 +5,4 @@ export type Organization<
   References extends any[] = any[],
 > = Aspect<"organization", Name, References>;
 
-export const Organization = defineAspect("organization");
+export const defineOrganization = defineAspect("organization");
