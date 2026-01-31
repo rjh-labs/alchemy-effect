@@ -63,6 +63,8 @@
     "test": "bun run test:live"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.31",
+    "@ai-sdk/openai": "^3.0.23",
     "distilled-aws": "0.0.21"
   },
   "devDependencies": {

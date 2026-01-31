@@ -19,3 +19,5 @@ export const asEffect = <T, Err = never, Req = never>(
   effect: T | Effect.Effect<T, Err, Req>,
 ): Effect.Effect<T, Err, Req> =>
   Effect.isEffect(effect) ? effect : Effect.succeed(effect);
+
+export type IsNever<T> = [T] extends [never] ? true : false;

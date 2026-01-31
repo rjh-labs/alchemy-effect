@@ -123,12 +123,15 @@
     "test:benchmark": "tsx --tsconfig tsconfig.test.json test/types.benchmark.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.72.0",
     "@aws-sdk/credential-providers": "catalog:",
     "@effect/vitest": "^0.27.0",
+    "@libsql/client": "^0.17.0",
     "@smithy/node-config-provider": "^4.0.0",
     "@smithy/shared-ini-file-loader": "^4.3.4",
     "@smithy/types": "^4.8.1",
     "@types/aws-lambda": "catalog:",
+    "ai": "^6.0.62",
     "aws4fetch": "^1.0.20",
     "cloudflare": "catalog:",
     "distilled-aws": "catalog:",
