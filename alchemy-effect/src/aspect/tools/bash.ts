@@ -1,27 +1,27 @@
-import * as Command from "@effect/platform/Command";
+import * as EffectCommand from "@effect/platform/Command";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import { cwd } from "../../cwd.ts";
 import { AspectConfig } from "../config.ts";
-import { cwd } from "../cwd.ts";
-import { param, result, Tool } from "../tool.ts";
+import { Tool } from "../tool.ts";
 import { CommandValidator } from "../util/command-validator.ts";
 
-const command = param("command")`The command to execute`;
+class Command extends Tool.input("command")`The command to execute` {}
 
-const timeout = param(
+class Timeout extends Tool.input(
   "timeout",
   S.optional(S.Number),
-)`Optional timeout in milliseconds`;
+)`Optional timeout in milliseconds` {}
 
-const workdir = param(
+class Workdir extends Tool.input(
   "workdir",
   S.optional(S.String),
-)`The working directory to run the command in. Defaults to ${cwd}. Use this instead of 'cd' commands.`;
+)`The working directory to run the command in. Defaults to ${cwd}. Use this instead of 'cd' commands.` {}
 
-const description = param(
+class Description extends Tool.input(
   "description",
 )`Clear, concise description of what this command does in 5-10 words. Examples:
 Input: ls
@@ -34,18 +34,25 @@ Input: npm install
 Output: Installs package dependencies
 
 Input: mkdir foo
-Output: Creates directory 'foo'`;
+Output: Creates directory 'foo'` {}
 
-const exitCode = result("exitCode", S.Number)`The exit code of the command.`;
-const success = result("output", S.String)`Containing both stdout and stderr.`;
+class ExitCode extends Tool.output(
+  "exitCode",
+  S.Number,
+)`The exit code of the command.` {}
 
-export const bash = Tool("bash", {
+class Stdout extends Tool.output(
+  "output",
+  S.String,
+)`Containing both stdout and stderr.` {}
+
+export class Bash extends Tool("bash", {
   alias: (model) => (model?.includes("claude") ? "AnthropicBash" : undefined),
-})`Executes a given bash ${command} in a persistent shell session with optional ${timeout}, ensuring proper handling and security measures.
-Returns the ${exitCode} and ${success} containing both stdout and stderr.
+})`Executes a given bash ${Command} in a persistent shell session with optional ${Timeout}, ensuring proper handling and security measures.
+Returns the ${ExitCode} and ${Stdout} containing both stdout and stderr.
 If the command is invalid, an error message will be returned as a ${S.String}.
 
-All commands run in ${cwd} by default. Use the ${workdir} parameter if you need to run a command in a different directory. AVOID using \`cd <directory> && <command>\` patterns - use \`workdir\` instead.
+All commands run in ${cwd} by default. Use the ${Workdir} parameter if you need to run a command in a different directory. AVOID using \`cd <directory> && <command>\` patterns - use \`workdir\` instead.
 
 IMPORTANT: This tool is for terminal operations like git, npm, docker, etc. DO NOT use it for file operations (reading, writing, editing, searching, finding files) - use the specialized tools for this instead.
 
@@ -68,7 +75,7 @@ Before executing the command, please follow these steps:
 Usage notes:
   - The command argument is required.
   - You can specify an optional timeout in milliseconds (up to 600000ms / 10 minutes). If not specified, commands will time out after 120000ms (2 minutes).
-  - It is very helpful if you write a clear, concise ${description} of what this command does in 5-10 words.
+  - It is very helpful if you write a clear, concise ${Description} of what this command does in 5-10 words.
   - If the output exceeds 30000 characters, output will be truncated before being returned to you.
   - You can use the \`run_in_background\` parameter to run the command in the background, which allows you to continue working while the command runs. You can monitor the output using the Bash tool as it becomes available. You do not need to use '&' at the end of the command when using this parameter.
 
@@ -178,14 +185,14 @@ Important:
     }
   }
 
-  const cmd = Command.make(command).pipe(
-    Command.runInShell(true),
-    Command.workingDirectory(workdir ?? config.cwd),
+  const cmd = EffectCommand.make(command).pipe(
+    EffectCommand.runInShell(true),
+    EffectCommand.workingDirectory(workdir ?? config.cwd),
   );
 
   const [exitCode, output] = yield* pipe(
     // Start running the command and return a handle to the running process
-    Command.start(cmd),
+    EffectCommand.start(cmd),
     Effect.flatMap((process) =>
       Effect.all(
         [
@@ -206,4 +213,4 @@ Important:
     exitCode,
     output,
   };
-});
+}) {}

@@ -1,8 +1,16 @@
-import { Aspect, defineAspect } from "./aspect.ts";
+import { type Aspect, defineAspect } from "./aspect.ts";
 
 export type Organization<
   Name extends string = string,
   References extends any[] = any[],
-> = Aspect<"organization", Name, References>;
+> = Aspect<Organization, "organization", Name, References>;
 
-export const defineOrganization = defineAspect("organization");
+export const Organization =
+  defineAspect<
+    <const Name extends string>(
+      name: Name,
+    ) => <References extends any[]>(
+      template: TemplateStringsArray,
+      ...references: References
+    ) => Organization<Name, References>
+  >("organization");

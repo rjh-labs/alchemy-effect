@@ -1,12 +1,13 @@
+import { Agent } from "./agent/agent.ts";
 import {
   isAspect,
   type Aspect,
-  type AspectName,
-  type IAspect,
+  type AspectLike,
   type Pointer,
 } from "./aspect.ts";
+import { Bash } from "./tools/bash.ts";
 
-export const deriveGraph = <A extends IAspect>(agent: A): AspectGraph<A> => {
+export const deriveGraph = <A extends AspectLike>(agent: A): AspectGraph<A> => {
   const seen = new Set<FQN>();
   return [agent, ...agent.references.flatMap((v) => visit(v, seen))].reduce(
     (acc: AspectGraph<A>, aspect) => ({
@@ -39,7 +40,7 @@ const visit = <A>(a: A, seen: Set<FQN>): Aspect[] => {
   return [];
 };
 
-export type AspectGraph<A extends IAspect> = {
+export type AspectGraph<A extends AspectLike> = {
   [type in AspectSet<A>["type"]]: {
     [id in Extract<AspectSet<A>, { type: type }>["id"]]: Extract<
       Extract<AspectSet<A>, { type: type }>,
@@ -52,7 +53,7 @@ export type AspectCategory<Aspects extends Aspect> = {
   [id in keyof Aspects["id"]]: Extract<Aspects, { id: id }>;
 };
 
-export type AspectSet<A extends IAspect = any> =
+export type AspectSet<A extends AspectLike = any> =
   | A
   | Visit<A["references"][number], FQN<A>>;
 
@@ -60,7 +61,7 @@ type Visit<Value, Seen extends string = never> =
   Pointer.Resolve<Value> extends infer A
     ? A extends {
         type: string;
-        id: AspectName;
+        id: string;
         references: infer References extends any[];
       }
       ? FQN<A> extends Seen
@@ -73,8 +74,24 @@ type Visit<Value, Seen extends string = never> =
           : never
     : never;
 
-type FQN<A extends { type: string; id: AspectName } = any> =
-  A["id"] extends string ? `${A["type"]}:${A["id"]}` : never;
+type FQN<A extends { type: string; id: string } = any> = A["id"] extends string
+  ? `${A["type"]}:${A["id"]}`
+  : never;
 
-const getFqn = <A extends { type: string; id: AspectName }>(a: A): FQN<A> =>
+const getFqn = <A extends { type: string; id: string }>(a: A): FQN<A> =>
   `${a.type}:${a.id}` as FQN<A>;
+
+export type AspectKinds<A extends Aspect> = {
+  [type in keyof AspectGraph<A>]: {
+    [id in keyof AspectGraph<A>[type]]: InstanceType<
+      AspectGraph<A>[type][id]["class"]
+    >;
+  }[keyof AspectGraph<A>[type]];
+}[keyof AspectGraph<A>];
+
+class CEO extends Agent("ceo")`
+The CEO of the company.
+${Bash}
+` {}
+
+type ____ = AspectSet<CEO>;

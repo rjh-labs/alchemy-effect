@@ -1,10 +1,10 @@
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { Agent, AgentId } from "../agent.ts";
+import { ChatService } from "../chat/service.ts";
+import { Thread, ThreadId } from "../chat/thread.ts";
 import { LLM } from "../llm/llm.ts";
-import { ChatService } from "./service.ts";
-import { Thread, ThreadId } from "./thread.ts";
+import { Agent, AgentId } from "./agent.ts";
 
 export type TaskId = string;
 export const TaskId = S.String.annotations({
@@ -32,13 +32,14 @@ export const startTask = Effect.fn("startTask")(function* <A extends Agent>({
   prompt: string;
 }) {
   const chat = yield* ChatService;
+  const llm = yield* LLM;
 
   const task = yield* chat.createTask({
     threadId: thread.threadId,
-    agent,
+    agentId: agent.id,
   });
 
-  const stream = (yield* LLM)
+  const stream = llm
     .stream({
       model: "anthropic/claude-opus-4.5",
       system: "You are a helpful assistant.",
@@ -47,7 +48,10 @@ export const startTask = Effect.fn("startTask")(function* <A extends Agent>({
     })
     .pipe(Stream.tapSink(chat.sinkTask(task.taskId)));
 
-  return stream;
+  return {
+    task,
+    stream,
+  };
 });
 
 export const interruptTask = Effect.fn("interruptTask")(function* (task: Task) {

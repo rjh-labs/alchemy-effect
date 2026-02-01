@@ -3,12 +3,12 @@ import * as Path from "@effect/platform/Path";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as S from "effect/Schema";
+import { cwd } from "../../cwd.ts";
 import { AspectConfig } from "../config.ts";
-import { cwd } from "../cwd.ts";
-import { param, result, Tool } from "../tool.ts";
+import { Input, Output, Tool } from "../tool.ts";
 import * as Ripgrep from "../util/ripgrep.ts";
 
-const pattern = param("pattern")`The glob pattern to match files against.
+const pattern = Input("pattern")`The glob pattern to match files against.
 Patterns not starting with "**/" are automatically prepended with "**/" to enable recursive searching.
 
 Examples:
@@ -16,12 +16,12 @@ Examples:
   - "**/node_modules/**" - find all node_modules directories
   - "**/test/**/test_*.ts" - find all test_*.ts files in any test directory`;
 
-const path = param(
+const path = Input(
   "path",
   S.optional(S.String),
 )`The directory to search in. Defaults to ${cwd} if not specified.`;
 
-const files = result(
+const files = Output(
   "files",
 )`The list of matching file paths, sorted by modification time (most recent first). Returns a message if no files are found.`;
 

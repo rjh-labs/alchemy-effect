@@ -2,20 +2,14 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { YieldWrap } from "effect/Utils";
 import type { IsNever } from "../util.ts";
-import type { Aspect } from "./aspect.ts";
+import { defineAspect, type Aspect } from "./aspect.ts";
 
 export type IO<
   Type extends string,
   ID extends string,
   S extends S.Struct.Field = typeof S.String,
   References extends any[] = any[],
-> = {
-  type: Type;
-  id: ID;
-  schema: S;
-  template: TemplateStringsArray;
-  references: References;
-};
+> = Aspect<IO<Type, ID, S, References>, Type, ID, References>;
 
 export const io =
   <Type extends string>(type: Type) =>
@@ -26,7 +20,7 @@ export const io =
   <const References extends any[]>(
     template: TemplateStringsArray,
     ...references: References
-  ) => ({
+  ): IO<Type, ID, S, References> => ({
     type,
     id: ID,
     schema,
@@ -34,40 +28,38 @@ export const io =
     references,
   });
 
-export const isParam = (artifact: any): artifact is Param =>
+export const isParam = (artifact: any): artifact is Input =>
   artifact?.type === "param";
 
-export type Param<
+export type Input<
   ID extends string = string,
   S extends S.Struct.Field = typeof S.String,
   References extends any[] = any[],
 > = IO<"param", ID, S, References>;
 
-export declare namespace Param {
+export declare namespace Params {
   export type Of<
     References extends any[],
     Fields extends S.Struct.Fields = {},
   > = References extends []
     ? S.Struct<Fields>["Type"]
     : References extends [infer Artifact, ...infer Rest]
-      ? Artifact extends Param<infer Name extends string, infer Field, any[]>
-        ? Param.Of<Rest, Fields & { [name in Name]: Field }>
-        : Param.Of<Rest, Fields>
+      ? Artifact extends Input<infer Name extends string, infer Field, any[]>
+        ? Params.Of<Rest, Fields & { [name in Name]: Field }>
+        : Params.Of<Rest, Fields>
       : [];
 }
 
-export const param = io("param");
-
-export const isResult = (artifact: any): artifact is Result =>
+export const isResult = (artifact: any): artifact is Output =>
   artifact?.type === "result";
 
-export type Result<
+export type Output<
   ID extends string = string,
   S extends S.Schema<any> = typeof S.String,
   References extends any[] = any[],
 > = IO<"result", ID, S, References>;
 
-export declare namespace Result {
+export declare namespace Output {
   export type Of<
     References extends readonly any[],
     Outputs = never,
@@ -82,7 +74,7 @@ export declare namespace Result {
           schema: infer Schema;
           id: infer Name extends string;
         }
-        ? Result.Of<
+        ? Output.Of<
             Rest,
             (IsNever<Outputs> extends true ? {} : Outputs) & {
               [name in Name]: S.Schema.Type<Schema>;
@@ -90,12 +82,10 @@ export declare namespace Result {
             Primitives
           >
         : Ref extends S.Schema<infer T>
-          ? Result.Of<Rest, Outputs, Primitives | T>
-          : Result.Of<Rest, Outputs, Primitives>
+          ? Output.Of<Rest, Outputs, Primitives | T>
+          : Output.Of<Rest, Outputs, Primitives>
       : never;
 }
-
-export const result = io("result");
 
 export const isTool = (artifact: any): artifact is Tool =>
   artifact?.type === "tool";
@@ -107,7 +97,7 @@ export interface Tool<
   References extends any[] = any[],
   Err = any,
   Req = any,
-> extends Aspect<"tool", ID, References> {
+> extends Aspect<Tool, "tool", ID, References> {
   readonly input: S.Schema<Input>;
   readonly output: S.Schema<Output>;
   readonly alias: ((model: string) => string | undefined) | undefined;
@@ -120,51 +110,82 @@ export interface Tool<
   readonly Err: Err;
 }
 
-export const Tool =
-  <ID extends string>(
-    id: ID,
-    options?: {
-      alias?: (model: string) => string | undefined;
-    },
-  ) =>
-  <References extends any[]>(
+export function Tool<ID extends string>(
+  id: ID,
+  options?: {
+    alias?: (model: string) => string | undefined;
+  },
+) {
+  return <References extends any[]>(
     template: TemplateStringsArray,
     ...references: References
   ) =>
-  <Eff extends YieldWrap<Effect.Effect<any, any, any>>>(
-    execute: (
-      input: Param.Of<References>,
-    ) => Generator<Eff, NoInfer<Result.Of<References>>, never>,
-  ): Tool<
-    ID,
-    Param.Of<References>,
-    Result.Of<References>,
-    References,
-    [Eff] extends [never]
-      ? never
-      : [Eff] extends [YieldWrap<Effect.Effect<infer _A, infer E, infer _R>>]
-        ? E
-        : never,
-    [Eff] extends [never]
-      ? never
-      : [Eff] extends [YieldWrap<Effect.Effect<infer _A, infer _E, infer R>>]
-        ? R
-        : never
-  > =>
-    ({
-      type: "tool",
-      id,
-      template,
-      references,
-      alias: options?.alias,
-      input: deriveSchema(references, isParam) as any as S.Schema<
-        Param.Of<References>
-      >,
-      output: (deriveSchema(references, isResult) ?? S.Any) as any as S.Schema<
-        Result.Of<References>
-      >,
-      execute: Effect.fn(id)(execute),
-    }) as any;
+    <Eff extends YieldWrap<Effect.Effect<any, any, any>>>(
+      execute: (
+        input: Params.Of<References>,
+      ) => Generator<Eff, NoInfer<Output.Of<References>>, never>,
+    ): Tool<
+      ID,
+      Params.Of<References>,
+      Output.Of<References>,
+      References,
+      [Eff] extends [never]
+        ? never
+        : [Eff] extends [YieldWrap<Effect.Effect<infer _A, infer E, infer _R>>]
+          ? E
+          : never,
+      [Eff] extends [never]
+        ? never
+        : [Eff] extends [YieldWrap<Effect.Effect<infer _A, infer _E, infer R>>]
+          ? R
+          : never
+    > =>
+      Object.assign(class {}, {
+        type: "tool",
+        id,
+        template,
+        references,
+        alias: options?.alias,
+        input: deriveSchema(references, isParam) as any as S.Schema<
+          Params.Of<References>
+        >,
+        output: (deriveSchema(references, isResult) ??
+          S.Any) as any as S.Schema<Output.Of<References>>,
+        execute: Effect.fn(id)(execute),
+      }) as any;
+}
+
+export namespace Tool {
+  export const input = io("input");
+  // export const output = io("output");
+
+  export const Schema = S.suspend((): S.Schema<S.Schema<any>> => S.Any);
+
+  export class OutputProps extends S.Class<OutputProps>("OutputProps")({
+    schema: Schema,
+  }) {}
+
+  export interface Output<
+    ID extends string = string,
+    References extends any[] = any[],
+    Props extends OutputProps = OutputProps,
+  > extends Aspect<Output, "output", ID, References, Props> {}
+
+  export const output = defineAspect<
+    <
+      const Name extends string,
+      Props extends OutputProps = { schema: typeof S.String },
+    >(
+      name: Name,
+      props?: Props,
+    ) => <References extends any[]>(
+      template: TemplateStringsArray,
+      ...references: References
+    ) => Output<Name, References, Props>
+  >("output", OutputProps);
+
+  output("stdout");
+}
 
 const deriveSchema = (
   references: any[],
@@ -190,12 +211,3 @@ const deriveSchema = (
     ),
   );
 };
-
-const command = param("command")`The command to execute`;
-
-export class bash extends Tool("bash")`
-A tool that can run bash ${command}s returning a ${S.String}.
-`(function* ({ command }) {
-  console.log(command);
-  return "";
-}) {}

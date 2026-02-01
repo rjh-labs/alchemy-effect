@@ -84,6 +84,7 @@ bun scripts/generate-docs.ts
 ```
 
 This script:
+
 1. Discovers all resource files in `alchemy-effect/src/{cloud}/{service}/`
 2. Parses TypeScript using the TypeScript Compiler API
 3. Extracts JSDoc comments from Props and Attrs interfaces
@@ -115,13 +116,14 @@ The `@default` tag is used to document default values and will appear in the gen
 **Examples are critical for documentation.** Every resource should have examples demonstrating common use cases. Use `@section` and `@example` JSDoc tags on the main Resource export to organize examples into a navigable table of contents.
 
 **Format:**
+
 - `@section <Section Title>` - Creates a heading in the Examples section and adds an entry to the Quick Reference table of contents
 - `@example <Example Title>` - Creates a subheading for a specific code example (must follow a `@section`)
-- Code blocks inside examples use standard markdown fenced code blocks (``` ```)
+- Code blocks inside examples use standard markdown fenced code blocks (` `)
 
 **Example:**
 
-```typescript
+````typescript
 /**
  * An S3 bucket for storing objects.
  *
@@ -156,13 +158,15 @@ The `@default` tag is used to document default values and will appear in the gen
  * ```
  */
 export const Bucket = Resource<...>("AWS.S3.Bucket");
-```
+````
 
 This generates:
+
 1. A "Quick Reference" section with links to each `@section`
 2. An "Examples" section with organized code examples under each section heading
 
 **Best practices for examples:**
+
 - Start with the simplest use case and progress to more complex ones
 - Include examples for all major capabilities (GetObject, PutObject, etc.)
 - Show real-world patterns like error handling, combining with other resources
@@ -316,8 +320,8 @@ For Event Sources, see the [QueueEventSource Binding Provider](./alchemy-effect/
 If you need to know what AWS region or account ID the resource is being created/updated in, you can use this inside any of the lifecycle operations.
 
 ```ts
-const region = yield* Region;
-const account = yield* Account;
+const region = yield * Region;
+const account = yield * Account;
 ```
 
 :::
@@ -329,7 +333,7 @@ You should favor getting the region/account INSIDE the lifecycle operations inst
 create: Effect.fn(function* ({ id, news, session }) {
   const region = yield* Region;
   const accountId = yield* Account;
-})
+});
 ```
 
 :::
@@ -424,7 +428,7 @@ PR bodies should focus exclusively on developer experience (DX) through code sni
 
 **Format:**
 
-```markdown
+````markdown
 One sentence describing the feature or change.
 
 ## Section Name
@@ -432,6 +436,7 @@ One sentence describing the feature or change.
 ```typescript
 // Code snippet demonstrating usage
 ```
+````
 
 ## Another Section
 
@@ -440,7 +445,8 @@ One sentence describing the feature or change.
 ```
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
-```
+
+````
 
 **Example PR body:**
 
@@ -476,7 +482,7 @@ class Consumer extends Lambda.consumeStream("Consumer", {
 \`\`\`
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
-```
+````
 
 **Guidelines:**
 
@@ -498,13 +504,14 @@ This runs the TypeScript compiler in build mode, which checks all projects in th
 
 ## Build Commands
 
-| Command | Description |
-|---------|-------------|
-| `bun tsc -b` | Type check all projects (always run before committing) |
-| `bun run build` | Clean, type check, and build the alchemy-effect package |
+| Command           | Description                                                                                  |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| `bun tsc -b`      | Type check all projects (always run before committing)                                       |
+| `bun run build`   | Clean, type check, and build the alchemy-effect package                                      |
 | `bun build:clean` | Full clean rebuild: cleans all artifacts, reinstalls dependencies, builds, and downloads env |
 
 Use `bun build:clean` when you encounter stale build artifacts or dependency issues. It runs:
+
 1. `bun clean .` - Removes all untracked files except .env
 2. `bun i` - Reinstalls dependencies
 3. `bun run build` - Builds the project

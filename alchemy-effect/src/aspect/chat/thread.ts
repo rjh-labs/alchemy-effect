@@ -1,10 +1,10 @@
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { AgentId } from "../agent.ts";
+import { AgentId } from "../agent/agent.ts";
+import { startTask } from "../agent/task.ts";
 import { LLM } from "../llm/llm.ts";
-import { param, Tool } from "../tool.ts";
+import { Input, Tool } from "../tool.ts";
 import { ChatService } from "./service.ts";
-import { startTask } from "./task.ts";
 
 export type ThreadId = string;
 export const ThreadId = S.String.annotations({
@@ -31,7 +31,7 @@ export const driveThread = Effect.fn("driveThread")(function* (thread: Thread) {
   const chat = yield* ChatService;
   const llm = yield* LLM;
 
-  const code = param("code")`Code to evaluate.`;
+  const code = Input("code")`Code to evaluate.`;
   const evaluate = Tool("eval")`
 Evaluates ${code} in the context of a Thread.
 Use this tool to explore the Chat environment and find relevant information.`(
@@ -41,14 +41,14 @@ Use this tool to explore the Chat environment and find relevant information.`(
     },
   );
 
-  const threadId = param("threadId", ThreadId)`The Thread to reply to.`;
-  const agentId = param(
+  const threadId = Input("threadId", ThreadId)`The Thread to reply to.`;
+  const agentId = Input(
     "agentId",
     AgentId,
     // TODO(sam): use examples of agents in the graph, agents.map((a) => a.id).slice(0, 3).join(", ")
     // or -> make it a literal type of all agent IDs
   )`The ID of the Agent to create a Task for, e.g. @ceo, @sde, @cfo.`;
-  const prompt = param("prompt")`The prompt to start the Task with.`;
+  const prompt = Input("prompt")`The prompt to start the Task with.`;
 
   const reply = Tool("reply")`
 Prompt an Agent (by ${agentId}) to reply in a Threa. The agent is given a ${prompt} to orient the direction of the task,

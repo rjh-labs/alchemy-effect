@@ -1,6 +1,6 @@
 import * as S from "effect/Schema";
+import { Task } from "../agent/task.ts";
 import { Message } from "./message.ts";
-import { Task } from "./task.ts";
 import { Thread } from "./thread.ts";
 
 export class MessageCreatedEvent extends S.Class<MessageCreatedEvent>(

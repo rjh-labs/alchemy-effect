@@ -1,6 +1,6 @@
 {
   "extends": "../tsconfig.base.json",
-  "include": ["package.json", "src"],
+  "include": ["package.json", "src/**/*.ts", "src/**/*.tsx", "src/**/*.json"],
   "compilerOptions": {
     "composite": true,
     "noEmit": false,
@@ -10,7 +10,8 @@
     "moduleResolution": "Bundler",
     "target": "ESNext",
     // ink
-    "jsx": "react",
+    "jsx": "preserve",
+    "jsxImportSource": "@opentui/solid",
     "lib": ["DOM", "DOM.Iterable", "ES2023"]
   }
 }

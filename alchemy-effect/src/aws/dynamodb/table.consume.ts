@@ -13,4 +13,7 @@ export type TableEvent<Data> = Omit<lambda.DynamoDBStreamEvent, "Records"> & {
   Records: TableRecord<Data>[];
 };
 
-export interface Consume<T = Table> extends Capability<"AWS.DynamoDB.Consume", T> {}
+export interface Consume<T = Table> extends Capability<
+  "AWS.DynamoDB.Consume",
+  T
+> {}

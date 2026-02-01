@@ -1,5 +1,5 @@
 import * as S from "effect/Schema";
-import { TaskId } from "./task.ts";
+import { TaskId } from "../agent/task.ts";
 
 export type Message = (typeof Message)["Type"];
 export const Message = S.Union(

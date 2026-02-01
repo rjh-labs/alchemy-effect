@@ -4,23 +4,23 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import { AspectConfig } from "../config.ts";
-import { param, result, Tool } from "../tool.ts";
+import { Input, Output, Tool } from "../tool.ts";
 
-const filePath = param(
+const filePath = Input(
   "filePath",
 )`The path to the file to read. Use relative paths from the current working directory (e.g., "src/index.ts", "test/fixtures/math.ts"). Do NOT use paths starting with "/" - use relative paths instead.`;
 
-const offset = param(
+const offset = Input(
   "offset",
   S.optional(S.Number),
 )`The line number to start reading from (0-based). Defaults to 0.`;
 
-const limit = param(
+const limit = Input(
   "limit",
   S.optional(S.Number),
 )`The number of lines to read. Defaults to 2000.`;
 
-const content = result(
+const content = Output(
   "content",
 )`The file content, or an error message if the file cannot be read.`;
 

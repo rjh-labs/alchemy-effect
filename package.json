@@ -7,6 +7,48 @@
     "type": "git",
     "url": "https://github.com/alchemy-run/alchemy"
   },
+  "workspaces": {
+    "catalog": {
+      "@aws-sdk/credential-providers": "^3.0.0",
+      "@cloudflare/vite-plugin": "^1.13.12",
+      "@cloudflare/workers-types": "^4.20250805.0",
+      "@effect/ai-anthropic": "latest",
+      "@effect/ai-google": "latest",
+      "@effect/ai-openai": "latest",
+      "@effect/ai": "latest",
+      "@effect/cli": "latest",
+      "@effect/cluster": "latest",
+      "@effect/platform-node": "latest",
+      "@effect/platform": "latest",
+      "@effect/vitest": "^0.27.0",
+      "@libsql/client": "^0.17.0",
+      "@opentui/core": "latest",
+      "@opentui/solid": "latest",
+      "@smithy/node-config-provider": "^4.0.0",
+      "@smithy/shared-ini-file-loader": "^4.3.4",
+      "@smithy/types": "^4.8.1",
+      "@types/aws-lambda": "^8.10.152",
+      "@types/bun": "latest",
+      "@types/node": "latest",
+      "ai": "^6.0.62",
+      "aws4fetch": "^1.0.20",
+      "cloudflare": "^5.2.0",
+      "distilled-aws": "^0.0.23",
+      "effect": "latest",
+      "esbuild": "^0.25.12",
+      "fast-xml-parser": "^5.3.4",
+      "solid-js": "latest",
+      "typescript": "^5.9.3",
+      "vite": "^7.1.9",
+      "web-tree-sitter": "0.25.10",
+      "wrangler": "^4.42.2",
+      "yaml": "^2.0.0"
+    },
+    "packages": [
+      "alchemy-effect",
+      "examples/*"
+    ]
+  },
   "type": "module",
   "module": "./lib/index.js",
   "scripts": {
@@ -33,37 +75,6 @@
     "test:live": "bun ./scripts/test.ts",
     "test": "bun run test:live"
   },
-  "workspaces": {
-    "catalog": {
-      "@aws-sdk/credential-providers": "^3.0.0",
-      "@cloudflare/vite-plugin": "^1.13.12",
-      "@cloudflare/workers-types": "^4.20250805.0",
-      "@effect/ai-anthropic": "latest",
-      "@effect/ai-google": "latest",
-      "@effect/ai-openai": "latest",
-      "@effect/ai": "latest",
-      "@effect/cli": "latest",
-      "@effect/cluster": "latest",
-      "@effect/platform-node": "latest",
-      "@effect/platform": "latest",
-      "@opencode-ai/sdk": "latest",
-      "@types/aws-lambda": "^8.10.152",
-      "@types/bun": "latest",
-      "@types/node": "latest",
-      "cloudflare": "^5.2.0",
-      "distilled-aws": "^0.0.23",
-      "effect": "latest",
-      "fast-xml-parser": "^5.3.4",
-      "typescript": "^5.9.3",
-      "vite": "^7.1.9",
-      "web-tree-sitter": "0.25.10",
-      "wrangler": "^4.42.2"
-    },
-    "packages": [
-      "alchemy-effect",
-      "examples/*"
-    ]
-  },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.31",
     "@ai-sdk/openai": "^3.0.23",
@@ -78,8 +89,8 @@
     "bun-types": "^1.3.8",
     "changelogithub": "^13.16.1",
     "dotenv": "^17.2.3",
-    "oxfmt": "^0.27.0",
-    "oxlint": "^1.42.0",
+    "oxfmt": "latest",
+    "oxlint": "latest",
     "pkg-pr-new": "^0.0.62",
     "typescript": "latest",
     "vite-tsconfig-paths": "^5.1.4",

@@ -3,12 +3,12 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
-import { Agent } from "../agent.ts";
+import { AgentId } from "../agent/agent.ts";
+import { Task, TaskId } from "../agent/task.ts";
 import { StreamTextPart } from "../llm/stream-text-part.ts";
 import { ChannelId } from "./channel.ts";
 import type { ChatEvent } from "./event.ts";
 import { Message, MessageId } from "./message.ts";
-import { Task, TaskId } from "./task.ts";
 import { Thread, ThreadId } from "./thread.ts";
 
 export type SenderId = string;
@@ -98,7 +98,7 @@ export class CreateTaskRequest extends S.Class<CreateTaskRequest>(
   "CreateTaskRequest",
 )({
   threadId: ThreadId,
-  agent: Agent.schema,
+  agentId: AgentId,
 }) {}
 
 /**

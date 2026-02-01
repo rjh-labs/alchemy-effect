@@ -65,8 +65,7 @@ export const fromClient = (
   client: Client,
   executor: { execute: Client["execute"] } = client,
 ): SqliteConnection => ({
-  prepare: <R>(sql: string) =>
-    Effect.succeed(wrapStatement<R>(executor, sql)),
+  prepare: <R>(sql: string) => Effect.succeed(wrapStatement<R>(executor, sql)),
 
   exec: (sql: string) =>
     Effect.tryPromise({
@@ -75,7 +74,9 @@ export const fromClient = (
         parseError(extractErrorCode(e), `Failed to execute SQL: ${e}`, e),
     }),
 
-  transaction: <A, E>(fn: (conn: SqliteConnection) => Effect.Effect<A, E, never>) =>
+  transaction: <A, E>(
+    fn: (conn: SqliteConnection) => Effect.Effect<A, E, never>,
+  ) =>
     Effect.tryPromise({
       try: async () => {
         const tx = await client.transaction("write");
