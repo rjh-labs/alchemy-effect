@@ -14,7 +14,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import type { Tool } from "../tool.ts";
+import type { Tool } from "../tool/tool.ts";
 import { fromAnyError, type LLMError } from "./error.ts";
 import type { StreamTextPart } from "./stream-text-part.ts";
 

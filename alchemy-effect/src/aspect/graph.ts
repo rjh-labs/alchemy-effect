@@ -5,7 +5,7 @@ import {
   type AspectLike,
   type Pointer,
 } from "./aspect.ts";
-import { Bash } from "./tools/bash.ts";
+import { bash } from "./coding/bash.ts";
 
 export const deriveGraph = <A extends AspectLike>(agent: A): AspectGraph<A> => {
   const seen = new Set<FQN>();
@@ -91,7 +91,7 @@ export type AspectKinds<A extends Aspect> = {
 
 class CEO extends Agent("ceo")`
 The CEO of the company.
-${Bash}
+${bash}
 ` {}
 
 type ____ = AspectSet<CEO>;

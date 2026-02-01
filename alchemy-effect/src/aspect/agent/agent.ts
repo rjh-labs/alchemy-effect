@@ -1,6 +1,5 @@
 import * as S from "effect/Schema";
 import { defineAspect, type Aspect } from "../aspect.ts";
-// import { Aspect } from "./aspect.ts";
 
 export type AgentId = string;
 export const AgentId = S.String.annotations({

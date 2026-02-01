@@ -5,31 +5,33 @@ import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import { cwd } from "../../cwd.ts";
 import { AspectConfig } from "../config.ts";
-import { Input, Output, Tool } from "../tool.ts";
+import { Parameter } from "../tool/parameter.ts";
+import { Result } from "../tool/result.ts";
+import { Tool } from "../tool/tool.ts";
 import { exec } from "../util/exec.ts";
 
 const MAX_LINE_LENGTH = 2000;
 
-const pattern = Input(
+export class pattern extends Parameter(
   "pattern",
 )`The regex pattern to search for in file contents.
-Supports full regex syntax (e.g., "log.*Error", "function\\s+\\w+", etc.)`;
+Supports full regex syntax (e.g., "log.*Error", "function\\s+\\w+", etc.)` {}
 
-const path = Input(
+export class path extends Parameter(
   "path",
   S.optional(S.String),
-)`The directory to search in. Defaults to ${cwd} if not specified.`;
+)`The directory to search in. Defaults to ${cwd} if not specified.` {}
 
-const include = Input(
+export class include extends Parameter(
   "include",
   S.optional(S.String),
-)`File pattern to include in the search (e.g., "*.js", "*.{ts,tsx}")`;
+)`File pattern to include in the search (e.g., "*.js", "*.{ts,tsx}")` {}
 
-const matches = Output(
+export class matches extends Result(
   "matches",
-)`The search results showing file paths and matching lines, sorted by modification time.`;
+)`The search results showing file paths and matching lines, sorted by modification time.` {}
 
-export const grep = Tool(
+export class grep extends Tool(
   "grep",
 )`Fast content search tool that works with any codebase size.
 Returns ${matches} with file paths and line numbers.
@@ -147,4 +149,4 @@ Given a ${pattern} and optional ${path} and ${include}:
   }
 
   return { matches: outputLines.join("\n") };
-});
+}) {}

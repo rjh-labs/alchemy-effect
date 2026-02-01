@@ -3,7 +3,7 @@ import * as S from "effect/Schema";
 import { AgentId } from "../agent/agent.ts";
 import { startTask } from "../agent/task.ts";
 import { LLM } from "../llm/llm.ts";
-import { Input, Tool } from "../tool.ts";
+import { Tool } from "../tool/tool.ts";
 import { ChatService } from "./service.ts";
 
 export type ThreadId = string;

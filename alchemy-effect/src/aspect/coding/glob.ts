@@ -5,27 +5,31 @@ import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import { cwd } from "../../cwd.ts";
 import { AspectConfig } from "../config.ts";
-import { Input, Output, Tool } from "../tool.ts";
+import { Parameter } from "../tool/parameter.ts";
+import { Result } from "../tool/result.ts";
+import { Tool } from "../tool/tool.ts";
 import * as Ripgrep from "../util/ripgrep.ts";
 
-const pattern = Input("pattern")`The glob pattern to match files against.
+export class pattern extends Parameter(
+  "pattern",
+)`The glob pattern to match files against.
 Patterns not starting with "**/" are automatically prepended with "**/" to enable recursive searching.
 
 Examples:
   - "*.js" (becomes "**/*.js") - find all .js files
   - "**/node_modules/**" - find all node_modules directories
-  - "**/test/**/test_*.ts" - find all test_*.ts files in any test directory`;
+  - "**/test/**/test_*.ts" - find all test_*.ts files in any test directory` {}
 
-const path = Input(
+export class path extends Parameter(
   "path",
   S.optional(S.String),
-)`The directory to search in. Defaults to ${cwd} if not specified.`;
+)`The directory to search in. Defaults to ${cwd} if not specified.` {}
 
-const files = Output(
+export class files extends Result(
   "files",
-)`The list of matching file paths, sorted by modification time (most recent first). Returns a message if no files are found.`;
+)`The list of matching file paths, sorted by modification time (most recent first). Returns a message if no files are found.` {}
 
-export const glob = Tool(
+export class glob extends Tool(
   "glob",
 )`Fast file pattern matching tool that works with any codebase size.
 Returns matching ${files} sorted by modification time.
@@ -92,4 +96,4 @@ Given a ${pattern} and optional ${path}:
   return {
     files: output.join("\n"),
   };
-});
+}) {}

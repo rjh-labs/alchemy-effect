@@ -5,18 +5,20 @@ import * as S from "effect/Schema";
 import { AspectConfig } from "../config.ts";
 import { formatDiagnostic } from "../lsp/diagnostics.ts";
 import { LSPManager } from "../lsp/manager.ts";
-import { Input, Output, Tool } from "../tool.ts";
+import { Parameter } from "../tool/parameter.ts";
+import { Result } from "../tool/result.ts";
+import { Tool } from "../tool/tool.ts";
 
-const paths = Input(
+export class paths extends Parameter(
   "paths",
   S.optional(S.Array(S.String)),
-)`Optional array of paths to files or directories to read linter errors for. If not provided, returns diagnostics for all files in the workspace.`;
+)`Optional array of paths to files or directories to read linter errors for. If not provided, returns diagnostics for all files in the workspace.` {}
 
-const diagnostics = Output(
+export class diagnostics extends Result(
   "diagnostics",
-)`The linter errors and diagnostics for the specified paths.`;
+)`The linter errors and diagnostics for the specified paths.` {}
 
-export const readlints = Tool(
+export class readlints extends Tool(
   "readlints",
 )`Read and display linter errors from the workspace.
 Returns ${diagnostics} for the specified files.
@@ -75,4 +77,4 @@ Given optional ${paths}:
   }
 
   return { diagnostics: results.join("\n") };
-});
+}) {}

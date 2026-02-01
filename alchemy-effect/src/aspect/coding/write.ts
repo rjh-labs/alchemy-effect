@@ -7,19 +7,23 @@ import {
   formatDiagnostics,
   getDiagnosticsIfAvailable,
 } from "../lsp/diagnostics.ts";
-import { Input, Output, Tool } from "../tool.ts";
+import { Parameter } from "../tool/parameter.ts";
+import { Result } from "../tool/result.ts";
+import { Tool } from "../tool/tool.ts";
 
-const filePath = Input(
+export class filePath extends Parameter(
   "filePath",
-)`The path to the file to write. Use relative paths from the current working directory (e.g., "src/index.ts", "test/fixtures/math.test.ts"). Do NOT use paths starting with "/" - use relative paths instead.`;
+)`The path to the file to write. Use relative paths from the current working directory (e.g., "src/index.ts", "test/fixtures/math.test.ts"). Do NOT use paths starting with "/" - use relative paths instead.` {}
 
-const content = Input("content")`The content to write to the file.`;
+export class content extends Parameter(
+  "content",
+)`The content to write to the file.` {}
 
-const output = Output(
+export class output extends Result(
   "result",
-)`The result of the write operation, including any diagnostics from LSP.`;
+)`The result of the write operation, including any diagnostics from LSP.` {}
 
-export const write = Tool("write")`Writes a file to the local filesystem.
+export class write extends Tool("write")`Writes a file to the local filesystem.
 Returns the ${output} of the operation.
 
 Given a ${filePath} and ${content}:
@@ -74,4 +78,4 @@ Given a ${filePath} and ${content}:
       ? `Wrote file: ${filePath}\n\n${formatted}`
       : `Wrote file: ${filePath}`,
   };
-});
+}) {}

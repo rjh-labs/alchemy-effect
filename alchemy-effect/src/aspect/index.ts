@@ -4,7 +4,7 @@ export * from "./aspect.ts";
 export * from "./config.ts";
 export * from "./graph.ts";
 export * from "./organization.ts";
-export * from "./tool.ts";
+export * from "./tool/index.ts";
 
+export * as Coding from "./coding/index.ts";
 export * as LLM from "./llm/index.ts";
-export * as Tools from "./tools/index.ts";

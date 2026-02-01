@@ -4,27 +4,29 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import { AspectConfig } from "../config.ts";
-import { Input, Output, Tool } from "../tool.ts";
+import { Parameter } from "../tool/parameter.ts";
+import { Result } from "../tool/result.ts";
+import { Tool } from "../tool/tool.ts";
 
-const filePath = Input(
+export class filePath extends Parameter(
   "filePath",
-)`The path to the file to read. Use relative paths from the current working directory (e.g., "src/index.ts", "test/fixtures/math.ts"). Do NOT use paths starting with "/" - use relative paths instead.`;
+)`The path to the file to read. Use relative paths from the current working directory (e.g., "src/index.ts", "test/fixtures/math.ts"). Do NOT use paths starting with "/" - use relative paths instead.` {}
 
-const offset = Input(
+export class offset extends Parameter(
   "offset",
   S.optional(S.Number),
-)`The line number to start reading from (0-based). Defaults to 0.`;
+)`The line number to start reading from (0-based). Defaults to 0.` {}
 
-const limit = Input(
+export class limit extends Parameter(
   "limit",
   S.optional(S.Number),
-)`The number of lines to read. Defaults to 2000.`;
+)`The number of lines to read. Defaults to 2000.` {}
 
-const content = Output(
+export class content extends Result(
   "content",
-)`The file content, or an error message if the file cannot be read.`;
+)`The file content, or an error message if the file cannot be read.` {}
 
-export const read = Tool("read")`Reads a file from the local filesystem.
+export class read extends Tool("read")`Reads a file from the local filesystem.
 Returns the ${content} of the file.
 
 Given a ${filePath} and optional ${offset} and ${limit}:
@@ -116,4 +118,4 @@ Given a ${filePath} and optional ${offset} and ${limit}:
       .slice(offset, offset + limit)
       .join("\n"),
   };
-});
+}) {}

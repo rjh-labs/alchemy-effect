@@ -6,22 +6,24 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { cwd } from "../../cwd.ts";
 import { AspectConfig } from "../config.ts";
-import { Tool } from "../tool.ts";
+import { Parameter } from "../tool/parameter.ts";
+import { Result } from "../tool/result.ts";
+import { Tool } from "../tool/tool.ts";
 import { CommandValidator } from "../util/command-validator.ts";
 
-class Command extends Tool.input("command")`The command to execute` {}
+export class command extends Parameter("command")`The command to execute` {}
 
-class Timeout extends Tool.input(
+export class timeout extends Parameter(
   "timeout",
   S.optional(S.Number),
 )`Optional timeout in milliseconds` {}
 
-class Workdir extends Tool.input(
+export class workdir extends Parameter(
   "workdir",
   S.optional(S.String),
 )`The working directory to run the command in. Defaults to ${cwd}. Use this instead of 'cd' commands.` {}
 
-class Description extends Tool.input(
+export class description extends Parameter(
   "description",
 )`Clear, concise description of what this command does in 5-10 words. Examples:
 Input: ls
@@ -36,23 +38,23 @@ Output: Installs package dependencies
 Input: mkdir foo
 Output: Creates directory 'foo'` {}
 
-class ExitCode extends Tool.output(
+export class exitCode extends Result(
   "exitCode",
   S.Number,
 )`The exit code of the command.` {}
 
-class Stdout extends Tool.output(
-  "output",
+export class stdout extends Result(
+  "stdout",
   S.String,
 )`Containing both stdout and stderr.` {}
 
-export class Bash extends Tool("bash", {
+export class bash extends Tool("bash", {
   alias: (model) => (model?.includes("claude") ? "AnthropicBash" : undefined),
-})`Executes a given bash ${Command} in a persistent shell session with optional ${Timeout}, ensuring proper handling and security measures.
-Returns the ${ExitCode} and ${Stdout} containing both stdout and stderr.
+})`Executes a given bash ${command} in a persistent shell session with optional ${timeout}, ensuring proper handling and security measures.
+Returns the ${exitCode} and ${stdout} containing both stdout and stderr.
 If the command is invalid, an error message will be returned as a ${S.String}.
 
-All commands run in ${cwd} by default. Use the ${Workdir} parameter if you need to run a command in a different directory. AVOID using \`cd <directory> && <command>\` patterns - use \`workdir\` instead.
+All commands run in ${cwd} by default. Use the ${workdir} parameter if you need to run a command in a different directory. AVOID using \`cd <directory> && <command>\` patterns - use \`workdir\` instead.
 
 IMPORTANT: This tool is for terminal operations like git, npm, docker, etc. DO NOT use it for file operations (reading, writing, editing, searching, finding files) - use the specialized tools for this instead.
 
@@ -75,7 +77,7 @@ Before executing the command, please follow these steps:
 Usage notes:
   - The command argument is required.
   - You can specify an optional timeout in milliseconds (up to 600000ms / 10 minutes). If not specified, commands will time out after 120000ms (2 minutes).
-  - It is very helpful if you write a clear, concise ${Description} of what this command does in 5-10 words.
+  - It is very helpful if you write a clear, concise ${description} of what this command does in 5-10 words.
   - If the output exceeds 30000 characters, output will be truncated before being returned to you.
   - You can use the \`run_in_background\` parameter to run the command in the background, which allows you to continue working while the command runs. You can monitor the output using the Bash tool as it becomes available. You do not need to use '&' at the end of the command when using this parameter.
 
@@ -211,6 +213,6 @@ Important:
 
   return {
     exitCode,
-    output,
+    stdout: output,
   };
 }) {}

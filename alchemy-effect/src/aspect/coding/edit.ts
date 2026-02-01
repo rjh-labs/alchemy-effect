@@ -8,29 +8,35 @@ import {
   formatDiagnostics,
   getDiagnosticsIfAvailable,
 } from "../lsp/diagnostics.ts";
-import { Input, Output, Tool } from "../tool.ts";
+import { Parameter } from "../tool/parameter.ts";
+import { Result } from "../tool/result.ts";
+import { Tool } from "../tool/tool.ts";
 import { replace } from "../util/replace.ts";
 
-const filePath = Input("filePath")`The absolute path to the file to modify`;
+export class filePath extends Parameter(
+  "filePath",
+)`The absolute path to the file to modify` {}
 
-const oldString = Input(
+export class oldString extends Parameter(
   "oldString",
-)`The text to replace. Use an empty string "" to create a new file.`;
+)`The text to replace. Use an empty string "" to create a new file.` {}
 
-const newString = Input(
+export class newString extends Parameter(
   "newString",
-)`The text to replace it with (must be different from oldString)`;
+)`The text to replace it with (must be different from oldString)` {}
 
-const replaceAll = Input(
+export class replaceAll extends Parameter(
   "replaceAll",
   S.Boolean,
-)`Replace all occurrences of oldString (default false). Use this when renaming variables or updating repeated patterns.`;
+)`Replace all occurrences of oldString (default false). Use this when renaming variables or updating repeated patterns.` {}
 
-const output = Output(
+export class output extends Result(
   "result",
-)`The result of the edit operation, including any diagnostics from LSP.`;
+)`The result of the edit operation, including any diagnostics from LSP.` {}
 
-export const edit = Tool("edit")`Performs exact string replacements in files.
+export class edit extends Tool(
+  "edit",
+)`Performs exact string replacements in files.
 Returns the ${output} of the operation.
 
 Given a ${filePath}, ${oldString}, and ${newString}:
@@ -147,4 +153,4 @@ Given a ${filePath}, ${oldString}, and ${newString}:
       ? `${action} file: ${filePath}\n\n${formatted}`
       : `${action} file: ${filePath}`,
   };
-});
+}) {}
