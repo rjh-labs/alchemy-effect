@@ -1,11 +1,10 @@
-import { Agent } from "./agent/agent.ts";
+import type { Instance } from "../policy.ts";
 import {
   isAspect,
   type Aspect,
   type AspectLike,
   type Pointer,
 } from "./aspect.ts";
-import { bash } from "./coding/bash.ts";
 
 export const deriveGraph = <A extends AspectLike>(agent: A): AspectGraph<A> => {
   const seen = new Set<FQN>();
@@ -66,7 +65,7 @@ type Visit<Value, Seen extends string = never> =
       }
       ? FQN<A> extends Seen
         ? never
-        : A | Visit<References[number], Seen | FQN<A>>
+        : Instance<A> | Visit<References[number], Seen | FQN<A>>
       : A extends readonly (infer I)[]
         ? Visit<I, Seen>
         : A extends Record<string, infer V>
@@ -83,15 +82,11 @@ const getFqn = <A extends { type: string; id: string }>(a: A): FQN<A> =>
 
 export type AspectKinds<A extends Aspect> = {
   [type in keyof AspectGraph<A>]: {
+    // @ts-expect-error
     [id in keyof AspectGraph<A>[type]]: InstanceType<
+      // @ts-expect-error
       AspectGraph<A>[type][id]["class"]
     >;
+    // @ts-expect-error
   }[keyof AspectGraph<A>[type]];
 }[keyof AspectGraph<A>];
-
-class CEO extends Agent("ceo")`
-The CEO of the company.
-${bash}
-` {}
-
-type ____ = AspectSet<CEO>;

@@ -16,7 +16,7 @@ export interface TuiPluginService<A extends Aspect> {
   content?: (a: A) => JSX.Element;
 }
 
-export const TuiPlugin = <A extends Aspect>(aspect: A): TuiPlugin<A> =>
+export const TuiPlugin = <A extends Aspect>(type: A["type"]): TuiPlugin<A> =>
   Context.GenericTag<`TuiPlugin<${A["type"]}>`, TuiPluginService<A>>(
-    `TuiPlugin<${aspect.type}>`,
+    `TuiPlugin<${type}>`,
   );

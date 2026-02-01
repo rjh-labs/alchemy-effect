@@ -51,9 +51,9 @@ export const GraphProvider = <Org extends Organization>(
 render(
   () => (
     <ThemeProvider mode="dark">
-      <GraphProvider>
-        <text>Hello, World!</text>
-      </GraphProvider>
+      {/* <GraphProvider> */}
+      <text>Hello, World!</text>
+      {/* </GraphProvider> */}
     </ThemeProvider>
   ),
   {

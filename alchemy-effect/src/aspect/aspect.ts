@@ -2,8 +2,10 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { YieldWrap } from "effect/Utils";
 import type { Class } from "../class.ts";
+import { TuiPlugin } from "../tui/plugin.ts";
 import type { IsAny } from "../util.ts";
-import type { Plugins } from "./plugin.ts";
+import { ContextPlugin } from "./context/plugin.ts";
+import { createPluginBuilder, type Plugins } from "./plugin.ts";
 import type { Parameters } from "./tool/parameter.ts";
 import type { Result } from "./tool/result.ts";
 import type { ToolHandler } from "./tool/tool.ts";
@@ -49,7 +51,7 @@ export interface Aspect<
   template: TemplateStringsArray;
   references: References;
   schema: IsAny<Props> extends true
-    ? []
+    ? any
     : [Props] extends [S.Struct.Field]
       ? S.Schema<Props>
       : [Props] extends [object]
@@ -60,7 +62,7 @@ export interface Aspect<
   props: Props;
 }
 
-export declare const defineAspect: <Fn extends AspectType<any>>(
+export const defineAspect: <Fn extends AspectType<any>>(
   type: GetAspectType<Fn>["type"],
   ...props: GetAspectType<Fn>["schema"] extends Class<infer C>
     ? IsAny<C> extends true
@@ -70,12 +72,55 @@ export declare const defineAspect: <Fn extends AspectType<any>>(
         : [C] extends [object]
           ? [cls: Class<C>]
           : [schema: S.Schema<C>]
-    : [schema: GetAspectType<Fn>["schema"]]
+    : []
 ) => Fn & {
+  kind: "aspect";
+  type: string;
+  schema: GetAspectType<Fn>["schema"];
   plugin: Plugins<GetAspectType<Fn>>;
-};
+} = ((type: string, schema: any) =>
+  Object.assign(
+    (name: string, data: any) =>
+      (template: TemplateStringsArray, ...references: any[]) => {
+        const aspect = (handler: any) => ({
+          kind: "aspect",
+          type,
+          id: name,
+          template,
+          references,
+          schema,
+          data,
+          handler,
+          plugin: {
+            context: createPluginBuilder(ContextPlugin(type) as any),
+            tui: createPluginBuilder(TuiPlugin(type) as any),
+          },
+        });
+        // function declaration so that a class can extends this
+        return Object.assign(function (handler: any) {
+          return Object.assign(function () {}, aspect(handler));
+        }, aspect(undefined));
+      },
+    {
+      kind: "aspect",
+      type,
+      schema,
+      plugin: {
+        context: createPluginBuilder(ContextPlugin(type) as any),
+        tui: createPluginBuilder(TuiPlugin(type) as any),
+      },
+    },
+  )) as any;
 
 type AspectType<Props = any> = AspectObject<Props> | AspectFunction<Props>;
+
+type AspectObject<Props = any> = <Name extends string>(
+  name: Name,
+  props?: Props,
+) => <References extends any[]>(
+  template: TemplateStringsArray,
+  ...references: References
+) => Aspect<Aspect, string, Name, References, Props>;
 
 type AspectFunction<Props = any> = <Name extends string>(
   name: Name,
@@ -109,14 +154,6 @@ type AspectFunction<Props = any> = <Name extends string>(
         : never
   >
 >;
-
-type AspectObject<Props = any> = <Name extends string>(
-  name: Name,
-  props?: Props,
-) => <References extends any[]>(
-  template: TemplateStringsArray,
-  ...references: References
-) => Aspect<Aspect, string, Name, References, Props>;
 
 type GetAspectType<Fn> = Fn extends (name: string, props?: any) => infer Return
   ? Return extends (...args: any[]) => infer Return2

@@ -1,3 +1,4 @@
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type { TuiPlugin, TuiPluginService } from "../tui/plugin.ts";
@@ -19,3 +20,14 @@ export type Plugin<Tag, Service> = {
 export type TuiPlugins<C> = C extends Aspect ? TuiPlugin<C> : never;
 
 export type ContextPlugins<C> = C extends Aspect ? ContextPlugin<C> : never;
+
+export const createPluginBuilder = <
+  Tag extends Context.Tag<string, Service>,
+  Service,
+>(
+  tag: Tag,
+) => ({
+  effect: <Err, Req>(eff: Effect.Effect<Service, Err, Req>) =>
+    Layer.effect(tag, eff),
+  succeed: (service: Service) => Layer.succeed(tag, service),
+});
