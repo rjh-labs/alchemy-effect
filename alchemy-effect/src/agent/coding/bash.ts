@@ -6,24 +6,22 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { cwd } from "../../cwd.ts";
 import { AspectConfig } from "../aspect.ts";
-import { Parameter } from "../tool/parameter.ts";
-import { Result } from "../tool/result.ts";
 import { Tool } from "../tool/tool.ts";
 import { CommandValidator } from "../util/command-validator.ts";
 
-export class command extends Parameter("command")`The command to execute` {}
+export class command extends Tool.input("command")`The command to execute` {}
 
-export class timeout extends Parameter(
+export class timeout extends Tool.input(
   "timeout",
   S.optional(S.Number),
 )`Optional timeout in milliseconds` {}
 
-export class workdir extends Parameter(
+export class workdir extends Tool.input(
   "workdir",
   S.optional(S.String),
 )`The working directory to run the command in. Defaults to ${cwd}. Use this instead of 'cd' commands.` {}
 
-export class description extends Parameter(
+export class description extends Tool.input(
   "description",
 )`Clear, concise description of what this command does in 5-10 words. Examples:
 Input: ls
@@ -38,12 +36,12 @@ Output: Installs package dependencies
 Input: mkdir foo
 Output: Creates directory 'foo'` {}
 
-export class exitCode extends Result(
+export class exitCode extends Tool.output(
   "exitCode",
   S.Number,
 )`The exit code of the command.` {}
 
-export class stdout extends Result(
+export class stdout extends Tool.output(
   "stdout",
   S.String,
 )`Containing both stdout and stderr.` {}

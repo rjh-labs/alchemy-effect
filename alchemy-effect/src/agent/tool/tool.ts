@@ -3,8 +3,8 @@ import * as S from "effect/Schema";
 import type { YieldWrap } from "effect/Utils";
 import { Function } from "../../schema.ts";
 import { defineAspect, type Aspect } from "../aspect.ts";
-import type { Parameters } from "./parameter.ts";
-import type { Result } from "./result.ts";
+import { Parameter, type Parameters } from "./parameter.ts";
+import { Result } from "./result.ts";
 
 export const isTool = (artifact: any): artifact is Tool =>
   artifact?.type === "tool";
@@ -74,4 +74,7 @@ export const Tool = defineAspect<
             : never
       >
     >)
->("tool", ToolProps);
+>("tool", ToolProps).with({
+  input: Parameter,
+  output: Result,
+});

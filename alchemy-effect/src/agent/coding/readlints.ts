@@ -5,16 +5,14 @@ import * as S from "effect/Schema";
 import { AspectConfig } from "../aspect.ts";
 import { formatDiagnostic } from "../lsp/diagnostics.ts";
 import { LSPManager } from "../lsp/manager.ts";
-import { Parameter } from "../tool/parameter.ts";
-import { Result } from "../tool/result.ts";
 import { Tool } from "../tool/tool.ts";
 
-export class paths extends Parameter(
+export class paths extends Tool.input(
   "paths",
   S.optional(S.Array(S.String)),
 )`Optional array of paths to files or directories to read linter errors for. If not provided, returns diagnostics for all files in the workspace.` {}
 
-export class diagnostics extends Result(
+export class diagnostics extends Tool.output(
   "diagnostics",
 )`The linter errors and diagnostics for the specified paths.` {}
 

@@ -28,10 +28,10 @@ import {
   runCollectToolResults,
   type StreamTextPart,
 } from "@/aspect/llm";
-import { describe, expect, it } from "vitest";
 import * as Chunk from "effect/Chunk";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
+import { describe, expect, it } from "vitest";
 
 // Helper to create mock stream parts
 const textStart = (id: string): StreamTextPart => ({
@@ -412,9 +412,9 @@ describe("stream-collectors", () => {
       Effect.gen(function* () {
         const parts: StreamTextPart[] = [
           toolCall("tc1", "search", { query: "test" }),
-          toolResult("tc1", "search", { results: ["a", "b"] }),
+          toolTool.output("tc1", "search", { results: ["a", "b"] }),
           toolCall("tc2", "read", { file: "test.txt" }),
-          toolResult("tc2", "read", { content: "file content" }),
+          toolTool.output("tc2", "read", { content: "file content" }),
         ];
 
         const stream = Stream.fromIterable(parts);
@@ -521,7 +521,7 @@ describe("stream-collectors", () => {
     it("runCollectToolResults works", () =>
       Effect.gen(function* () {
         const parts: StreamTextPart[] = [
-          toolResult("tc1", "search", { data: "test" }),
+          toolTool.output("tc1", "search", { data: "test" }),
         ];
         const stream = Stream.fromIterable(parts);
         const result = yield* runCollectToolResults(stream);
@@ -592,7 +592,7 @@ describe("stream-collectors", () => {
           const parts: StreamTextPart[] = [
             textDelta("1", "Hello"),
             toolCall("tc1", "search", {}),
-            toolResult("tc1", "search", {}),
+            toolTool.output("tc1", "search", {}),
             toolCall("tc2", "read", {}),
           ];
 
@@ -611,9 +611,9 @@ describe("stream-collectors", () => {
         Effect.gen(function* () {
           const parts: StreamTextPart[] = [
             toolCall("tc1", "search", {}),
-            toolResult("tc1", "search", { data: "result1" }),
+            toolTool.output("tc1", "search", { data: "result1" }),
             toolCall("tc2", "read", {}),
-            toolResult("tc2", "read", { data: "result2" }),
+            toolTool.output("tc2", "read", { data: "result2" }),
           ];
 
           const stream = Stream.fromIterable(parts);
@@ -632,7 +632,7 @@ describe("stream-collectors", () => {
           const parts: StreamTextPart[] = [
             toolCall("tc1", "search", {}),
             toolError("tc1", "search", new Error("Failed")),
-            toolResult("tc2", "read", {}),
+            toolTool.output("tc2", "read", {}),
           ];
 
           const stream = Stream.fromIterable(parts);

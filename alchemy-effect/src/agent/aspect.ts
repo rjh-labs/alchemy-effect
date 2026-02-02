@@ -38,6 +38,7 @@ export type AspectClass<Fn extends AspectType<any>> = Fn & {
   type: string;
   schema: GetAspectType<Fn>["schema"];
   plugin: Plugins<GetAspectType<Fn>>;
+  with<T>(context: T): AspectClass<Fn> & T;
 };
 
 export type AspectLike = {
@@ -75,14 +76,18 @@ export interface Aspect<
 
 export const defineAspect: <Fn extends AspectType<any>>(
   type: GetAspectType<Fn>["type"],
-  ...props: GetAspectType<Fn>["schema"] extends Class<infer C>
-    ? IsAny<C> extends true
-      ? []
-      : [C] extends [S.Struct.Field]
-        ? [schema: S.Schema<C>]
-        : [C] extends [object]
-          ? [cls: Class<C>]
-          : [schema: S.Schema<C>]
+  ...props: GetAspectType<Fn>["schema"] extends infer Schema
+    ? Schema extends Class<infer C>
+      ? IsAny<C> extends true
+        ? []
+        : [C] extends [S.Struct.Field]
+          ? [schema: S.Schema<C>]
+          : [C] extends [object]
+            ? [cls: Class<C>]
+            : [schema: S.Schema<C>]
+      : IsAny<Schema> extends true
+        ? []
+        : [Schema]
     : []
 ) => AspectClass<Fn> = ((type: string, schema: any) =>
   Object.assign(
@@ -177,39 +182,6 @@ type GetAspectType<Fn> = Fn extends (name: string, props?: any) => infer Return
     : never
   : never;
 
-export const deriveGraph = <A extends AspectLike>(agent: A): AspectGraph<A> => {
-  const seen = new Set<FQN>();
-  return [agent, ...agent.references.flatMap((v) => visit(v, seen))].reduce(
-    (acc: AspectGraph<A>, aspect) => ({
-      ...acc,
-      [aspect.type]: {
-        ...acc[aspect.type as keyof AspectGraph<A>],
-        [aspect.id as keyof AspectGraph<A>[keyof AspectGraph<A>]]: aspect,
-      },
-    }),
-    {} as AspectGraph<A>,
-  );
-};
-
-const visit = <A>(a: A, seen: Set<FQN>): Aspect[] => {
-  if (isAspect(a)) {
-    const fqn = getFqn(a);
-    if (!seen.has(fqn)) {
-      seen.add(fqn);
-      return [a, ...a.references.flatMap((v) => visit(v, seen))];
-    }
-  } else if (Array.isArray(a)) {
-    return a.flatMap((v) => visit(v, seen));
-  } else if (a instanceof Set) {
-    return Array.from(a).flatMap((v) => visit(v, seen));
-  } else if (a instanceof Map) {
-    return Array.from(a.values()).flatMap((v) => visit(v, seen));
-  } else if (typeof a === "object" && a !== null) {
-    return Object.values(a).flatMap((v) => visit(v, seen));
-  }
-  return [];
-};
-
 export type AspectGraph<A extends AspectLike> = {
   [type in AspectSet<A>["type"]]: {
     [id in Extract<AspectSet<A>, { type: type }>["id"]]: Extract<
@@ -261,3 +233,36 @@ export type AspectKinds<A extends Aspect> = {
     // @ts-expect-error
   }[keyof AspectGraph<A>[type]];
 }[keyof AspectGraph<A>];
+
+export const deriveGraph = <A extends AspectLike>(agent: A): AspectGraph<A> => {
+  const seen = new Set<FQN>();
+  return [agent, ...agent.references.flatMap((v) => visit(v, seen))].reduce(
+    (acc: AspectGraph<A>, aspect) => ({
+      ...acc,
+      [aspect.type]: {
+        ...acc[aspect.type as keyof AspectGraph<A>],
+        [aspect.id as keyof AspectGraph<A>[keyof AspectGraph<A>]]: aspect,
+      },
+    }),
+    {} as AspectGraph<A>,
+  );
+};
+
+const visit = <A>(a: A, seen: Set<FQN>): Aspect[] => {
+  if (isAspect(a)) {
+    const fqn = getFqn(a);
+    if (!seen.has(fqn)) {
+      seen.add(fqn);
+      return [a, ...a.references.flatMap((v) => visit(v, seen))];
+    }
+  } else if (Array.isArray(a)) {
+    return a.flatMap((v) => visit(v, seen));
+  } else if (a instanceof Set) {
+    return Array.from(a).flatMap((v) => visit(v, seen));
+  } else if (a instanceof Map) {
+    return Array.from(a.values()).flatMap((v) => visit(v, seen));
+  } else if (typeof a === "object" && a !== null) {
+    return Object.values(a).flatMap((v) => visit(v, seen));
+  }
+  return [];
+};

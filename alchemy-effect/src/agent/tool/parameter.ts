@@ -1,6 +1,6 @@
 import * as S from "effect/Schema";
+import { Field } from "../../schema.ts";
 import { defineAspect, type Aspect } from "../aspect.ts";
-import { Field } from "../schema.ts";
 
 export const isParameter = (artifact: any): artifact is Parameter =>
   artifact?.type === "param";

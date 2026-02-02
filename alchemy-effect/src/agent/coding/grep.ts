@@ -5,29 +5,27 @@ import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import { cwd } from "../../cwd.ts";
 import { AspectConfig } from "../aspect.ts";
-import { Parameter } from "../tool/parameter.ts";
-import { Result } from "../tool/result.ts";
 import { Tool } from "../tool/tool.ts";
 import { exec } from "../util/exec.ts";
 
 const MAX_LINE_LENGTH = 2000;
 
-class pattern extends Parameter(
+class pattern extends Tool.input(
   "pattern",
 )`The regex pattern to search for in file contents.
 Supports full regex syntax (e.g., "log.*Error", "function\\s+\\w+", etc.)` {}
 
-class path extends Parameter(
+class path extends Tool.input(
   "path",
   S.optional(S.String),
 )`The directory to search in. Defaults to ${cwd} if not specified.` {}
 
-class include extends Parameter(
+class include extends Tool.input(
   "include",
   S.optional(S.String),
 )`File pattern to include in the search (e.g., "*.js", "*.{ts,tsx}")` {}
 
-class matches extends Result(
+class matches extends Tool.output(
   "matches",
 )`The search results showing file paths and matching lines, sorted by modification time.` {}
 

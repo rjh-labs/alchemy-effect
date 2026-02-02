@@ -1,16 +1,15 @@
-import { Parameter } from "../tool/parameter.ts";
 import { Tool } from "../tool/tool.ts";
 import { Issues } from "./issue-service.ts";
 import { Issue, IssueId } from "./issue.ts";
 
-export class title extends Parameter("title")`
+export class title extends Tool.input("title")`
 The title of the Issue.` {}
 
-export class description extends Parameter(
+export class description extends Tool.input(
   "description",
 )`The description of the Issue.` {}
 
-export class issueId extends Parameter(
+export class issueId extends Tool.input(
   "issueId",
   IssueId,
 )`The ID of the Issue.` {}

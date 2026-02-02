@@ -1,10 +1,10 @@
 // Ripgrep utility functions
-import * as Effect from "effect/Effect";
-import * as FileSystem from "@effect/platform/FileSystem";
-import path from "path";
-import * as S from "effect/Schema";
-import { Schema } from "effect";
 import * as Command from "@effect/platform/Command";
+import * as FileSystem from "@effect/platform/FileSystem";
+import { Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import path from "path";
 import { exec } from "./exec.ts";
 
 // import { ZipReader, BlobReader, BlobWriter } from "@zip.js/zip.js";
@@ -250,7 +250,9 @@ export const search = Effect.fn("search")(function* (input: {
   const lines = result.stdout.trim().split(/\r?\n/).filter(Boolean);
 
   // Parse JSON lines from ripgrep output
-  return (yield* Effect.all(lines.map((line) => parseResult(JSON.parse(line)))))
+  return (yield* Effect.all(
+    lines.map((line) => parseTool.output(JSON.parse(line))),
+  ))
     .filter((r) => r.type === "match")
     .map((r) => r.data);
 });

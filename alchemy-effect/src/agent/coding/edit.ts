@@ -8,29 +8,27 @@ import {
   formatDiagnostics,
   getDiagnosticsIfAvailable,
 } from "../lsp/diagnostics.ts";
-import { Parameter } from "../tool/parameter.ts";
-import { Result } from "../tool/result.ts";
 import { Tool } from "../tool/tool.ts";
 import { replace } from "../util/replace.ts";
 
-export class filePath extends Parameter(
+export class filePath extends Tool.input(
   "filePath",
 )`The absolute path to the file to modify` {}
 
-export class oldString extends Parameter(
+export class oldString extends Tool.input(
   "oldString",
 )`The text to replace. Use an empty string "" to create a new file.` {}
 
-export class newString extends Parameter(
+export class newString extends Tool.input(
   "newString",
 )`The text to replace it with (must be different from oldString)` {}
 
-export class replaceAll extends Parameter(
+export class replaceAll extends Tool.input(
   "replaceAll",
   S.Boolean,
 )`Replace all occurrences of oldString (default false). Use this when renaming variables or updating repeated patterns.` {}
 
-export class output extends Result(
+export class output extends Tool.output(
   "result",
 )`The result of the edit operation, including any diagnostics from LSP.` {}
 

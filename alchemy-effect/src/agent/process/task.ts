@@ -1,6 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import { ServiceTag } from "../../service-tag.ts";
 import { Agent, AgentId } from "../agent.ts";
 import { Chat } from "../chat/service.ts";
 import { Thread, ThreadId } from "../chat/thread.ts";
@@ -20,6 +21,20 @@ export class Task extends S.Class<Task>("Task")({
     description: "The agent that is working on the task",
   }),
 }) {}
+
+export class CreateTaskRequest extends S.Class<CreateTaskRequest>(
+  "CreateTaskRequest",
+)({
+  threadId: ThreadId,
+  agentId: AgentId,
+}) {}
+
+export class Tasks extends ServiceTag("Tasks")<
+  Tasks,
+  {
+    createTask: (input: CreateTaskRequest) => Effect.Effect<Task>;
+  }
+>() {}
 
 /** Trigger an Agent to reply in a thread */
 export const startTask = Effect.fn("startTask")(function* <A extends Agent>({
@@ -47,9 +62,4 @@ export const startTask = Effect.fn("startTask")(function* <A extends Agent>({
     task,
     stream,
   };
-});
-
-export const interruptTask = Effect.fn("interruptTask")(function* (task: Task) {
-  const chat = yield* Chat;
-  yield* chat.interruptTask(task.taskId);
 });
