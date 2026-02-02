@@ -100,3 +100,25 @@ export const hasSetAnnotation = hasGenericAnnotation("Set");
 export const getSetValueAST = (schema: S.Schema<any>): AST =>
   // @ts-expect-error - ast.to?. is not narrowed, we don't care
   isSetSchema(schema) && schema.ast.to?.typeParameters[0];
+
+/** A Schema representing a Schema */
+export type Field = S.Struct.Field; // needs to be a Field to support S.optional(..)
+export const Field = S.suspend(
+  (): [Field] extends [any] ? S.Schema<Field> : never => S.Any,
+);
+
+type FunctionType = (...args: any[]) => any;
+export type Function<F extends FunctionType = FunctionType> = S.Schema<F>;
+export const Function: <F extends FunctionType>() => Function<F> = S.suspend(
+  (): S.Schema<FunctionType> => S.Any,
+) as any;
+
+export type CreatedAt = Date;
+export const CreatedAt = S.Date.annotations({
+  description: "The timestamp of when this record was created",
+});
+
+export type UpdatedAt = Date;
+export const UpdatedAt = S.Date.annotations({
+  description: "The timestamp of when this record was last updated",
+});
