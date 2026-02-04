@@ -1,5 +1,5 @@
 import * as S from "effect/Schema";
-import { CreatedAt, UpdatedAt } from "../schema.ts";
+import { CreatedAt, UpdatedAt } from "../../schema.ts";
 import { IssueId } from "./issue.ts";
 
 export type ReplyId = number;

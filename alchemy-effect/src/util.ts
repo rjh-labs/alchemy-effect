@@ -2,6 +2,8 @@ import * as Effect from "effect/Effect";
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
+export type ExcludeAny<T> = IsAny<T> extends true ? never : T;
+
 export type UnionToIntersection<U> = (
   U extends any ? (k: U) => void : never
 ) extends (k: infer I) => void

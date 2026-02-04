@@ -12,8 +12,8 @@ import type {
 import type { Capability } from "./capability.ts";
 import type { Diff, NoopDiff, UpdateDiff } from "./diff.ts";
 import { InstanceId } from "./instance-id.ts";
+import type { Instance } from "./instance.ts";
 import * as Output from "./output.ts";
-import type { Instance } from "./policy.ts";
 import type { Provider } from "./provider.ts";
 import { getProviderByType, type ProviderService } from "./provider.ts";
 import type { AnyResource, Resource, ResourceTags } from "./resource.ts";

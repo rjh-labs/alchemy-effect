@@ -1,19 +1,19 @@
-import type { HttpClient } from "@effect/platform/HttpClient";
 import { FileSystem } from "@effect/platform/FileSystem";
+import type { HttpClient } from "@effect/platform/HttpClient";
 import { Path } from "@effect/platform/Path";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as App from "./app.ts";
 import { type AppliedPlan } from "./apply.ts";
+import type { CLI } from "./cli/service.ts";
 import { DotAlchemy } from "./dot-alchemy.ts";
+import type { Instance } from "./instance.ts";
 import type { DerivePlan, Providers, TraverseResources } from "./plan.ts";
-import type { Instance } from "./policy.ts";
+import type { Ref } from "./ref.ts";
 import type { AnyResource } from "./resource.ts";
 import type { AnyService } from "./service.ts";
 import { type StageConfig, type Stages } from "./stage.ts";
 import * as State from "./state.ts";
-import type { Ref } from "./ref.ts";
-import type { CLI } from "./cli/service.ts";
 
 export const defineStack = <
   const Name extends string,

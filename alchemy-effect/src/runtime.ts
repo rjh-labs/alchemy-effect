@@ -39,6 +39,9 @@ export type AnyRuntime = Runtime<string>;
 
 export interface RuntimeProps<Run extends IRuntime, Req> {
   bindings: Policy<Run, Extract<Req, Capability>, unknown>;
+  bindings2: (
+    effect: Effect.Effect<any, any, any>,
+  ) => Layer.Layer<Req, Capability>;
 }
 
 export interface IRuntime<

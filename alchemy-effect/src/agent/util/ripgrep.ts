@@ -250,9 +250,7 @@ export const search = Effect.fn("search")(function* (input: {
   const lines = result.stdout.trim().split(/\r?\n/).filter(Boolean);
 
   // Parse JSON lines from ripgrep output
-  return (yield* Effect.all(
-    lines.map((line) => parseTool.output(JSON.parse(line))),
-  ))
+  return (yield* Effect.all(lines.map((line) => parseResult(JSON.parse(line)))))
     .filter((r) => r.type === "match")
     .map((r) => r.data);
 });

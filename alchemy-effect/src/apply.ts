@@ -11,6 +11,7 @@ import {
 } from "./cli/service.ts";
 import type { ApplyStatus } from "./event.ts";
 import { generateInstanceId, InstanceId } from "./instance-id.ts";
+import type { Instance } from "./instance.ts";
 import * as Output from "./output.ts";
 import {
   type Apply,
@@ -21,7 +22,6 @@ import {
   type Providers,
   plan,
 } from "./plan.ts";
-import type { Instance } from "./policy.ts";
 import { getProviderByType } from "./provider.ts";
 import type { AnyResource, Resource } from "./resource.ts";
 import type { AnyService } from "./service.ts";

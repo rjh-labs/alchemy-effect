@@ -1,13 +1,10 @@
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
+import { effect, fn, sink, stream } from "../../schema.ts";
 import { ServiceTag } from "../../service-tag.ts";
 import { AgentId } from "../agent.ts";
 import { StreamTextPart } from "../llm/stream-text-part.ts";
-import { Task, TaskId } from "../process/task.ts";
+import { TaskId } from "../process/task.ts";
 import { ChannelId } from "./channel.ts";
-import type { ChatEvent } from "./event.ts";
 import { Message, MessageId } from "./message.ts";
 import { Thread, ThreadId } from "./thread.ts";
 
@@ -104,41 +101,19 @@ export class CreateTaskRequest extends S.Class<CreateTaskRequest>(
 /**
  * The ChatService is the central service for managing Channels, Threads, and Messages.
  */
-export class Chat extends ServiceTag("ChatService")<
-  Chat,
-  {
-    getThread: (input: GetThreadRequest) => Effect.Effect<GetThreadResponse>;
-    createThread: (
-      input: CreateThreadRequest,
-    ) => Effect.Effect<CreateThreadResponse>;
-    listThreads: (
-      input: ListThreadsRequest,
-    ) => Effect.Effect<ListThreadsResponse>;
-    sendMessage: (
-      input: SendMessageRequest,
-    ) => Effect.Effect<SendMessageResponse>;
-    listMessages: (
-      input: ListMessagesRequest,
-    ) => Effect.Effect<ListMessagesResponse>;
-
-    /**
-     * Subscribe to all events in the ChatService.
-     */
-    subscribe: () => Stream.Stream<ChatEvent>;
-
-    /**
-     * A Task is an isolated workspace where an Agent is working on performing a task and
-     * preparing a reply to a Thread. It is where we can stream thinking traces, outputs,
-     * tool calls, and results. A user shoul be able to tap into it to see what an Agent
-     * is doing and interrupt/provide feedback directly.
-     */
-    createTask: (input: CreateTaskRequest) => Effect.Effect<Task>;
-    appendTask: (input: AppendRequest) => Effect.Effect<void>;
-    subscribeTask: (input: SubscribeRequest) => Stream.Stream<StreamTextPart>;
-    sinkTask: (taskId: TaskId) => Sink.Sink<StreamTextPart, StreamTextPart>;
-    sinkThreadDriver: (
-      threadId: ThreadId,
-    ) => Sink.Sink<StreamTextPart, StreamTextPart>;
-    interruptTask: (taskId: TaskId) => Effect.Effect<void>;
-  }
->() {}
+export class Chat extends ServiceTag.make<Chat>()("Chat", {
+  getThread: fn(GetThreadRequest, effect(GetThreadResponse))`
+    Get a thread by its ID. 
+    If it does not exist, you should first use ${() => Chat.createThread}
+  `,
+  createThread: fn(CreateThreadRequest, effect(CreateThreadResponse)),
+  listThreads: fn(ListThreadsRequest, effect(ListThreadsResponse)),
+  sendMessage: fn(SendMessageRequest, effect(SendMessageResponse)),
+  listMessages: fn(ListMessagesRequest, effect(ListMessagesResponse)),
+  subscribe: fn(SubscribeRequest, stream(StreamTextPart)),
+  createTask: fn(CreateTaskRequest, effect(Task)),
+  appendTask: fn(AppendRequest, effect(S.Void)),
+  subscribeTask: fn(SubscribeRequest, stream(StreamTextPart)),
+  sinkTask: fn(TaskId, sink(StreamTextPart, StreamTextPart)),
+  sinkThreadDriver: fn(ThreadId, sink(StreamTextPart, StreamTextPart)),
+}) {}

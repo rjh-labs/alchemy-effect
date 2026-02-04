@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { type AnyBinding, type Bind } from "./binding.ts";
 import type { Capability } from "./capability.ts";
+import type { Instance } from "./instance.ts";
 import type { IRuntime, Runtime } from "./runtime.ts";
 
 /**
@@ -112,13 +113,6 @@ export namespace Policy {
 export const declare = <S extends Capability>() =>
   Effect.gen(function* () {}) as Effect.Effect<void, never, S>;
 
-export type Instance<T> = T extends { id: string }
-  ? string extends T["id"]
-    ? T
-    : T extends new (...args: any) => infer I
-      ? I
-      : never
-  : never;
 // syntactic sugar for mapping `typeof Messages` -> Messages, e.g. so it's SQS.SendMessage<Messages> instead of SQS.SendMessage<typeof Messages>
 // e.g. <Q extends SQS.Queue>(queue: Q) => SQS.SendMessage<To<Q>>
 export type From<T> = Instance<T>;

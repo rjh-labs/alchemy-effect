@@ -52,9 +52,7 @@ export function Plan({ plan }: PlanProps): React.JSX.Element {
               </Text>
             </Box>
           );
-          return i === actions.length - 1
-            ? [box]
-            : [box, <Text key={actions[i]}> | </Text>];
+          return i === actions.length - 1 ? [box] : [box, <Text> | </Text>];
         })}
       </Box>
       <Box flexDirection="column" marginTop={1}>

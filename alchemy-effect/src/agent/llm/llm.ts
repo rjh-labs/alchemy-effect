@@ -14,6 +14,7 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { ServiceTag } from "../../service-tag.ts";
+import type { IsUnknown } from "../../unknown.ts";
 import type { Tool } from "../tool/tool.ts";
 import { fromAnyError, type LLMError } from "./error.ts";
 import type { StreamTextPart } from "./stream-text-part.ts";
@@ -32,8 +33,10 @@ export interface LLMService {
     input: StreamTextOptions<Tools>,
   ) => Stream.Stream<
     StreamTextPart,
-    LLMError | Tool.Error<Tools>,
-    Tool.Context<Tools>
+    IsUnknown<Tool.Error<Tools>> extends true
+      ? LLMError
+      : LLMError | Tool.Error<Tools>,
+    Exclude<Tool.Context<Tools>, unknown>
   >;
 }
 

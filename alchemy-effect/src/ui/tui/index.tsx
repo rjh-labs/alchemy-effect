@@ -8,9 +8,10 @@ import {
 } from "solid-js";
 import {
   deriveGraph,
-  type AspectGraph,
+  type AspectIndex,
   type Organization,
-} from "../aspect/index.ts";
+} from "../../agent/index.ts";
+
 import type { TuiPlugin } from "./plugin.ts";
 import { ThemeProvider } from "./theme/theme.tsx";
 
@@ -30,10 +31,10 @@ export interface GraphProviderProps<
 export const GraphProvider = <Org extends Organization>(
   props: GraphProviderProps<Org>,
 ) => {
-  const [graph, setGraph] = createSignal<AspectGraph<Org> | null>(null);
+  const [graph, setGraph] = createSignal<AspectIndex<Org> | null>(null);
   const GraphContext = createContext<{
-    graph: Accessor<AspectGraph<Org> | null>;
-    setGraph: (graph: AspectGraph<Org>) => void;
+    graph: Accessor<AspectIndex<Org> | null>;
+    setGraph: (graph: AspectIndex<Org>) => void;
   }>();
 
   return (

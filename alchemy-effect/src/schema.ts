@@ -1,5 +1,8 @@
+import type { Effect } from "effect/Effect";
 import * as S from "effect/Schema";
 import type { AST } from "effect/SchemaAST";
+import type { Sink } from "effect/Sink";
+import type { Stream } from "effect/Stream";
 
 const Description = Symbol.for("effect/annotation/Description");
 
@@ -122,3 +125,199 @@ export type UpdatedAt = Date;
 export const UpdatedAt = S.Date.annotations({
   description: "The timestamp of when this record was last updated",
 });
+
+export type AnyClassSchema<
+  Self = any,
+  Fields extends S.Struct.Fields = S.Struct.Fields,
+> = S.Class<Self, Fields, any, any, any, any, any>;
+
+export type AnyClass = new (...args: any[]) => any;
+
+export type AnyErrorSchema = S.TaggedErrorClass<any, any, any>;
+
+export type SchemaWithTemplate<
+  Schema extends S.Schema<any>,
+  References extends any[] = any[],
+> = Schema & {
+  template: TemplateStringsArray;
+  references: References;
+};
+
+export type SchemaExt =
+  | FunctionSchema
+  | EffectSchema
+  | StreamSchema
+  | SinkSchema;
+
+export interface SchemaExtBase<A> extends S.Schema<A> {
+  <References extends any[]>(
+    template: TemplateStringsArray,
+    ...references: References
+  ): SchemaWithTemplate<this, References>;
+}
+
+export interface FunctionSchema<
+  Input extends S.Schema.All | undefined = S.Schema.All | undefined,
+  Output extends S.Schema.All = S.Schema.All,
+> extends SchemaExtBase<
+  (
+    ...args: Input extends undefined ? [] : [input: S.Schema.Type<Input>]
+  ) => S.Schema.Type<Output>
+> {
+  input: Input;
+  output: Output;
+}
+
+export interface EffectSchema<
+  A extends S.Schema.All = S.Schema.All,
+  Err extends S.Schema.All = S.Schema.All,
+  Req extends S.Schema.All = S.Schema.All,
+> extends SchemaExtBase<
+  Effect<S.Schema.Type<A>, S.Schema.Type<Err>, S.Schema.Type<Req>>
+> {
+  A: A;
+  Err: Err;
+  Req: Req;
+}
+
+export interface StreamSchema<
+  A extends S.Schema.All = S.Schema.All,
+  Err extends S.Schema.All = S.Schema.All,
+  Req extends S.Schema.All = S.Schema.All,
+> extends SchemaExtBase<
+  Stream<S.Schema.Type<A>, S.Schema.Type<Err>, S.Schema.Type<Req>>
+> {
+  A: A;
+  Err: Err;
+  Req: Req;
+}
+
+export interface SinkSchema<
+  A extends S.Schema.All = S.Schema.All,
+  In extends S.Schema.All = S.Schema.All,
+  L extends S.Schema.All = S.Schema.All,
+  Err extends S.Schema.All = S.Schema.All,
+  Req extends S.Schema.All = S.Schema.All,
+> extends SchemaExtBase<
+  Sink<
+    S.Schema.Type<A>,
+    S.Schema.Type<In>,
+    S.Schema.Type<L>,
+    S.Schema.Type<Err>,
+    S.Schema.Type<Req>
+  >
+> {
+  A: A;
+  In: In;
+  L: L;
+  Err: Err;
+  Req: Req;
+}
+
+export const makeExtSchema = <Schema extends SchemaExt>(
+  schema: Schema,
+): SchemaExt => {
+  const s = S.Any.annotations({
+    aspect: schema,
+  });
+  return new Proxy(() => {}, {
+    get: (_target, prop) => s[prop as keyof typeof s],
+    apply: (_target, _thisArg, [template, ...references]) => {
+      return S.annotations({
+        aspect: {
+          ...schema,
+          template,
+          references,
+        },
+      });
+    },
+  }) as any as SchemaExt;
+};
+
+export const fn: {
+  <Output extends S.Schema<any>>(
+    output: Output,
+  ): S.Schema<() => S.Schema.Type<Output>> & {
+    <R extends any[]>(
+      template: TemplateStringsArray,
+      ...references: R
+    ): SchemaWithTemplate<S.Schema<() => S.Schema.Type<Output>>, R>;
+  };
+  <Input extends S.Schema<any>, Output extends S.Schema<any>>(
+    input: Input,
+    output: Output,
+  ): S.Schema<(input: S.Schema.Type<Input>) => S.Schema.Type<Output>> & {
+    <R extends any[]>(
+      template: TemplateStringsArray,
+      ...references: R
+    ): SchemaWithTemplate<
+      S.Schema<(input: S.Schema.Type<Input>) => S.Schema.Type<Output>>,
+      R
+    >;
+  };
+} = ((input: any, output: any) =>
+  S.Any.annotations({
+    aspect: {
+      type: "fn",
+      input: output ? input : undefined,
+      output: output ?? input,
+    },
+  })) as any;
+
+export const effect = <
+  A extends S.Schema<any>,
+  Err extends S.Schema<any> | S.Never = S.Never,
+  Req extends S.Schema<any> | S.Any = S.Any,
+>(
+  a: A,
+  err: Err = S.Never as any,
+  req: Req = S.Never as any,
+): S.Schema<Effect<S.Schema.Type<A>, S.Schema.Type<Err>, S.Schema.Type<Req>>> =>
+  S.Any.annotations({
+    aspect: {
+      type: "effect",
+      a: a,
+      err: err,
+      req: req,
+    },
+  });
+export const stream = <
+  A extends S.Schema<any>,
+  Err extends S.Schema<any> | S.Never = S.Never,
+  Req extends S.Schema<any> | S.Never = S.Never,
+>(
+  a: A,
+  err: Err = S.Never as any,
+  req: Req = S.Never as any,
+) =>
+  S.Any.annotations({
+    aspect: {
+      type: "stream",
+      a: a,
+      err: err,
+      req: req,
+    },
+  });
+export const sink = <
+  A extends S.Schema<any>,
+  In extends S.Schema<any>,
+  L extends S.Schema<any>,
+  Err extends S.Schema<any> | S.Never = S.Never,
+  Req extends S.Schema<any> | S.Never = S.Never,
+>(
+  a: A,
+  _in: In = S.Never as any,
+  l: L = S.Never as any,
+  err: Err = S.Never as any,
+  req: Req = S.Never as any,
+) =>
+  S.Any.annotations({
+    aspect: {
+      type: "sink",
+      a: a,
+      in: _in,
+      l: l,
+      err: err,
+      req: req,
+    },
+  });

@@ -2,7 +2,7 @@
 import type { JSX } from "react";
 
 import * as Context from "effect/Context";
-import type { Aspect } from "../aspect/aspect.ts";
+import type { Aspect } from "../../agent/aspect.ts";
 
 export type TuiPlugin<A extends Aspect> = Context.Tag<
   `TuiPlugin<${A["type"]}>`,

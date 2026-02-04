@@ -1,6 +1,6 @@
+export * from "./agent.ts";
 export * from "./aspect-graph.ts";
 export * from "./aspect.ts";
-export * from "./process/agent.ts";
 export * from "./process/organization.ts";
 export * from "./process/process.ts";
 export * from "./tool/index.ts";
