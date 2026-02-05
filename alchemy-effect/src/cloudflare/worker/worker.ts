@@ -1,14 +1,11 @@
 import type { Workers } from "cloudflare/resources";
-import { Runtime, type RuntimeProps } from "../../runtime.ts";
+import { Runtime } from "../../runtime.ts";
 import type * as Assets from "./assets.fetch.ts";
 
 export const WorkerType = "Cloudflare.Worker" as const;
 export type WorkerType = typeof WorkerType;
 
-export type WorkerProps<Req = any> = RuntimeProps<
-  Worker,
-  Exclude<Req, Assets.Fetch>
-> & {
+export type WorkerProps<Req = any> = {
   name?: string;
   logpush?: boolean;
   observability?: Worker.Observability;
@@ -22,12 +19,12 @@ export type WorkerProps<Req = any> = RuntimeProps<
   limits?: Worker.Limits;
   placement?: Worker.Placement;
 } & (Extract<Req, Assets.Fetch> extends never
-    ? {
-        assets?: string | Worker.AssetsProps;
-      }
-    : {
-        assets: string | Worker.AssetsProps;
-      });
+  ? {
+      assets?: string | Worker.AssetsProps;
+    }
+  : {
+      assets: string | Worker.AssetsProps;
+    });
 
 export type WorkerAttr<Props extends WorkerProps<any>> = {
   workerId: string;

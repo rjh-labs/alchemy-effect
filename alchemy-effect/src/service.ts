@@ -1,4 +1,5 @@
 import type { Effect } from "effect/Effect";
+import type { Pipeable } from "effect/Pipeable";
 import type { Capability } from "./capability.ts";
 import type { IResource } from "./resource.ts";
 import type { IRuntime, RuntimeHandler, RuntimeProps } from "./runtime.ts";
@@ -53,6 +54,13 @@ export interface Service<
   Attr = (F & { props: Props })["attr"],
   Base = unknown,
 > extends IService<ID, F, Handler, Props, Attr, Base> {}
+
+export interface ServiceDef<
+  ID extends string = string,
+  Handler extends RuntimeHandler = RuntimeHandler,
+> extends Pipeable {
+  new (): ServiceDef<ID, Handler>;
+}
 
 export const isService = (resource: any): resource is IService => {
   return resource && resource.kind === "Service";

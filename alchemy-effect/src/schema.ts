@@ -234,26 +234,54 @@ export const makeExtSchema = <Schema extends SchemaExt>(
   }) as any as SchemaExt;
 };
 
-export const fn: {
+// export type def = typeof def;
+
+export interface func<
+  Input extends undefined | S.Schema.All | S.Schema.All[],
+  Output extends S.Schema.All,
+> extends S.Schema<
+  Input extends undefined
+    ? () => S.Schema.Type<Output>
+    : Input extends S.Schema.All[]
+      ? (...args: TypeArray<Input>) => S.Schema.Type<Output>
+      : (input: S.Schema.Type<Input>) => S.Schema.Type<Output>
+> {}
+
+type TypeArray<T extends S.Schema.All[]> = T extends [
+  infer Head,
+  ...infer Tail extends S.Schema.All[],
+]
+  ? Head extends S.Schema.All
+    ? [S.Schema.Type<Head>, ...TypeArray<Tail>]
+    : never
+  : [];
+
+export const func: {
   <Output extends S.Schema<any>>(
     output: Output,
-  ): S.Schema<() => S.Schema.Type<Output>> & {
+  ): func<undefined, Output> & {
     <R extends any[]>(
       template: TemplateStringsArray,
       ...references: R
-    ): SchemaWithTemplate<S.Schema<() => S.Schema.Type<Output>>, R>;
+    ): SchemaWithTemplate<func<undefined, Output>, R>;
   };
   <Input extends S.Schema<any>, Output extends S.Schema<any>>(
     input: Input,
     output: Output,
-  ): S.Schema<(input: S.Schema.Type<Input>) => S.Schema.Type<Output>> & {
+  ): func<Input, Output> & {
     <R extends any[]>(
       template: TemplateStringsArray,
       ...references: R
-    ): SchemaWithTemplate<
-      S.Schema<(input: S.Schema.Type<Input>) => S.Schema.Type<Output>>,
-      R
-    >;
+    ): SchemaWithTemplate<func<Input, Output>, R>;
+  };
+  <const Args extends S.Schema<any>[], Output extends S.Schema<any>>(
+    args: Args,
+    output: Output,
+  ): func<Args, Output> & {
+    <R extends any[]>(
+      template: TemplateStringsArray,
+      ...references: R
+    ): SchemaWithTemplate<func<Args, Output>, R>;
   };
 } = ((input: any, output: any) =>
   S.Any.annotations({
@@ -264,6 +292,10 @@ export const fn: {
     },
   })) as any;
 
+export interface effect<A, Err, Req> extends S.Schema<
+  Effect<S.Schema.Type<A>, S.Schema.Type<Err>, S.Schema.Type<Req>>
+> {}
+
 export const effect = <
   A extends S.Schema<any>,
   Err extends S.Schema<any> | S.Never = S.Never,
@@ -272,7 +304,7 @@ export const effect = <
   a: A,
   err: Err = S.Never as any,
   req: Req = S.Never as any,
-): S.Schema<Effect<S.Schema.Type<A>, S.Schema.Type<Err>, S.Schema.Type<Req>>> =>
+): effect<A, Err, Req> =>
   S.Any.annotations({
     aspect: {
       type: "effect",
@@ -281,6 +313,7 @@ export const effect = <
       req: req,
     },
   });
+
 export const stream = <
   A extends S.Schema<any>,
   Err extends S.Schema<any> | S.Never = S.Never,
@@ -298,6 +331,7 @@ export const stream = <
       req: req,
     },
   });
+
 export const sink = <
   A extends S.Schema<any>,
   In extends S.Schema<any>,

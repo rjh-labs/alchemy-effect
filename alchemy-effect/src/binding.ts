@@ -3,6 +3,7 @@ import type { Effect } from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type { Capability, ICapability } from "./capability.ts";
 import type { Diff } from "./diff.ts";
+import type { Hosted } from "./layer.ts";
 import type { IResource, Resource } from "./resource.ts";
 import type { IRuntime } from "./runtime.ts";
 
@@ -94,6 +95,15 @@ export const Binding: {
     } satisfies BindingDeclaration<IRuntime, any>,
   );
 };
+
+export namespace Bindings {
+  export const provide =
+    <B extends AnyBinding[]>(...capabilities: B) =>
+    <F extends IRuntime, A, Err, Req>(
+      layer: Hosted<F, A, Err, B[number]["capability"]>,
+    ): Effect<A, Err, Req> =>
+      undefined!;
+}
 
 export interface BindingDeclaration<
   Run extends IRuntime,

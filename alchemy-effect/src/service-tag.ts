@@ -1,6 +1,6 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
+import type { Layer } from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
@@ -11,8 +11,6 @@ export type ServiceTag<Self, ID extends string, Shape> = Context.TagClass<
   ID,
   Shape
 > & {
-  shape: Shape;
-} & {
   [key in keyof Shape]: Shape[key] extends (
     ...args: any[]
   ) => Effect.Effect<infer A, infer Err, infer Req>
@@ -37,7 +35,7 @@ export type ServiceTag<Self, ID extends string, Shape> = Context.TagClass<
   layer: {
     effect: <Impl extends Shape, Err = never, Req = never>(
       effect: Effect.Effect<Impl, Err, Req>,
-    ) => Layer.Layer<
+    ) => Layer<
       Self,
       Err,
       | Req
@@ -45,11 +43,11 @@ export type ServiceTag<Self, ID extends string, Shape> = Context.TagClass<
           [k in keyof Impl]: Impl[k] extends (
             ...args: any[]
           ) => Effect.Effect<infer _A, infer _Err, infer Req>
-            ? Req
+            ? ExcludeAny<Req>
             : Impl[k] extends (
                   ...args: any[]
                 ) => Stream.Stream<infer _A, infer _Err, infer Req>
-              ? Req
+              ? ExcludeAny<Req>
               : Impl[k] extends (
                     ...args: any[]
                   ) => Sink.Sink<
@@ -59,15 +57,55 @@ export type ServiceTag<Self, ID extends string, Shape> = Context.TagClass<
                     infer _Err,
                     infer Req
                   >
-                ? Req
+                ? ExcludeAny<Req>
                 : never;
         }[keyof Impl]
+    >;
+    succeed: <Impl extends Shape>(
+      effect: Impl,
+    ) => Layer<
+      Self,
+      never,
+      {
+        [k in keyof Impl]: Impl[k] extends (
+          ...args: any[]
+        ) => Effect.Effect<infer _A, infer _Err, infer Req>
+          ? ExcludeAny<Req>
+          : Impl[k] extends (
+                ...args: any[]
+              ) => Stream.Stream<infer _A, infer _Err, infer Req>
+            ? ExcludeAny<Req>
+            : Impl[k] extends (
+                  ...args: any[]
+                ) => Sink.Sink<
+                  infer _A,
+                  infer _In,
+                  infer _L,
+                  infer _Err,
+                  infer Req
+                >
+              ? ExcludeAny<Req>
+              : never;
+      }[keyof Impl]
     >;
   };
 };
 
 export const ServiceTag =
-  <ID extends string>(id: ID) =>
+  <ID extends string>(
+    id: ID,
+  ): {
+    <Self, Shape>(): ServiceTag<Self, ID, Shape>;
+    <Self>(): <ID extends string, Shape extends Record<string, S.Schema.All>>(
+      shape: Shape,
+    ) => ServiceTag<
+      Self,
+      ID,
+      {
+        [key in keyof Shape]: S.Schema.Type<Shape[key]>;
+      }
+    >;
+  } =>
   <Self, Shape>() =>
     new Proxy(Context.Tag(id)<Self, Shape>(), {
       get: (target: any, prop: string | symbol) =>
@@ -78,33 +116,3 @@ export const ServiceTag =
                 Effect.flatMap((service: any) => service[prop](...args)),
               ),
     }) as ServiceTag<Self, ID, Shape>;
-
-ServiceTag.make =
-  <Self>() =>
-  <ID extends string, Shape extends Record<string, S.Schema.All>>(
-    id: ID,
-    shape: Shape,
-  ) =>
-    new Proxy(
-      Context.Tag(id)<
-        any,
-        {
-          [key in keyof Shape]: S.Schema.Type<Shape[key]>;
-        }
-      >(),
-      {
-        get: (target: any, prop: string | symbol) =>
-          prop in target
-            ? target[prop]
-            : (...args: any[]) =>
-                target.pipe(
-                  Effect.flatMap((service: any) => service[prop](...args)),
-                ),
-      },
-    ) as ServiceTag<
-      Self,
-      ID,
-      {
-        [key in keyof Shape]: S.Schema.Type<Shape[key]>;
-      }
-    >;

@@ -1,5 +1,5 @@
 import * as S from "effect/Schema";
-import { effect, fn, sink, stream } from "../../schema.ts";
+import { effect, func } from "../../schema.ts";
 import { ServiceTag } from "../../service-tag.ts";
 import { AgentId } from "../agent.ts";
 import { StreamTextPart } from "../llm/stream-text-part.ts";
@@ -101,19 +101,19 @@ export class CreateTaskRequest extends S.Class<CreateTaskRequest>(
 /**
  * The ChatService is the central service for managing Channels, Threads, and Messages.
  */
-export class Chat extends ServiceTag.make<Chat>()("Chat", {
-  getThread: fn(GetThreadRequest, effect(GetThreadResponse))`
+export class Chat extends ServiceTag("Chat")<Chat>()({
+  getThread: func(GetThreadRequest, effect(GetThreadResponse))`
     Get a thread by its ID. 
     If it does not exist, you should first use ${() => Chat.createThread}
   `,
-  createThread: fn(CreateThreadRequest, effect(CreateThreadResponse)),
-  listThreads: fn(ListThreadsRequest, effect(ListThreadsResponse)),
-  sendMessage: fn(SendMessageRequest, effect(SendMessageResponse)),
-  listMessages: fn(ListMessagesRequest, effect(ListMessagesResponse)),
-  subscribe: fn(SubscribeRequest, stream(StreamTextPart)),
-  createTask: fn(CreateTaskRequest, effect(Task)),
-  appendTask: fn(AppendRequest, effect(S.Void)),
-  subscribeTask: fn(SubscribeRequest, stream(StreamTextPart)),
-  sinkTask: fn(TaskId, sink(StreamTextPart, StreamTextPart)),
-  sinkThreadDriver: fn(ThreadId, sink(StreamTextPart, StreamTextPart)),
+  createThread: func(CreateThreadRequest, effect(CreateThreadResponse)),
+  listThreads: func(ListThreadsRequest, effect(ListThreadsResponse)),
+  // sendMessage: fn(SendMessageRequest, effect(SendMessageResponse)),
+  // listMessages: fn(ListMessagesRequest, effect(ListMessagesResponse)),
+  // subscribe: fn(SubscribeRequest, stream(StreamTextPart)),
+  // createTask: fn(CreateTaskRequest, effect(Task)),
+  // appendTask: fn(AppendRequest, effect(S.Void)),
+  // subscribeTask: fn(SubscribeRequest, stream(StreamTextPart)),
+  // sinkTask: fn(TaskId, sink(StreamTextPart, StreamTextPart)),
+  // sinkThreadDriver: fn(ThreadId, sink(StreamTextPart, StreamTextPart)),
 }) {}

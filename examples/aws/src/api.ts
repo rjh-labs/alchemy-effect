@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { $, type } from "alchemy-effect";
 import * as DynamoDB from "alchemy-effect/aws/dynamodb";
 import * as Lambda from "alchemy-effect/aws/lambda";
@@ -45,10 +46,6 @@ export class Api extends Lambda.serve("Api", {
   }),
 })({
   main: import.meta.filename,
-  // Infer instead of hard-code - always least-privilege
-  // TODO(sam): implement the compiler plugin
-  // bindings: $.infer(),
-  // OR: do it manually if you want to manually enforce a policy scope
   bindings: $(
     DynamoDB.GetItem(SingleTable, {
       leadingKeys: $.anyOf("USER#123"),

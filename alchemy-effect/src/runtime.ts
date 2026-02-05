@@ -6,7 +6,7 @@ import type { Capability } from "./capability.ts";
 import type { Policy } from "./policy.ts";
 import type { ProviderService } from "./provider.ts";
 import type { IResource, Resource, ResourceTags } from "./resource.ts";
-import type { IService, Service } from "./service.ts";
+import type { IService, ServiceDef } from "./service.ts";
 
 export type RuntimeHandler<
   Inputs extends any[] = any[],
@@ -39,9 +39,6 @@ export type AnyRuntime = Runtime<string>;
 
 export interface RuntimeProps<Run extends IRuntime, Req> {
   bindings: Policy<Run, Extract<Req, Capability>, unknown>;
-  bindings2: (
-    effect: Effect.Effect<any, any, any>,
-  ) => Layer.Layer<Req, Capability>;
 }
 
 export interface IRuntime<
@@ -74,15 +71,7 @@ export interface Runtime<
   >(
     id: ID,
     { handle }: { handle: Handler },
-  ): <const Props extends this["props"]>(
-    props: Props,
-  ) => Service<
-    ID,
-    this,
-    Handler,
-    // @ts-expect-error
-    Props
-  >;
+  ): ServiceDef<ID, this, Handler>;
 }
 
 export const Runtime =
