@@ -1,11 +1,10 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import type { ScopedPlanStatusSession } from "./cli/service.ts";
-import type { Diff } from "./diff.ts";
 import type { Input } from "./input.ts";
 import type { Resource } from "./resource.ts";
-import type { Runtime } from "./runtime.ts";
 import type { Service } from "./service.ts";
+import type { Diff } from "./util/diff.ts";
 
 export interface Provider<
   R extends Resource | Service,

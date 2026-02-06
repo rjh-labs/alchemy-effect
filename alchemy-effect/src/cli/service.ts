@@ -1,7 +1,7 @@
-import type { IPlan } from "../plan.ts";
-import * as Effect from "effect/Effect";
 import * as Context from "effect/Context";
-import type { ApplyEvent } from "../event.ts";
+import * as Effect from "effect/Effect";
+import type { IPlan } from "../plan.ts";
+import type { ApplyEvent } from "./event.ts";
 
 export interface PlanStatusSession {
   emit: (event: ApplyEvent) => Effect.Effect<void>;

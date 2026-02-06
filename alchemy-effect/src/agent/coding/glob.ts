@@ -3,7 +3,7 @@ import * as Path from "@effect/platform/Path";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as S from "effect/Schema";
-import { cwd } from "../../cwd.ts";
+import { cwd } from "../../config/cwd.ts";
 import { AspectConfig } from "../aspect.ts";
 import { Tool } from "../tool/tool.ts";
 import * as Ripgrep from "../util/ripgrep.ts";

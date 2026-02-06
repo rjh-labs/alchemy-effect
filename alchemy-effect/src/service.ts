@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import type { Capability } from "./capability.ts";
-import type { ExcludeAny } from "./util.ts";
+import type { ExcludeAny } from "./util/types.ts";
 
 export type TagTypeId = typeof TagTypeId;
 export const TagTypeId = "alchemy/Service" as const;

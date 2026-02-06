@@ -4,7 +4,8 @@
     "package.json",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/**/*.json"
+    "src/**/*.json",
+    "playground/service-example.ts"
   ],
   "compilerOptions": {
     "composite": true,

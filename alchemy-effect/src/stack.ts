@@ -6,14 +6,14 @@ import * as Layer from "effect/Layer";
 import * as App from "./app.ts";
 import { type AppliedPlan } from "./apply.ts";
 import type { CLI } from "./cli/service.ts";
-import { DotAlchemy } from "./dot-alchemy.ts";
-import type { Instance } from "./instance.ts";
+import { DotAlchemy } from "./config/dot-alchemy.ts";
 import type { DerivePlan, Providers, TraverseResources } from "./plan.ts";
 import type { Ref } from "./ref.ts";
 import type { AnyResource } from "./resource.ts";
 import type { AnyService } from "./service.ts";
 import { type StageConfig, type Stages } from "./stage.ts";
 import * as State from "./state.ts";
+import type { Instance } from "./util/instance.ts";
 
 export const defineStack = <
   const Name extends string,

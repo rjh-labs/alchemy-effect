@@ -4,14 +4,13 @@ import * as Effect from "effect/Effect";
 import type { Simplify } from "effect/Types";
 import { App } from "./app.ts";
 import type { AnyBinding, BindingProvider } from "./binding.ts";
+import type { ApplyStatus } from "./cli/event.ts";
 import {
   type PlanStatusSession,
   type ScopedPlanStatusSession,
   CLI,
 } from "./cli/service.ts";
-import type { ApplyStatus } from "./event.ts";
 import { generateInstanceId, InstanceId } from "./instance-id.ts";
-import type { Instance } from "./instance.ts";
 import * as Output from "./output.ts";
 import {
   type Apply,
@@ -37,7 +36,8 @@ import {
   State,
   StateStoreError,
 } from "./state.ts";
-import { asEffect } from "./util.ts";
+import type { Instance } from "./util/instance.ts";
+import { asEffect } from "./util/types.ts";
 
 export type ApplyEffect<
   P extends IPlan,

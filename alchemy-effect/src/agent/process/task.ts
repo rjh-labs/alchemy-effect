@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { ServiceTag } from "../../service-tag.ts";
+import { ServiceTag } from "../../experimental/service-tag.ts";
 import { AgentId } from "../agent.ts";
 import { ThreadId } from "../chat/thread.ts";
 

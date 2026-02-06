@@ -1,8 +1,8 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 import * as Layer from "effect/Layer";
-import type { Provider, ProviderService } from "./provider.ts";
 import type { InstanceId } from "./instance-id.ts";
+import type { Provider, ProviderService } from "./provider.ts";
 
 export const isResource = (r: any): r is Resource => {
   return (

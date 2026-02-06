@@ -1,7 +1,7 @@
 // oxlint-disable no-unused-expressions
 import * as S from "effect/Schema";
-import type { ClassTuple } from "../class.ts";
 import type { AnyClassSchema } from "../schema.ts";
+import type { ClassTuple } from "../util/class.ts";
 import type { Annotated } from "./annotated.ts";
 
 export type TraitFn<

@@ -10,9 +10,7 @@ import type {
   BindingProvider,
 } from "./binding.ts";
 import type { Capability } from "./capability.ts";
-import type { Diff, NoopDiff, UpdateDiff } from "./diff.ts";
 import { InstanceId } from "./instance-id.ts";
-import type { Instance } from "./instance.ts";
 import * as Output from "./output.ts";
 import type { Provider } from "./provider.ts";
 import { getProviderByType, type ProviderService } from "./provider.ts";
@@ -29,7 +27,9 @@ import {
   type UpdatedResourceState,
   type UpdatingReourceState,
 } from "./state.ts";
-import { asEffect } from "./util.ts";
+import type { Diff, NoopDiff, UpdateDiff } from "./util/diff.ts";
+import type { Instance } from "./util/instance.ts";
+import { asEffect } from "./util/types.ts";
 
 export type PlanError = never;
 

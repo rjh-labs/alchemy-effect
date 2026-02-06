@@ -3,8 +3,8 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { type AnyBinding, type Bind } from "./binding.ts";
 import type { Capability } from "./capability.ts";
-import type { Instance } from "./instance.ts";
 import type { IRuntime, Runtime } from "./runtime.ts";
+import type { Instance } from "./util/instance.ts";
 
 /**
  * A Policy binds a set of Capbilities (e.g SQS.SendMessage, SQS.Consume, etc.) to a

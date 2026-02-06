@@ -15,12 +15,12 @@ import { ConfigProvider, LogLevel } from "effect";
 import * as NodePath from "node:path";
 import { App } from "./app.ts";
 import { CLI } from "./cli/service.ts";
-import { DotAlchemy, dotAlchemy } from "./dot-alchemy.ts";
+import { DotAlchemy, dotAlchemy } from "./config/dot-alchemy.ts";
 import type { Resource } from "./resource.ts";
 import * as State from "./state.ts";
 
-import * as Credentials from "./aws/credentials.ts";
-import * as Region from "./aws/region.ts";
+import * as Credentials from "./providers/aws/credentials.ts";
+import * as Region from "./providers/aws/region.ts";
 
 declare module "@effect/vitest" {
   interface ExpectStatic {

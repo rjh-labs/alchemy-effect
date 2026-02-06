@@ -3,7 +3,7 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as util from "node:util";
 import * as vm from "node:vm";
-import { schemaToType } from "../../schema-to-type.ts";
+import { schemaToType } from "../../util/schema-to-type.ts";
 import { Agent, AgentId } from "../agent.ts";
 import { AspectGraph } from "../aspect-graph.ts";
 import { Chat } from "../chat/service.ts";

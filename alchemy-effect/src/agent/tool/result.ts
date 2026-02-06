@@ -1,6 +1,6 @@
 import * as S from "effect/Schema";
 import { Field } from "../../schema.ts";
-import type { IsNever } from "../../util.ts";
+import type { IsNever } from "../../util/types.ts";
 import { defineAspect, type Aspect } from "../aspect.ts";
 
 export const isResult = (artifact: any): artifact is Result =>

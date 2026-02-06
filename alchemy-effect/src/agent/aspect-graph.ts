@@ -1,7 +1,7 @@
 import * as S from "effect/Schema";
-import type { Instance } from "../instance.ts";
+import { ServiceTag } from "../experimental/service-tag.ts";
 import type { Pointer } from "../pointer.ts";
-import { ServiceTag } from "../service-tag.ts";
+import type { Instance } from "../util/instance.ts";
 import { isAspect, type Aspect, type AspectLike } from "./aspect.ts";
 
 export class AspectGraph extends ServiceTag("AspectGraphService")<

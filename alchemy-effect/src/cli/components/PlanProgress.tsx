@@ -2,12 +2,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { Box, Text } from "ink";
-import type {
-  ApplyEvent,
-  ApplyStatus,
-  StatusChangeEvent,
-} from "../../event.ts";
 import type { IPlan } from "../../plan.ts";
+import type { ApplyEvent, ApplyStatus, StatusChangeEvent } from "../event.ts";
 
 interface ProgressEventSource {
   subscribe(listener: (event: ApplyEvent) => void): () => void;

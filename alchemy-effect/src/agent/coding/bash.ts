@@ -4,7 +4,7 @@ import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { cwd } from "../../cwd.ts";
+import { cwd } from "../../config/cwd.ts";
 import { AspectConfig } from "../aspect.ts";
 import { Tool } from "../tool/tool.ts";
 import { CommandValidator } from "../util/command-validator.ts";

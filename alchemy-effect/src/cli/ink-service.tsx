@@ -1,14 +1,12 @@
-import React from "react";
-
-import { type PlanStatusSession, CLI } from "./service.ts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import type { IPlan } from "../plan.ts";
 import { render } from "ink";
+import type { IPlan } from "../plan.ts";
 import { ApprovePlan } from "./components/ApprovePlan.tsx";
 import { Plan } from "./components/Plan.tsx";
 import { PlanProgress } from "./components/PlanProgress.tsx";
-import type { ApplyEvent } from "../event.ts";
+import type { ApplyEvent } from "./event.ts";
+import { type PlanStatusSession, CLI } from "./service.ts";
 
 export const inkCLI = () =>
   Layer.succeed(

@@ -1,6 +1,6 @@
 import type * as S from "effect/Schema";
-import type { Primitive } from "./data.ts";
 import type { Output } from "./output.ts";
+import type { Primitive } from "./util/data.ts";
 
 export type Function = (...args: any[]) => any;
 export type Constructor = new (...args: any[]) => any;

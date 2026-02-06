@@ -1,6 +1,6 @@
 import type { Effect } from "effect/Effect";
 import * as S from "effect/Schema";
-import { ServiceTag } from "../../service-tag.ts";
+import { ServiceTag } from "../../experimental/service-tag.ts";
 import { Issue, IssueId } from "./issue.ts";
 import { Reply, ReplyId } from "./reply.ts";
 
