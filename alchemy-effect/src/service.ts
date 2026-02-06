@@ -55,6 +55,17 @@ export interface Service<
   Base = unknown,
 > extends IService<ID, F, Handler, Props, Attr, Base> {}
 
+export function Tag<const ID extends string>(id: ID) {
+  return <Self, Contract>() => class {};
+}
+
+export namespace Service {
+  export const effect =
+    <const ID extends string>(id: ID) =>
+    <Self, Contract>() =>
+      class {};
+}
+
 export interface ServiceDef<
   ID extends string = string,
   Handler extends RuntimeHandler = RuntimeHandler,

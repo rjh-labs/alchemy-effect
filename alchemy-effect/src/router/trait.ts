@@ -1,10 +1,18 @@
 // oxlint-disable no-unused-expressions
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import type { ClassTuple } from "../class.ts";
 import type { AnyClassSchema } from "../schema.ts";
 import type { Annotated } from "./annotated.ts";
+
+export type TraitFn<
+  T extends Trait.Any = Trait.Any,
+  Args extends any[] = any[],
+> = (...args: Args) => T;
+
+export type TraitDef<Fn extends TraitFn> = Fn & {
+  /** @internal phantom */
+  trait: ReturnType<Fn>;
+};
 
 export interface Trait<
   Tag extends string = string,
@@ -15,10 +23,10 @@ export interface Trait<
   tag: Tag;
   errors?: ClassTuple<Errors>;
   provides?: ClassTuple<Provides>;
-  <Target>(target: Target): Apply<Target, this>;
 }
 
 export namespace Trait {
+  export type Any = Trait<any, any, any>;
   export type Of<A> = A;
   export const apply = <T extends Trait<any, any, any>>(
     tag: T["tag"],
@@ -51,31 +59,17 @@ type _TraitProps<A extends Trait<any, any, any>> = Omit<
         provides: Exclude<A["provides"], undefined>;
       });
 
-export declare function defineTrait<F extends (...args: any[]) => any>(
+export declare function defineTrait<F extends TraitFn>(
   tag: NoInfer<ReturnType<F>["tag"]>,
   fn: F,
-): F & MiddlewareProviders<ReturnType<F>>;
+): TraitDef<F>;
 
-export declare function defineTrait<T extends Trait, Req extends Trait = never>(
+export declare function defineTrait<T extends Trait>(
   tag: T["tag"],
   props: {
     [k in keyof TraitProps<T>]: TraitProps<T>[k];
   },
-): T & MiddlewareProviders<T, Req>;
-
-export declare function Trait<A extends Trait, Req extends Trait = never>(
-  props: TraitProps<A>,
-): A & {};
-
-type MiddlewareProviders<A extends Trait, Req extends Trait = never> = {
-  effect: <Err = never, Req = never>(
-    fn: (
-      input: any,
-      trait: A,
-      next: Effect.Effect<any, any, any>,
-    ) => Effect.Effect<any, Err, Req>,
-  ) => Layer.Layer<A, TraitError<A> | Err, Req>;
-};
+): TraitDef<<Target>(target: Target) => Apply<Target, T>>;
 
 export type Apply<Target, T extends Trait<any, any, any>> = ([Target] extends [
   Annotated<infer s, infer t>,

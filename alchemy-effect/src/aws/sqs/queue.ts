@@ -1,4 +1,5 @@
 import type * as S from "effect/Schema";
+import { Queue as AlchemyQueue } from "../../cloud/queue.ts";
 import { Resource } from "../../resource.ts";
 // required to avoid this error in consumers: "The inferred type of 'Messages' cannot be named without a reference to '../../distilled-aws/node_modules/@types/aws-lambda'. This is likely not portable. A type annotation is necessary.ts(2742)"
 export type * as lambda from "aws-lambda";
@@ -8,6 +9,10 @@ export const Queue = Resource<{
     id: ID,
     props: Props,
   ): Queue<ID, Props>;
+  <const Q extends AlchemyQueue, const Props extends QueueProps>(
+    queue: Q,
+    props: Props,
+  ): Queue<Q["id"], Props>;
 }>("AWS.SQS.Queue");
 
 export interface Queue<
