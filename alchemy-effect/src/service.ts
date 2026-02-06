@@ -1,78 +1,99 @@
-import type { Effect } from "effect/Effect";
-import type { Pipeable } from "effect/Pipeable";
+import type * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import type { Capability } from "./capability.ts";
-import type { IResource } from "./resource.ts";
-import type { IRuntime, RuntimeHandler, RuntimeProps } from "./runtime.ts";
+import type { ExcludeAny } from "./util.ts";
 
-export interface IService<
-  ID extends string = string,
-  F extends IRuntime = IRuntime,
-  Handler extends RuntimeHandler = RuntimeHandler,
-  Props extends RuntimeProps<F, any> = RuntimeProps<F, any>,
-  Attr = (F & { props: Props })["attr"],
-  Base = unknown,
-> extends IResource<F["type"], ID, Props, Attr, F> {
-  kind: "Service";
-  type: F["type"];
-  id: ID;
-  runtime: F;
-  /**
-   * The raw handler function as passed in to the Runtime.
-   *
-   * @internal phantom type
-   */
-  impl: Handler;
-  /**
-   * An Effect that produces a handler stripped of its Infrastructure-time-only Capabilities.
-   */
-  handler: Effect<
-    (
-      ...inputs: Parameters<Handler>
-    ) => Effect<
-      Effect.Success<ReturnType<Handler>>,
-      Effect.Error<ReturnType<Handler>>,
-      never
-    >,
-    never,
-    Exclude<Effect.Context<ReturnType<Handler>>, Capability>
-  >;
-  props: Props;
-  /** @internal phantom type of this resource's output attributes */
-  attr: Attr;
-  /** @internal phantom type of this resource's parent */
-  parent: unknown;
-  new (): Service<ID, F, Handler, Props, Attr, Base>;
+export type TagTypeId = typeof TagTypeId;
+export const TagTypeId = "alchemy/Service" as const;
+
+export interface TagClass<
+  Self = any,
+  Id extends string = string,
+  Type = any,
+> extends Context.Tag<Self, Type> {
+  new (_: never): TagClassShape<Id, Type>;
+  readonly key: Id;
 }
 
-export interface AnyService extends IService {}
-
-export interface Service<
-  ID extends string = string,
-  F extends IRuntime = IRuntime,
-  Handler extends RuntimeHandler = RuntimeHandler,
-  Props extends RuntimeProps<F, any> = RuntimeProps<F, any>,
-  Attr = (F & { props: Props })["attr"],
-  Base = unknown,
-> extends IService<ID, F, Handler, Props, Attr, Base> {}
-
-export function Tag<const ID extends string>(id: ID) {
-  return <Self, Contract>() => class {};
+export interface TagClassShape<Id, Shape> {
+  readonly [TagTypeId]: TagTypeId;
+  readonly Type: Shape;
+  readonly Id: Id;
 }
 
-export namespace Service {
-  export const effect =
-    <const ID extends string>(id: ID) =>
-    <Self, Contract>() =>
-      class {};
-}
+export type Capabilities<Shape> = Shape extends (...args: any[]) => infer Return
+  ? Capabilities<Return>
+  : Shape extends Effect.Effect<infer _A, infer _Err, infer Req>
+    ? ExcludeAny<Extract<Req, Capability>>
+    : Shape extends Stream.Stream<infer _A, infer _Err, infer Req>
+      ? ExcludeAny<Extract<Req, Capability>>
+      : Shape extends Sink.Sink<
+            infer _A,
+            infer _In,
+            infer _L,
+            infer _Err,
+            infer Req
+          >
+        ? ExcludeAny<Extract<Req, Capability>>
+        : never;
 
-export interface ServiceDef<
-  ID extends string = string,
-  Handler extends RuntimeHandler = RuntimeHandler,
-> extends Pipeable {
-  new (): ServiceDef<ID, Handler>;
-}
+export const Tag =
+  <const ID extends string>(id: ID) =>
+  <Self, Contract>(): TagClass<Self, ID, Contract> =>
+    undefined!;
 
-export const isService = (resource: any): resource is IService => {
-  return resource && resource.kind === "Service";
+export interface Service<Shape, Err, Req, Cap> {}
+
+export const effect = <
+  Tag extends TagClass,
+  A extends Impl<Tag["Identifier"], Tag["Service"]>,
+  Err = never,
+  Req = never,
+>(
+  tag: Tag,
+  effect: Effect.Effect<A, Err, Req>,
+): Service<
+  Tag["Service"],
+  Err,
+  Req,
+  {
+    [k in keyof A]: A[k] extends (
+      ...args: any[]
+    ) => Effect.Effect<infer _A, infer _Err, infer Req>
+      ? ExcludeAny<Req>
+      : A[k] extends (
+            ...args: any[]
+          ) => Stream.Stream<infer _A, infer _Err, infer Req>
+        ? ExcludeAny<Req>
+        : A[k] extends (
+              ...args: any[]
+            ) => Sink.Sink<infer _A, infer _In, infer _L, infer _Err, infer Req>
+          ? ExcludeAny<Req>
+          : never;
+  }[keyof A]
+> => undefined!;
+
+export const succeed = <Tag extends ServiceTagClass>(tag: Tag, service: Tag) =>
+  undefined!;
+
+type Impl<Self, Shape> = {
+  [key in keyof Shape]: Shape[key] extends (
+    ...args: infer Args extends any[]
+  ) => Effect.Effect<infer A, infer Err, infer _Req>
+    ? (...args: Args) => Effect.Effect<A, Err, any> // allow any so the user can provide any
+    : Shape[key] extends (
+          ...args: any[]
+        ) => Stream.Stream<infer A, infer Err, infer Req>
+      ? (
+          ...args: Parameters<Shape[key]>
+        ) => Stream.Stream<A, Err, ExcludeAny<Req> | Self>
+      : Shape[key] extends (
+            ...args: any[]
+          ) => Sink.Sink<infer A, infer In, infer L, infer Err, infer Req>
+        ? (
+            ...args: Parameters<Shape[key]>
+          ) => Sink.Sink<A, In, L, Err, ExcludeAny<Req> | Self>
+        : Shape[key];
 };
