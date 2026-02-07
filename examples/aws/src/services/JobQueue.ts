@@ -1,7 +1,14 @@
-// @ts-nocheck
+import * as S3 from "alchemy-effect/AWS/S3";
+import * as EventSource from "alchemy-effect/EventSource";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
+
+import { JobStorage } from "./JobStorage.ts";
+
+export class JobQueue extends EventSource.Tag("JobQueue")<JobQueue, {}>() {}
 
 // IMPLEMENTATION (cloud specific)
-export const s3JobWorker = EventSource.effect(
+export const s3JobQueue = EventSource.effect(
   JobQueue,
   Effect.gen(function* () {
     const jobStorage = yield* JobStorage;

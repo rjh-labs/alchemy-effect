@@ -1,8 +1,8 @@
 import * as Stack from "alchemy-effect/Stack";
-import JobService from "./src/job-api.ts";
+import JobApi from "./src/JobApi.ts";
 
 // group into stack
 export default Stack.define({
   name: "job-service",
-  resources: [JobService],
+  resources: [JobApi],
 });

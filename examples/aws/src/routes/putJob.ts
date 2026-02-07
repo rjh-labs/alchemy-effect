@@ -3,7 +3,7 @@ import * as Route from "alcehmy-effect/Route";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Job } from "../job.ts";
-import { JobStorage } from "../services/job-storage.ts";
+import { JobStorage } from "../services/JobStorage.ts";
 
 export class PutJobRequest extends S.Class<PutJobRequest>("PutJobRequest")({
   content: S.String,

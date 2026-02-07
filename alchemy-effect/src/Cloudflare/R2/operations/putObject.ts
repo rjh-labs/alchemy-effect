@@ -1,10 +1,13 @@
 import type * as runtime from "@cloudflare/workers-types";
 import * as Effect from "effect/Effect";
-import { replaceEffectStream } from "../stream.ts";
-import { getR2BucketFromEnv, type UploadValue } from "./bucket.client.ts";
-import type { Bucket } from "./bucket.ts";
+import { replaceEffectStream } from "../../stream.ts";
+import type { Bucket } from "../Bucket.ts";
+import {
+  getR2BucketFromEnv,
+  type UploadValue,
+} from "../util/getR2BucketFromEnv.ts";
 
-export const put = Effect.fnUntraced(function* <B extends Bucket>(
+export const putObject = Effect.fnUntraced(function* <B extends Bucket>(
   bucket: B,
   key: string,
   value: UploadValue,

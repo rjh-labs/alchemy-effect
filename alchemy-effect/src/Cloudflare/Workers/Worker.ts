@@ -1,24 +1,101 @@
+import type * as runtime from "@cloudflare/workers-types";
 import * as FileSystem from "@effect/platform/FileSystem";
 import * as Path from "@effect/platform/Path";
-import type { Workers } from "cloudflare/resources.mjs";
+import type { Workers } from "cloudflare/resources";
 import * as Effect from "effect/Effect";
-import type { ScopedPlanStatusSession } from "../../cli/service.ts";
-import { DotAlchemy } from "../../config/dot-alchemy.ts";
-import { ESBuild } from "../../util/esbuild.ts";
-import { createPhysicalName } from "../../util/physical-name.ts";
-import { sha256 } from "../../util/sha256.ts";
+import * as Layer from "effect/Layer";
+
+import type { Capability } from "../../Capability.ts";
+import type { ScopedPlanStatusSession } from "../../Cli.ts";
+import * as ESBuild from "../../ESBuild.ts";
+import { DotAlchemy } from "../../internal/config/dot-alchemy.ts";
+import type { Hosted, Unbound } from "../../internal/layer.ts";
+import { sha256 } from "../../internal/util/sha256.ts";
+import { createPhysicalName } from "../../PhysicalName.ts";
+import { Runtime } from "../../Runtime.ts";
 import { Account } from "../account.ts";
 import { CloudflareApi } from "../api.ts";
-import { Assets } from "./assets.provider.ts";
-import { Worker, type WorkerAttr, type WorkerProps } from "./worker.ts";
+import { CloudflareContext } from "../context.ts";
+import * as Assets from "./Assets.ts";
 
-export const workerProvider = () =>
+export const WorkerType = "Cloudflare.Worker" as const;
+export type WorkerType = typeof WorkerType;
+
+export type WorkerProps<Req = any> = {
+  name?: string;
+  logpush?: boolean;
+  observability?: Worker.Observability;
+  subdomain?: Worker.Subdomain;
+  tags?: string[];
+  main: string;
+  compatibility?: {
+    date?: string;
+    flags?: string[];
+  };
+  limits?: Worker.Limits;
+  placement?: Worker.Placement;
+} & (Extract<Req, Assets.Fetch> extends never
+  ? {
+      assets?: string | Worker.AssetsProps;
+    }
+  : {
+      assets: string | Worker.AssetsProps;
+    });
+
+export type WorkerAttr<Props extends WorkerProps<any>> = {
+  workerId: string;
+  workerName: Props["name"] extends string ? Props["name"] : string;
+  logpush: Props["logpush"] extends boolean ? Props["logpush"] : boolean;
+  observability: Props["observability"] extends Worker.Observability
+    ? Props["observability"]
+    : {
+        // whatever cloudflare's (or our, probably ours) default is
+      };
+  url: Props["subdomain"] extends { enabled: false } ? undefined : string;
+  subdomain: Props["subdomain"] extends Worker.Subdomain
+    ? Props["subdomain"]
+    : { enabled: true; previews_enabled: true };
+  tags: Props["tags"] extends string[] ? Props["tags"] : string[];
+  accountId: string;
+  hash: { assets: string | undefined; bundle: string };
+};
+
+export interface Worker extends Runtime<WorkerType> {
+  base: Worker;
+  props: WorkerProps<any>;
+  attr: WorkerAttr<Extract<this["props"], WorkerProps<any>>>;
+  binding: {
+    bindings: Worker.Binding[];
+  };
+}
+
+export const Worker = Runtime(WorkerType)<Worker>();
+
+export declare namespace Worker {
+  export type Observability = Workers.ScriptUpdateParams.Metadata.Observability;
+  export type Subdomain = Workers.Beta.Worker.Subdomain;
+  export type Binding = NonNullable<
+    Workers.Beta.Workers.VersionCreateParams["bindings"]
+  >[number];
+  export type Limits = Workers.Beta.Workers.Version.Limits;
+  export type Placement = Workers.Beta.Workers.Version.Placement;
+  export type Assets = Workers.Beta.Workers.Version.Assets;
+  export type AssetsConfig = Workers.Beta.Workers.Version.Assets.Config;
+  export type Module = Workers.Beta.Workers.Version.Module;
+
+  export interface AssetsProps {
+    directory: string;
+    config?: AssetsConfig;
+  }
+}
+
+export const WorkerProvider = () =>
   Worker.provider.effect(
     Effect.gen(function* () {
       const api = yield* CloudflareApi;
       const accountId = yield* Account;
-      const { read, upload } = yield* Assets;
-      const { build } = yield* ESBuild;
+      const { read, upload } = yield* Assets.Assets;
+      const { build } = yield* ESBuild.ESBuild;
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const dotAlchemy = yield* DotAlchemy;
@@ -277,3 +354,44 @@ export const workerProvider = () =>
       };
     }),
   );
+
+type Handler = (
+  request: Request,
+  env: unknown,
+  ctx: runtime.ExecutionContext,
+) => Effect.Effect<Response, any, CloudflareContext>;
+type HandlerFactory<H extends Handler, Req = Capability> = Effect.Effect<
+  H,
+  any,
+  Req
+>;
+
+export const toHandler = <H extends Handler>(
+  factory: HandlerFactory<H, Capability>,
+) => {
+  return {
+    fetch: async (
+      request: Request,
+      env: unknown,
+      ctx: runtime.ExecutionContext,
+    ) => {
+      const exit = await Effect.runPromiseExit(
+        (factory as HandlerFactory<H, never>).pipe(
+          Effect.flatMap((handler) => handler(request, env, ctx)),
+          Effect.provide(Layer.succeed(CloudflareContext, { env, ctx })),
+        ),
+      );
+      if (exit._tag === "Success") {
+        return exit.value;
+      }
+      return Response.json(exit, { status: 500 });
+    },
+  };
+};
+
+export const serve =
+  <const Props extends WorkerProps>(props: Props) =>
+  <Svc extends ServiceDef, Err, Cap extends Capability>(
+    t: Unbound<Svc, Err, Cap>,
+  ): Hosted<Worker, InstanceType<Svc>, Err, Cap> =>
+    undefined!;

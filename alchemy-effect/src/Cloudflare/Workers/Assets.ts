@@ -1,11 +1,15 @@
+import type * as runtime from "@cloudflare/workers-types";
 import { FileSystem, Path } from "@effect/platform";
 import type { PlatformError } from "@effect/platform/Error";
 import { Context, Data, Layer } from "effect";
 import * as Effect from "effect/Effect";
-import type { ScopedPlanStatusSession } from "../../cli/service.ts";
-import { sha256 } from "../../util/sha256.ts";
+import { Binding } from "../../Binding.ts";
+import { declare, type Capability } from "../../Capability.ts";
+import type { ScopedPlanStatusSession } from "../../Cli.ts";
+import { sha256 } from "../../internal/util/sha256.ts";
 import { CloudflareApi, CloudflareApiError } from "../api.ts";
-import type { Worker } from "./worker.ts";
+import { getCloudflareEnvKey } from "../context.ts";
+import { Worker } from "./Worker.ts";
 
 const MAX_ASSET_SIZE = 1024 * 1024 * 25; // 25MB
 const MAX_ASSET_COUNT = 20_000;
@@ -247,3 +251,25 @@ export const assetsProvider = () =>
       };
     }),
   );
+
+export interface Fetch extends Capability<"Cloudflare.Assets.Fetch"> {}
+
+export const Fetch = Binding<() => Binding<Worker, Fetch>>(
+  Worker,
+  "Cloudflare.Assets.Fetch",
+);
+
+export const fetch = Effect.fnUntraced(function* (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+) {
+  yield* declare<Fetch>();
+  const fetcher = yield* getCloudflareEnvKey<runtime.Fetcher>("ASSETS");
+  return yield* Effect.promise(
+    (): Promise<Response> =>
+      fetcher.fetch(
+        input as URL | runtime.RequestInfo,
+        init as runtime.RequestInit<runtime.CfProperties<unknown>>,
+      ) as any,
+  );
+});

@@ -1,9 +1,9 @@
 import type * as runtime from "@cloudflare/workers-types";
 import * as Effect from "effect/Effect";
-import { getR2BucketFromEnv } from "./bucket.client.ts";
-import type { Bucket } from "./bucket.ts";
+import type { Bucket } from "../Bucket.ts";
+import { getR2BucketFromEnv } from "../util/getR2BucketFromEnv.ts";
 
-export const list = Effect.fnUntraced(function* <B extends Bucket>(
+export const listObjects = Effect.fnUntraced(function* <B extends Bucket>(
   bucket: B,
   options?: runtime.R2ListOptions,
 ) {

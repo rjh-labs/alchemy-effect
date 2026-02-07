@@ -1,8 +1,8 @@
 import * as Route from "alchemy-effect/Route";
+import * as S from "alchemy-effect/Schema";
 import * as Effect from "effect/Effect";
-import * as S from "effect/Schema";
-import { Job, JobId } from "../database/job.ts";
-import { JobStorage } from "../services/job-storage.ts";
+import { Job, JobId } from "../database/Job.ts";
+import { JobStorage } from "../services/JobStorage.ts";
 
 export class GetJobRequest extends S.Class<GetJobRequest>("GetJobRequest")({
   jobId: JobId,
@@ -11,7 +11,7 @@ export class GetJobRequest extends S.Class<GetJobRequest>("GetJobRequest")({
 export class GetJobResponse extends S.Class<GetJobResponse>(
   "ListTodosResponse",
 )({
-  job: Job,
+  job: S.optional(Job),
 }) {}
 
 export class InvalidJobId extends S.TaggedError<InvalidJobId>()(
