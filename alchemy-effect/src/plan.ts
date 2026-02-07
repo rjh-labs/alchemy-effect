@@ -3,19 +3,22 @@ import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { omit } from "effect/Struct";
-import { App } from "./app.ts";
+import { App } from "./App.ts";
 import type {
   AnyBinding,
   BindingDiffProps,
   BindingProvider,
-} from "./binding.ts";
-import type { Capability } from "./capability.ts";
-import { InstanceId } from "./instance-id.ts";
-import * as Output from "./output.ts";
-import type { Provider } from "./provider.ts";
-import { getProviderByType, type ProviderService } from "./provider.ts";
-import type { AnyResource, Resource, ResourceTags } from "./resource.ts";
-import { isService, type IService, type Service } from "./service.ts";
+} from "./Binding.ts";
+import type { Capability } from "./Capability.ts";
+import type { Diff, NoopDiff, UpdateDiff } from "./Diff.ts";
+import { InstanceId } from "./internal/instance-id.ts";
+import { isService, type IService, type Service } from "./internal/service.ts";
+import type { Instance } from "./internal/util/instance.ts";
+import { asEffect } from "./internal/util/types.ts";
+import * as Output from "./Output.ts";
+import type { Provider } from "./Provider.ts";
+import { getProviderByType, type ProviderService } from "./Provider.ts";
+import type { AnyResource, Resource, ResourceTags } from "./Resource.ts";
 import {
   State,
   StateStoreError,
@@ -26,10 +29,7 @@ import {
   type ResourceState,
   type UpdatedResourceState,
   type UpdatingReourceState,
-} from "./state.ts";
-import type { Diff, NoopDiff, UpdateDiff } from "./util/diff.ts";
-import type { Instance } from "./util/instance.ts";
-import { asEffect } from "./util/types.ts";
+} from "./State.ts";
 
 export type PlanError = never;
 

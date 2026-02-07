@@ -3,17 +3,17 @@ import type { HttpClient } from "@effect/platform/HttpClient";
 import { Path } from "@effect/platform/Path";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as App from "./app.ts";
-import { type AppliedPlan } from "./apply.ts";
-import type { CLI } from "./cli/service.ts";
-import { DotAlchemy } from "./config/dot-alchemy.ts";
+import * as App from "./App.ts";
+import { type AppliedPlan } from "./Apply.ts";
+import type { CLI } from "./internal/cli/service.ts";
+import { DotAlchemy } from "./internal/config/dot-alchemy.ts";
+import type { AnyService } from "./internal/service.ts";
+import type { Instance } from "./internal/util/instance.ts";
 import type { DerivePlan, Providers, TraverseResources } from "./plan.ts";
-import type { Ref } from "./ref.ts";
-import type { AnyResource } from "./resource.ts";
-import type { AnyService } from "./service.ts";
-import { type StageConfig, type Stages } from "./stage.ts";
-import * as State from "./state.ts";
-import type { Instance } from "./util/instance.ts";
+import type { Ref } from "./Ref.ts";
+import type { AnyResource } from "./Resource.ts";
+import { type StageConfig, type Stages } from "./Stage.ts";
+import * as State from "./State.ts";
 
 export const defineStack = <
   const Name extends string,
@@ -23,6 +23,8 @@ export const defineStack = <
 >(
   stack: StackConfig<Name, Resources, Req, Err>,
 ): Stack<Name, Instance<Resources[number]>, Req, Err> => stack as any;
+
+export const define = defineStack;
 
 export type StackConfig<
   Name extends string,

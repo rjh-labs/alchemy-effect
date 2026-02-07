@@ -1,4 +1,10 @@
-import type { Policy } from "./policy";
+import * as Effect from "effect/Effect";
+import type { Instance } from "./internal/util/instance.ts";
+import type { Policy } from "./Policy.ts";
+
+/** declare a Policy requiring Capabilities in some context */
+export const declare = <S extends Capability>() =>
+  Effect.gen(function* () {}) as Effect.Effect<void, never, S>;
 
 export interface ICapability<
   Type extends string = string,
@@ -61,3 +67,11 @@ export declare namespace Capability {
     };
   }
 }
+
+// syntactic sugar for mapping `typeof Messages` -> Messages, e.g. so it's SQS.SendMessage<Messages> instead of SQS.SendMessage<typeof Messages>
+// e.g. <Q extends SQS.Queue>(queue: Q) => SQS.SendMessage<To<Q>>
+export type From<T> = Instance<T>;
+export type To<T> = Instance<T>;
+export type In<T> = Instance<T>;
+export type Into<T> = Instance<T>;
+export type On<T> = Instance<T>;

@@ -1,3 +1,3 @@
-import { apply } from "./apply.ts";
+import { apply } from "./Apply.ts";
 
 export const destroy = () => apply();

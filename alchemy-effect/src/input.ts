@@ -1,5 +1,5 @@
 import type * as S from "effect/Schema";
-import type { Output } from "./output.ts";
+import type { Output } from "./Output.ts";
 import type { Primitive } from "./util/data.ts";
 
 export type Function = (...args: any[]) => any;

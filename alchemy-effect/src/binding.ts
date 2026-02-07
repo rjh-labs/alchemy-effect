@@ -1,11 +1,11 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 import * as Layer from "effect/Layer";
-import type { Capability, ICapability } from "./capability.ts";
-import type { Hosted } from "./layer.ts";
-import type { IResource, Resource } from "./resource.ts";
-import type { IRuntime } from "./runtime.ts";
-import type { Diff } from "./util/diff.ts";
+import type { Capability, ICapability } from "./Capability.ts";
+import type { Diff } from "./Diff.ts";
+import type { Hosted } from "./internal/layer.ts";
+import type { IResource, Resource } from "./Resource.ts";
+import type { IRuntime } from "./Runtime.ts";
 
 export interface BindingProps {
   [key: string]: any;

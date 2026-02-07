@@ -2,11 +2,11 @@ import type { Types } from "effect";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import type { Capability } from "./capability.ts";
-import type { Policy } from "./policy.ts";
-import type { ProviderService } from "./provider.ts";
-import type { IResource, Resource, ResourceTags } from "./resource.ts";
-import type { IService, ServiceDef } from "./service.ts";
+import type { Capability } from "./Capability.ts";
+import type { IService, ServiceDef } from "./internal/service.ts";
+import type { Policy } from "./Policy.ts";
+import type { ProviderService } from "./Provider.ts";
+import type { IResource, Resource, ResourceTags } from "./Resource.ts";
 
 export type RuntimeHandler<
   Inputs extends any[] = any[],

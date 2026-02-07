@@ -1,6 +1,6 @@
 import * as Context from "effect/Context";
 import * as Layer from "effect/Layer";
-import type { StageConfig } from "./stage.ts";
+import type { StageConfig } from "./Stage.ts";
 
 export interface AppProps {
   name: string;

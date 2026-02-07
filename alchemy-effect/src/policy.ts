@@ -1,10 +1,7 @@
 import * as Context from "effect/Context";
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { type AnyBinding, type Bind } from "./binding.ts";
-import type { Capability } from "./capability.ts";
-import type { IRuntime, Runtime } from "./runtime.ts";
-import type { Instance } from "./util/instance.ts";
+import { type AnyBinding, type Bind } from "./Binding.ts";
+import type { IRuntime, Runtime } from "./Runtime.ts";
 
 /**
  * A Policy binds a set of Capbilities (e.g SQS.SendMessage, SQS.Consume, etc.) to a
@@ -108,15 +105,3 @@ export namespace Policy {
   // TODO(sam): one day we might infer policies using a compiler plugin, this is a placeholder
   export const infer = <T>(): T => undefined!;
 }
-
-/** declare a Policy requiring Capabilities in some context */
-export const declare = <S extends Capability>() =>
-  Effect.gen(function* () {}) as Effect.Effect<void, never, S>;
-
-// syntactic sugar for mapping `typeof Messages` -> Messages, e.g. so it's SQS.SendMessage<Messages> instead of SQS.SendMessage<typeof Messages>
-// e.g. <Q extends SQS.Queue>(queue: Q) => SQS.SendMessage<To<Q>>
-export type From<T> = Instance<T>;
-export type To<T> = Instance<T>;
-export type In<T> = Instance<T>;
-export type Into<T> = Instance<T>;
-export type On<T> = Instance<T>;

@@ -5,8 +5,8 @@ import * as Context from "effect/Context";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import { isResource } from "./Resource.ts";
 import type { BindNode } from "./plan.ts";
-import { isResource } from "./resource.ts";
 
 // SQL only?? no
 // DynamoDB is faster but bounded to 400KB (<10ms minimum latency)

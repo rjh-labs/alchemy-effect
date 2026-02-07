@@ -1,7 +1,7 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import type { StackName, StackRef, Stack, StackResources } from "./stack.ts";
-import { ref } from "./ref.ts";
+import { ref } from "./Ref.ts";
+import type { Stack, StackName, StackRef, StackResources } from "./Stack.ts";
 
 export interface StageConfig {
   /**

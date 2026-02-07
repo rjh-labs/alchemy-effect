@@ -25,95 +25,30 @@
       "bun": "./src/index.ts",
       "import": "./lib/index.js"
     },
-    "./Output": {
-      "types": "./lib/output.d.ts",
-      "bun": "./src/output.ts",
-      "import": "./lib/output.js"
+    "./*": {
+      "types": "./src/*.d.ts",
+      "bun": "./src/*.ts",
+      "import": "./lib/*.js"
     },
-    "./aspect": {
-      "types": "./lib/aspect/index.d.ts",
-      "bun": "./src/aspect/index.ts",
-      "import": "./lib/aspect/index.js"
+    "./AWS": {
+      "types": "./src/AWS/index.d.ts",
+      "bun": "./src/AWS/index.ts",
+      "import": "./lib/AWS/index.js"
     },
-    "./aws": {
-      "types": "./lib/aws/index.d.ts",
-      "bun": "./src/aws/index.ts",
-      "import": "./lib/aws/index.js"
+    "./AWS/*/*": {
+      "types": "./src/AWS/*/index.d.ts",
+      "bun": "./src/AWS/*/index.ts",
+      "import": "./lib/AWS/*/index.js"
     },
-    "./aws/dynamodb": {
-      "types": "./lib/aws/dynamodb/index.d.ts",
-      "bun": "./src/aws/dynamodb/index.ts",
-      "import": "./lib/aws/dynamodb/index.js"
+    "./Cloudflare": {
+      "types": "./src/Cloudflare/index.d.ts",
+      "bun": "./src/Cloudflare/index.ts",
+      "import": "./lib/Cloudflare/index.js"
     },
-    "./aws/ec2": {
-      "types": "./lib/aws/ec2/index.d.ts",
-      "bun": "./src/aws/ec2/index.ts",
-      "import": "./lib/aws/ec2/index.js"
-    },
-    "./aws/kinesis": {
-      "types": "./lib/aws/kinesis/index.d.ts",
-      "bun": "./src/aws/kinesis/index.ts",
-      "import": "./lib/aws/kinesis/index.js"
-    },
-    "./aws/lambda": {
-      "types": "./lib/aws/lambda/index.d.ts",
-      "bun": "./src/aws/lambda/index.ts",
-      "import": "./lib/aws/lambda/index.js"
-    },
-    "./aws/s3": {
-      "types": "./lib/aws/s3/index.d.ts",
-      "bun": "./src/aws/s3/index.ts",
-      "import": "./lib/aws/s3/index.js"
-    },
-    "./aws/sqs": {
-      "types": "./lib/sqs/aws/index.d.ts",
-      "bun": "./src/aws/sqs/index.ts",
-      "import": "./lib/aws/sqs/index.js"
-    },
-    "./aws/sts": {
-      "types": "./lib/sts.d.ts",
-      "bun": "./src/aws/sts.ts",
-      "import": "./lib/aws/sts.js"
-    },
-    "./aws/iam": {
-      "types": "./lib/iam.d.ts",
-      "bun": "./src/aws/iam.ts",
-      "import": "./lib/aws/iam.js"
-    },
-    "./aws/credentials": {
-      "types": "./lib/aws/credentials.d.ts",
-      "bun": "./src/aws/credentials.ts",
-      "import": "./lib/aws/credentials.js"
-    },
-    "./cli": {
-      "types": "./lib/cli/index.d.ts",
-      "bun": "./src/cli/index.ts",
-      "import": "./lib/cli/index.js"
-    },
-    "./cloudflare": {
-      "types": "./lib/cloudflare/index.d.ts",
-      "bun": "./src/cloudflare/index.ts",
-      "import": "./lib/cloudflare/index.js"
-    },
-    "./cloudflare/assets": {
-      "types": "./lib/cloudflare/worker/assets.fetch.d.ts",
-      "bun": "./src/cloudflare/worker/assets.fetch.ts",
-      "import": "./lib/cloudflare/worker/assets.fetch.js"
-    },
-    "./cloudflare/worker": {
-      "types": "./lib/cloudflare/worker/index.d.ts",
-      "bun": "./src/cloudflare/worker/index.ts",
-      "import": "./lib/cloudflare/worker/index.js"
-    },
-    "./cloudflare/kv": {
-      "types": "./lib/cloudflare/kv/index.d.ts",
-      "bun": "./src/cloudflare/kv/index.ts",
-      "import": "./lib/cloudflare/kv/index.js"
-    },
-    "./cloudflare/r2": {
-      "types": "./lib/cloudflare/r2/index.d.ts",
-      "bun": "./src/cloudflare/r2/index.ts",
-      "import": "./lib/cloudflare/r2/index.js"
+    "./Cloudflare/*/*": {
+      "types": "./src/Cloudflare/*/index.d.ts",
+      "bun": "./src/Cloudflare/*/index.ts",
+      "import": "./lib/Cloudflare/*/index.js"
     }
   },
   "publishConfig": {

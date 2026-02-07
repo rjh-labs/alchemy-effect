@@ -1,13 +1,13 @@
 import { pipe } from "effect";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
-import * as App from "./app.ts";
-import type { From } from "./policy.ts";
-import { getRefMetadata, isRef, ref as stageRef, type Ref } from "./ref.ts";
-import type { AnyResource, Resource } from "./resource.ts";
-import * as State from "./state.ts";
-import { isPrimitive } from "./util/data.ts";
-import type { IsAny, UnionToIntersection } from "./util/types.ts";
+import * as App from "./App.ts";
+import { isPrimitive } from "./internal/util/data.ts";
+import type { IsAny, UnionToIntersection } from "./internal/util/types.ts";
+import type { From } from "./Policy.ts";
+import { getRefMetadata, isRef, ref as stageRef, type Ref } from "./Ref.ts";
+import type { AnyResource, Resource } from "./Resource.ts";
+import * as State from "./State.ts";
 
 // a special symbol only used at runtime to probe the Output proxy
 const ExprSymbol = Symbol.for("alchemy/Expr");
