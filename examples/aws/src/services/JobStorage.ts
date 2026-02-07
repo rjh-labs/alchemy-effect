@@ -2,7 +2,7 @@ import * as S3 from "alchemy-effect/AWS/S3";
 import * as Service from "alchemy-effect/Service";
 import * as Effect from "effect/Effect";
 
-import type { Job } from "../database/Job.ts";
+import type { Job } from "../Job.ts";
 import { JobsBucket } from "../JobsBucket.ts";
 
 // TAG

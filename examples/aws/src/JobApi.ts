@@ -8,8 +8,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import { JobsBucket } from "./JobsBucket.ts";
-import { GetJob } from "./routes/getJob.ts";
-import { PutJob } from "./routes/putJob.ts";
+import { getJob, GetJob } from "./routes/getJob.ts";
+import { putJob, PutJob } from "./routes/putJob.ts";
 import { JobQueue, s3JobQueue } from "./services/JobQueue.ts";
 import { s3JobStorage } from "./services/JobStorage.ts";
 
@@ -17,11 +17,13 @@ export class JobApi extends HttpEndpoint.Tag("JobApi", {
   routes: [GetJob, PutJob],
 }) {}
 
-export const jobApi = HttpEndpoint.effect(JobApi, Router.make(getJob, putJob));
-
 export class JobApiFunction extends Lambda.Function("JobApiFunction", {
   hosts: [JobApi, JobQueue],
 }) {}
+
+export const jobApi = JobApi.pipe(
+  HttpEndpoint.effect(JobApi, Router.make(getJob, putJob)),
+);
 
 // Bind entrypoint
 export default JobApiFunction.pipe(
