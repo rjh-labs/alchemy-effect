@@ -103,7 +103,7 @@ export const BucketEventSource = Binding<
   ) => BucketEventSource<B, Props>
 >(Function, "AWS.S3.OnBucketEvent", "BucketEventSource");
 
-export const bucketEventSourceProvider = () =>
+export const BucketEventSourceProvider = () =>
   BucketEventSource.provider.effect(
     Effect.gen(function* () {
       const accountId = yield* Account;

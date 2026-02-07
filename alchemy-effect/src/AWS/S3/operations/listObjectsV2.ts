@@ -43,7 +43,7 @@ export const listObjectsV2 = Effect.fnUntraced(function* <B extends Bucket>(
   });
 });
 
-export const listObjectsV2FromLambdaFunction = () =>
+export const ListObjectsV2Binding = () =>
   ListObjectsV2.provider.succeed({
     attach: ({ source: bucket }) => ({
       env: {

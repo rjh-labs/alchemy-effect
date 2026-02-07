@@ -8,7 +8,10 @@ import * as S from "effect/Schema";
 import { declare, type From } from "../../../Capability.ts";
 import type { Consume, Stream, StreamEvent } from "../../Kinesis/Stream.ts";
 import * as Lambda from "../Function.ts";
-import { StreamEventSource, type StreamEventSourceProps } from "../StreamEventSource.ts";
+import {
+  StreamEventSource,
+  type StreamEventSourceProps,
+} from "../StreamEventSource.ts";
 
 export const consumeStream =
   <K extends Stream, ID extends string, Req>(

@@ -7,36 +7,44 @@ import { toEnvKey } from "../../../internal/util/env.ts";
 import { Function } from "../../Lambda/Function.ts";
 import { Bucket } from "../Bucket.ts";
 
-export interface DeleteObject<B = Bucket> extends Capability<
-  "AWS.S3.DeleteObject",
+export interface UploadPart<B = Bucket> extends Capability<
+  "AWS.S3.UploadPart",
   B
 > {}
 
-export const DeleteObject = Binding<
-  <B extends Bucket>(bucket: B) => Binding<Function, DeleteObject<To<B>>>
->(Function, "AWS.S3.DeleteObject");
+export const UploadPart = Binding<
+  <B extends Bucket>(bucket: B) => Binding<Function, UploadPart<To<B>>>
+>(Function, "AWS.S3.UploadPart");
 
-export interface DeleteObjectOptions {
+export interface UploadPartOptions {
   key: string;
-  versionId?: string;
+  uploadId: string;
+  partNumber: number;
+  body: string | Buffer | Uint8Array;
+  contentLength?: number;
+  contentMD5?: string;
 }
 
-export const deleteObject = Effect.fnUntraced(function* <B extends Bucket>(
+export const uploadPart = Effect.fnUntraced(function* <B extends Bucket>(
   bucket: B,
-  options: DeleteObjectOptions,
+  options: UploadPartOptions,
 ) {
-  yield* declare<DeleteObject<To<B>>>();
+  yield* declare<UploadPart<To<B>>>();
   const bucketName = process.env[toEnvKey(bucket.id, "BUCKET_NAME")]!;
 
-  return yield* S3.deleteObject({
+  return yield* S3.uploadPart({
     Bucket: bucketName,
     Key: options.key,
-    VersionId: options.versionId,
+    UploadId: options.uploadId,
+    PartNumber: options.partNumber,
+    Body: options.body,
+    ContentLength: options.contentLength,
+    ContentMD5: options.contentMD5,
   });
 });
 
-export const DeleteObjectBinding = () =>
-  DeleteObject.provider.succeed({
+export const UploadPartBinding = () =>
+  UploadPart.provider.succeed({
     attach: ({ source: bucket }) => ({
       env: {
         [toEnvKey(bucket.id, "BUCKET_NAME")]: bucket.attr.bucketName,
@@ -44,9 +52,9 @@ export const DeleteObjectBinding = () =>
       },
       policyStatements: [
         {
-          Sid: "DeleteObject",
+          Sid: "UploadPart",
           Effect: "Allow",
-          Action: ["s3:DeleteObject", "s3:DeleteObjectVersion"],
+          Action: ["s3:PutObject"],
           Resource: [`${bucket.attr.bucketArn}/*`],
         },
       ],

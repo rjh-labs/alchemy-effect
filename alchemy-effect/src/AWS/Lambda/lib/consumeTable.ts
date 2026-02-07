@@ -9,7 +9,10 @@ import type { TableEvent } from "../../DynamoDB/index.ts";
 import type { Consume } from "../../DynamoDB/Table.ts";
 import * as DynamoDB from "../../DynamoDB/Table.ts";
 import * as Lambda from "../Function.ts";
-import { TableEventSource, type TableEventSourceProps } from "../TableEventSource.ts";
+import {
+  TableEventSource,
+  type TableEventSourceProps,
+} from "../TableEventSource.ts";
 
 export const consumeTable =
   <T extends DynamoDB.AnyTable, ID extends string, Req>(

@@ -7,36 +7,35 @@ import { toEnvKey } from "../../../internal/util/env.ts";
 import { Function } from "../../Lambda/Function.ts";
 import { Bucket } from "../Bucket.ts";
 
-export interface DeleteObject<B = Bucket> extends Capability<
-  "AWS.S3.DeleteObject",
+export interface AbortMultipartUpload<B = Bucket> extends Capability<
+  "AWS.S3.AbortMultipartUpload",
   B
 > {}
 
-export const DeleteObject = Binding<
-  <B extends Bucket>(bucket: B) => Binding<Function, DeleteObject<To<B>>>
->(Function, "AWS.S3.DeleteObject");
+export const AbortMultipartUpload = Binding<
+  <B extends Bucket>(bucket: B) => Binding<Function, AbortMultipartUpload<To<B>>>
+>(Function, "AWS.S3.AbortMultipartUpload");
 
-export interface DeleteObjectOptions {
+export interface AbortMultipartUploadOptions {
   key: string;
-  versionId?: string;
+  uploadId: string;
 }
 
-export const deleteObject = Effect.fnUntraced(function* <B extends Bucket>(
-  bucket: B,
-  options: DeleteObjectOptions,
-) {
-  yield* declare<DeleteObject<To<B>>>();
+export const abortMultipartUpload = Effect.fnUntraced(function* <
+  B extends Bucket,
+>(bucket: B, options: AbortMultipartUploadOptions) {
+  yield* declare<AbortMultipartUpload<To<B>>>();
   const bucketName = process.env[toEnvKey(bucket.id, "BUCKET_NAME")]!;
 
-  return yield* S3.deleteObject({
+  return yield* S3.abortMultipartUpload({
     Bucket: bucketName,
     Key: options.key,
-    VersionId: options.versionId,
+    UploadId: options.uploadId,
   });
 });
 
-export const DeleteObjectBinding = () =>
-  DeleteObject.provider.succeed({
+export const AbortMultipartUploadBinding = () =>
+  AbortMultipartUpload.provider.succeed({
     attach: ({ source: bucket }) => ({
       env: {
         [toEnvKey(bucket.id, "BUCKET_NAME")]: bucket.attr.bucketName,
@@ -44,9 +43,9 @@ export const DeleteObjectBinding = () =>
       },
       policyStatements: [
         {
-          Sid: "DeleteObject",
+          Sid: "AbortMultipartUpload",
           Effect: "Allow",
-          Action: ["s3:DeleteObject", "s3:DeleteObjectVersion"],
+          Action: ["s3:AbortMultipartUpload"],
           Resource: [`${bucket.attr.bucketArn}/*`],
         },
       ],

@@ -12,6 +12,21 @@ import * as Region from "../Region.ts";
 import * as S3 from "../S3/index.ts";
 import * as SQS from "../SQS/index.ts";
 
+
+/**
+ * AWS providers with optional Assets layer for S3-based code deployment.
+ * If the assets bucket exists (created via `alchemy-effect bootstrap`),
+ * Lambda functions will use S3 for code deployment instead of inline ZipFile.
+ */
+export const Providers = () =>
+  bareProviders().pipe(
+    Layer.provideMerge(Assets.AssetsProvider()),
+    Layer.provideMerge(Account.fromStageConfig()),
+    Layer.provideMerge(Region.fromStageConfig()),
+    Layer.provideMerge(Credentials.fromStageConfig()),
+    Layer.provideMerge(Endpoint.fromStageConfig()),
+  );
+
 export const Resources = () =>
   Layer.mergeAll(
     DynamoDB.TableProvider(),
@@ -40,27 +55,27 @@ export const Resources = () =>
 export const Bindings = () =>
   Layer.mergeAll(
     DynamoDB.GetItemProvider(),
-    DynamoDB.tableEventSourceProvider(),
-    Kinesis.streamEventSourceProvider(),
     Kinesis.putRecordFromLambdaFunction(),
-    S3.bucketEventSourceProvider(),
-    S3.copyObjectFromLambdaFunction(),
-    S3.deleteObjectFromLambdaFunction(),
-    S3.getObjectFromLambdaFunction(),
-    S3.headObjectFromLambdaFunction(),
-    S3.listObjectsV2FromLambdaFunction(),
-    S3.multipartUploadFromLambdaFunction(),
+    Lambda.BucketEventSourceProvider(),
+    Lambda.QueueEventSourceProvider(),
+    Lambda.StreamEventSourceProvider(),
+    Lambda.TableEventSourceProvider(),
+    S3.CopyObjectBinding(),
+    S3.DeleteObjectBinding(),
+    S3.GetObjectBinding(),
+    S3.HeadObjectBinding(),
+    S3.ListObjectsV2Binding(),
+    S3.AbortMultipartUploadBinding(),
+    S3.CompleteMultipartUploadBinding(),
+    S3.CreateMultipartUploadBinding(),
+    S3.UploadPartBinding(),
     S3.putObjectFromLambdaFunction(),
-    SQS.queueEventSourceProvider(),
     SQS.sendMessageFromLambdaFunction(),
   );
 
-export const utils = () => Layer.mergeAll(ESBuild.layer());
-
-export const bareProviders = () =>
-  Resources().pipe(Layer.provideMerge(Bindings()), Layer.provideMerge(utils()));
-
-export const config = <L extends Layer.Layer<any, any, any>>(layer: L) =>
+export const StageConfigLayer = <L extends Layer.Layer<any, any, any>>(
+  layer: L,
+) =>
   layer.pipe(
     Layer.provideMerge(Account.fromStageConfig()),
     Layer.provideMerge(Region.fromStageConfig()),
@@ -68,16 +83,7 @@ export const config = <L extends Layer.Layer<any, any, any>>(layer: L) =>
     Layer.provideMerge(Endpoint.fromStageConfig()),
   );
 
-/**
- * AWS providers with optional Assets layer for S3-based code deployment.
- * If the assets bucket exists (created via `alchemy-effect bootstrap`),
- * Lambda functions will use S3 for code deployment instead of inline ZipFile.
- */
-export const Providers = () =>
-  bareProviders().pipe(
-    Layer.provideMerge(Assets.AssetsProvider()),
-    Layer.provideMerge(Account.fromStageConfig()),
-    Layer.provideMerge(Region.fromStageConfig()),
-    Layer.provideMerge(Credentials.fromStageConfig()),
-    Layer.provideMerge(Endpoint.fromStageConfig()),
-  );
+const utils = () => Layer.mergeAll(ESBuild.layer());
+
+const bareProviders = () =>
+  Resources().pipe(Layer.provideMerge(Bindings()), Layer.provideMerge(utils()));

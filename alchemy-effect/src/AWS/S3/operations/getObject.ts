@@ -45,7 +45,7 @@ export const getObject = Effect.fnUntraced(function* <B extends Bucket>(
   });
 });
 
-export const getObjectFromLambdaFunction = () =>
+export const GetObjectBinding = () =>
   GetObject.provider.succeed({
     attach: ({ source: bucket }) => ({
       env: {

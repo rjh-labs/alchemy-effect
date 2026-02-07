@@ -2,6 +2,16 @@ export * from "./lib/index.ts";
 export * from "./operations/index.ts";
 
 export {
+  BucketEventSource,
+  BucketEventSourceProvider,
+  type BucketEventSourceAttr,
+  type BucketEventSourceProps,
+  type OnBucketEvent,
+  type S3Event,
+  type S3EventType,
+  type S3Record,
+} from "./BucketEventSource.ts";
+export {
   Function,
   FunctionProvider,
   type FunctionAttr,

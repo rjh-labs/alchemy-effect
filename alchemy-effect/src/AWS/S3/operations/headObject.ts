@@ -47,7 +47,7 @@ export const headObject = Effect.fnUntraced(function* <B extends Bucket>(
   });
 });
 
-export const headObjectFromLambdaFunction = () =>
+export const HeadObjectBinding = () =>
   HeadObject.provider.succeed({
     attach: ({ source: bucket }) => ({
       env: {
