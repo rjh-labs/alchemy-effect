@@ -2,6 +2,8 @@ import { Layer } from "effect";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import type { Simplify } from "effect/Types";
+import type { Instance } from ".//Util/instance.ts";
+import { asEffect } from ".//Util/types.ts";
 import { App } from "./App.ts";
 import type { AnyBinding, BindingProvider } from "./Binding.ts";
 import {
@@ -11,8 +13,6 @@ import {
 } from "./Cli/CLI.ts";
 import type { ApplyStatus } from "./Cli/CLIEvent.ts";
 import { generateInstanceId, InstanceId } from "./InstanceId.ts";
-import type { Instance } from "./internal/util/instance.ts";
-import { asEffect } from "./internal/util/types.ts";
 import * as Output from "./Output/index.ts";
 import {
   type Apply,

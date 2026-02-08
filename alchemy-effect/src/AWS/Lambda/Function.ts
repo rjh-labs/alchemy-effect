@@ -76,8 +76,6 @@ export interface Function extends Runtime<"AWS.Lambda.Function"> {
 }
 export const Function = Runtime("AWS.Lambda.Function")<Function>();
 
-export const make = (props: FunctionProps<any>) => {};
-
 type Handler = (
   event: any,
   context: LambdaContext,

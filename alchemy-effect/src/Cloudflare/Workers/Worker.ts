@@ -5,11 +5,11 @@ import type { Workers } from "cloudflare/resources";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { sha256 } from "../..//Util/sha256.ts";
 import * as ESBuild from "../../Bundle/ESBuild.ts";
 import type { Capability } from "../../Capability.ts";
 import type { ScopedPlanStatusSession } from "../../Cli/index.ts";
 import { DotAlchemy } from "../../Config.ts";
-import { sha256 } from "../../internal/util/sha256.ts";
 import { createPhysicalName } from "../../PhysicalName.ts";
 import { Runtime } from "../../Runtime.ts";
 import { Account } from "../Account.ts";

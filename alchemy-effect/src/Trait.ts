@@ -1,5 +1,5 @@
+import type { ClassTuple } from ".//Util/class.ts";
 import * as S from "./Schema.ts";
-import type { ClassTuple } from "./internal/util/class.ts";
 
 export declare function defineTrait<F extends TraitFn>(
   tag: NoInfer<ReturnType<F>["tag"]>,

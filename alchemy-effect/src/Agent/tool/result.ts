@@ -1,5 +1,5 @@
 import * as S from "effect/Schema";
-import type { IsNever } from "../../internal/util/types.ts";
+import type { IsNever } from "../..//Util/types.ts";
 import { Field } from "../../Schema.ts";
 import { defineAspect, type Aspect } from "../Aspect.ts";
 

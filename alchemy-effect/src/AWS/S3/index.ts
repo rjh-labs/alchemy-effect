@@ -1,5 +1,6 @@
 export * from "./AbortMultipartUpload.ts";
 export * from "./Bucket.ts";
+export * from "./BucketNotification.ts";
 export * from "./BucketPolicy.ts";
 export * from "./CompleteMultipartUpload.ts";
 export * from "./CopyObject.ts";
@@ -9,4 +10,5 @@ export * from "./GetObject.ts";
 export * from "./HeadObject.ts";
 export * from "./ListObjectsV2.ts";
 export * from "./PutObject.ts";
+export * from "./S3Event.ts";
 export * from "./UploadPart.ts";

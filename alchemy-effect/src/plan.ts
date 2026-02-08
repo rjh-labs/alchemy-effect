@@ -3,6 +3,8 @@ import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { omit } from "effect/Struct";
+import type { Instance } from ".//Util/instance.ts";
+import { asEffect } from ".//Util/types.ts";
 import { App } from "./App.ts";
 import type {
   AnyBinding,
@@ -12,13 +14,11 @@ import type {
 import type { Capability } from "./Capability.ts";
 import type { Diff, NoopDiff, UpdateDiff } from "./Diff.ts";
 import { InstanceId } from "./InstanceId.ts";
-import { isService, type IService, type Service } from "./internal/service.ts";
-import type { Instance } from "./internal/util/instance.ts";
-import { asEffect } from "./internal/util/types.ts";
 import * as Output from "./Output/index.ts";
 import type { Provider } from "./Provider.ts";
 import { getProviderByType, type ProviderService } from "./Provider.ts";
 import type { AnyResource, Resource, ResourceTags } from "./Resource.ts";
+import { isService, type IService, type Service } from "./Service.ts";
 import {
   State,
   StateStoreError,

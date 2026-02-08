@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
+import { base32 } from ".//Util/base32.ts";
 import { App } from "./App.ts";
 import { InstanceId } from "./InstanceId.ts";
-import { base32 } from "./internal/util/base32.ts";
 
 export const createPhysicalName = Effect.fn(function* ({
   id,

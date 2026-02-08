@@ -6,23 +6,16 @@ import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
 
 import { Binding } from "../../Binding.ts";
-import { declare, type Capability, type From } from "../../Capability.ts";
+import { declare, type From } from "../../Capability.ts";
 import { Account } from "../Account.ts";
 import { Bucket } from "../S3/Bucket.ts";
+import type { ConsumeBucketNotifications } from "../S3/BucketNotification.ts";
+import type { S3Event, S3EventType } from "../S3/S3Event.ts";
 import {
   Function,
   type FunctionBinding,
   type FunctionProps,
 } from "./Function.ts";
-import type { S3Event, S3EventType } from "./S3Event.ts";
-
-/**
- * Capability for handling S3 bucket events.
- */
-export interface OnBucketEvent<B = Bucket> extends Capability<
-  "AWS.S3.OnBucketEvent",
-  B
-> {}
 
 export interface BucketEventSourceProps {
   /**
@@ -52,7 +45,7 @@ export interface BucketEventSource<
   Props extends BucketEventSourceProps,
 > extends Binding<
   Function,
-  OnBucketEvent<From<B>>,
+  ConsumeBucketNotifications<From<B>>,
   Props,
   BucketEventSourceAttr,
   "BucketEventSource"
@@ -230,7 +223,7 @@ export const consumeBucket =
   <const Props extends FunctionProps<Req>>({ bindings, ...props }: Props) =>
     Function(id, {
       handle: Effect.fn(function* (event: S3Event, context: LambdaContext) {
-        yield* declare<OnBucketEvent<From<B>>>();
+        yield* declare<ConsumeBucketNotifications<From<B>>>();
         yield* handle(event, context);
       }),
     })({

@@ -7,7 +7,12 @@ import type { Hosted } from "./Layer.ts";
 import type { IResource, Resource } from "./Resource.ts";
 import type { IRuntime } from "./Runtime.ts";
 
-export const bind = () => {};
+export const bind =
+  <B extends AnyBinding[]>(...capabilities: B) =>
+  <F extends IRuntime, A, Err, Req>(
+    layer: Hosted<F, A, Err, B[number]["capability"]>,
+  ): Effect<A, Err, Req> =>
+    undefined!;
 
 export interface BindingProps {
   [key: string]: any;
@@ -97,15 +102,6 @@ export const Binding: {
     } satisfies BindingDeclaration<IRuntime, any>,
   );
 };
-
-export namespace Bindings {
-  export const provide =
-    <B extends AnyBinding[]>(...capabilities: B) =>
-    <F extends IRuntime, A, Err, Req>(
-      layer: Hosted<F, A, Err, B[number]["capability"]>,
-    ): Effect<A, Err, Req> =>
-      undefined!;
-}
 
 export interface BindingDeclaration<
   Run extends IRuntime,

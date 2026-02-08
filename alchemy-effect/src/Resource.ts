@@ -39,8 +39,6 @@ export interface Resource<
   Binding = unknown,
 > extends IResource<Type, ID, Props, Attrs, Base, Binding> {
   new (): Resource<Type, ID, Props, Attrs, Base, Binding>;
-  // TODO(sam): implement
-  make<Self, P extends Props>(this: Self, props: P): Self;
 }
 
 export interface ResourceTags<R extends Resource<string, string, any, any>> {

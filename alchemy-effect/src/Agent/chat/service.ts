@@ -1,6 +1,7 @@
 import * as S from "effect/Schema";
-import { ServiceTag } from "../../internal/ServiceTag.ts";
+
 import { effect, func } from "../../Schema.ts";
+import { ServiceTag } from "../../Service.ts";
 import { AgentId } from "../Agent.ts";
 import { StreamTextPart } from "../llm/stream-text-part.ts";
 import { TaskId } from "../process/task.ts";

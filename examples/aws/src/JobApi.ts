@@ -1,9 +1,8 @@
 import * as Alchemy from "alchemy-effect";
+import * as Client from "alchemy-effect/Client";
+import * as ContentType from "alchemy-effect/ContentType";
 import * as Http from "alchemy-effect/Http";
-import * as Router from "alchemy-effect/Router";
-import * as Rpc from "alchemy-effect/Rpc";
-import * as Service from "alchemy-effect/Service";
-import * as Effect from "effect/Effect";
+import * as Server from "alchemy-effect/Server";
 import * as Layer from "effect/Layer";
 
 import { getJob, GetJob } from "./routes/GetJob.ts";
@@ -11,12 +10,17 @@ import { putJob, PutJob } from "./routes/PutJob.ts";
 
 export class JobApi extends Alchemy.Endpoint("JobApi", {
   routes: [GetJob, PutJob],
-  protocols: [Http.Protocol, Rpc.Protocol],
+  protocols: [Http.Rest, Http.JsonRpc],
+  accepts: [ContentType.Json, ContentType.Xml, ContentType.MessagePack],
 }) {}
 
-export const jobApi = Service.effect(
-  JobApi,
-  Router.makeHttpRouter(getJob, putJob).pipe(
-    Effect.provide(Layer.mergeAll(Http.ServerProtocol, Rpc.ServerProtocol)),
-  ),
+export const jobApi = Server.make(JobApi).pipe(
+  Layer.provide([Http.RestServer, Http.JsonRpcServer]),
+  Layer.provide([ContentType.JsonCodec, ContentType.XmlCodec]),
+  Layer.provide([getJob, putJob]),
+);
+
+export const jobClient = Client.make(JobApi).pipe(
+  Layer.provide([Http.RestClient, Http.JsonRpcClient]),
+  Layer.provide([ContentType.JsonCodec, ContentType.XmlCodec]),
 );

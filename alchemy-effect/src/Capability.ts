@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect";
-import type { Instance } from "./internal/util/instance.ts";
+import type { Instance } from ".//Util/instance.ts";
 import * as Policy from "./Policy/index.ts";
 
 /** declare a Policy requiring Capabilities in some context */

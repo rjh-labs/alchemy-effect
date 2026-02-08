@@ -69,8 +69,12 @@ export interface Runtime<
     Handler extends RuntimeHandler<Inputs, Output, Err, Req>,
   >(
     id: ID,
-    { handle }: { handle: Handler },
+    props: {
+      services:
+    }
   ): ServiceDef<ID, this, Handler>;
+  // TODO(sam): implement
+  make<Self, P extends Props>(this: Self, props: P): Self;
 }
 
 export const Runtime =

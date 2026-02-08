@@ -1,8 +1,5 @@
 import * as S from "effect/Schema";
-import {
-  defineAspect,
-  type Aspect,
-} from "../../internal/internal/agent/aspect.ts";
+import { defineAspect, type Aspect } from "../Aspect.ts";
 
 export interface Channel<
   Name extends string = string,

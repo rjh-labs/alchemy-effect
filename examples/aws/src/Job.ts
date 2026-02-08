@@ -9,3 +9,5 @@ export class Job extends S.Class<Job>("Job")({
   id: JobId,
   content: S.String,
 }) {}
+
+export const decodeJob = S.decode(Job);

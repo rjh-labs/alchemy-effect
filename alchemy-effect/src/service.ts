@@ -4,21 +4,11 @@ import * as Layer from "effect/Layer";
 
 export const Service = Context.Tag;
 
-export const effect = <
-  Tag extends Context.Tag<any, any>,
-  A extends Tag["Service"],
-  Err = never,
-  Req = never,
->(
-  tag: Tag,
-  effect: Effect.Effect<A, Err, Req>,
-) => Layer.effect(tag, effect);
-
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import type { ExcludeAny } from ".//Util/types.ts";
 import type { Capability } from "./Capability.ts";
-import type { ExcludeAny } from "./internal/util/types.ts";
 
 export type ServiceTag<Self, ID extends string, Shape> = Context.TagClass<
   Self,

@@ -1,14 +1,17 @@
 import type { HttpServerResponse } from "@effect/platform/HttpServerResponse";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import {
-  applyTrait,
-  defineTrait,
-  type Trait,
-  type TraitDef,
-} from "../Trait.ts";
-import { Middleware, type MiddlewareClass } from "./Middleware.ts";
-import { Protocol } from "./Protocol.ts";
+import { Middleware, type MiddlewareClass } from "./Endpoint/Middleware.ts";
+import { Protocol } from "./Endpoint/Protocol.ts";
+import { applyTrait, defineTrait, type Trait, type TraitDef } from "./Trait.ts";
+
+export const Rest = undefined!;
+export const RestServer = undefined!;
+export const RestClient = undefined!;
+
+export const JsonRpc = undefined!;
+export const JsonRpcServer = undefined!;
+export const JsonRpcClient = undefined!;
 
 export class HttpProtocol extends Protocol("HTTP")<HttpProtocol>() {}
 

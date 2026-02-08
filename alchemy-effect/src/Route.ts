@@ -5,6 +5,7 @@ import type { AnyClass } from "./Schema.ts";
 
 export type AnyRoute = Route<string, AnyClass, AnyClass, AnyClass>;
 
+// TODO(sam): rename to Operation?
 export interface Route<
   Name extends string = string,
   Input extends AnyClass = AnyClass,

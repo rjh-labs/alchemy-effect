@@ -1,6 +1,6 @@
 import * as S from "effect/Schema";
-import type { Instance } from "../internal/util/instance.ts";
-import type { Pointer } from "../internal/util/pointer.ts";
+import type { Instance } from "..//Util/instance.ts";
+import type { Pointer } from "..//Util/pointer.ts";
 import { ServiceTag } from "../Service.ts";
 import { isAspect, type Aspect, type AspectLike } from "./Aspect.ts";
 

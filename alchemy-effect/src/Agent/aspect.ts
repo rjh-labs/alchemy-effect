@@ -3,10 +3,11 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { YieldWrap } from "effect/Utils";
 import { TuiPlugin } from "../Tui/plugin.ts";
+import type { Class, IsAny } from "../Util/index.ts";
 import { ContextPlugin } from "./ContextPlugin.ts";
-import type { Parameters } from "./tool/parameter.ts";
+import { createPluginBuilder, type Plugins } from "./Plugin.ts";
 import type { Result } from "./tool/result.ts";
-import type { ToolHandler } from "./tool/tool.ts";
+import type { Parameters, ToolHandler } from "./tool/tool.ts";
 
 export const isAspect = (a: any): a is Aspect => {
   return (

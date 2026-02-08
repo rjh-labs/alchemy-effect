@@ -1,6 +1,6 @@
+import { isPrimitive } from "..//Util/data.ts";
+import type { IsAny, UnionToIntersection } from "..//Util/types.ts";
 import type { AnyResource, Resource } from "../Resource.ts";
-import { isPrimitive } from "../internal/util/data.ts";
-import type { IsAny, UnionToIntersection } from "../internal/util/types.ts";
 import {
   isAllExpr,
   isApplyExpr,

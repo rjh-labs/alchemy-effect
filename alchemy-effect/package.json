@@ -75,6 +75,11 @@
       "bun": "./src/Bundle/index.ts",
       "import": "./lib/Bundle/index.js"
     },
+    "./ContentType": {
+      "types": "./src/ContentType.d.ts",
+      "bun": "./src/ContentType.ts",
+      "import": "./lib/ContentType.js"
+    },
     "./Cloudflare": {
       "types": "./src/Cloudflare/index.d.ts",
       "bun": "./src/Cloudflare/index.ts",
@@ -84,6 +89,11 @@
       "types": "./src/Cloudflare/*/index.d.ts",
       "bun": "./src/Cloudflare/*/index.ts",
       "import": "./lib/Cloudflare/*/index.js"
+    },
+    "./Endpoint": {
+      "types": "./src/Endpoint/index.d.ts",
+      "bun": "./src/Endpoint/index.ts",
+      "import": "./lib/Endpoint/index.js"
     },
     "./SQLite": {
       "types": "./src/SQLite/index.d.ts",
