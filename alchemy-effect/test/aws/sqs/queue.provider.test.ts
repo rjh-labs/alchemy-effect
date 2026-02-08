@@ -1,7 +1,7 @@
 import * as AWS from "@/aws";
 import { Queue } from "@/aws/sqs";
 import { apply, destroy } from "@/index";
-import { test } from "@/test";
+import { test } from "@/Test/Vitest";
 import { expect } from "@effect/vitest";
 import * as SQS from "distilled-aws/sqs";
 import * as Data from "effect/Data";

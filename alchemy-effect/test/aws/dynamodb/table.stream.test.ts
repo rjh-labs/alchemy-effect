@@ -1,14 +1,10 @@
-import { apply, destroy, type } from "@/index";
-
 import * as AWS from "@/aws";
-import { Table } from "@/aws/dynamodb";
-import { test } from "@/test";
+import { test } from "@/Test/Vitest";
 import { expect } from "@effect/vitest";
 import * as DynamoDB from "distilled-aws/dynamodb";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
-import * as S from "effect/Schema";
 
 // Retry policy for transient AWS errors
 const retryTransient = <A, E, R>(eff: Effect.Effect<A, E, R>) =>

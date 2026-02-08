@@ -8,7 +8,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 
 import { Account } from "./Account.ts";
-import { ASSETS_BUCKET_TAG, getAssetsBucketName } from "./lib/bootstrap.ts";
+import { ASSETS_BUCKET_TAG, getAssetsBucketName } from "./Bootstrap.ts";
 
 /**
  * Error type for Assets service operations.

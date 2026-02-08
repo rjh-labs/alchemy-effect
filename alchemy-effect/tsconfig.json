@@ -5,7 +5,6 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.json",
-    "playground/service-example.ts"
   ],
   "compilerOptions": {
     "composite": true,
@@ -16,11 +15,17 @@
     "moduleResolution": "Bundler",
     "target": "ESNext",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
     // ink
     "jsx": "preserve",
     "jsxImportSource": "@opentui/solid",
-    "lib": ["DOM", "DOM.Iterable", "ES2023"]
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2023"
+    ]
   }
 }

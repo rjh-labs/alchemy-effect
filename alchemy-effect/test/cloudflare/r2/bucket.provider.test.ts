@@ -3,7 +3,7 @@ import { CloudflareApi } from "@/cloudflare/api";
 import * as CloudflareLive from "@/cloudflare/live";
 import * as R2 from "@/cloudflare/r2";
 import { apply, destroy } from "@/index";
-import { test } from "@/test";
+import { test } from "@/Test/Vitest";
 import { expect } from "@effect/vitest";
 import { LogLevel } from "effect";
 import * as Data from "effect/Data";

@@ -17,10 +17,10 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schedule from "effect/Schedule";
 
+import { zipCode } from "../../Agent/util/zip.ts";
 import { App } from "../../App.ts";
 import type { Capability } from "../../Capability.ts";
-import { zipCode } from "../../internal/agent/util/zip.ts";
-import { DotAlchemy } from "../../internal/config/dot-alchemy.ts";
+import { DotAlchemy } from "../../Config.ts";
 import { createPhysicalName } from "../../PhysicalName.ts";
 import { Runtime, type RuntimeProps } from "../../Runtime.ts";
 import { createInternalTags, createTagsList, hasTags } from "../../Tags.ts";
@@ -76,6 +76,8 @@ export interface Function extends Runtime<"AWS.Lambda.Function"> {
 }
 export const Function = Runtime("AWS.Lambda.Function")<Function>();
 
+export const make = (props: FunctionProps<any>) => {};
+
 type Handler = (
   event: any,
   context: LambdaContext,
@@ -112,6 +114,7 @@ export const toHandler =
 
 export const FunctionProvider = () =>
   Function.provider.effect(
+    // @ts-expect-error
     Effect.gen(function* () {
       const app = yield* App;
       const accountId = yield* Account;
@@ -265,7 +268,9 @@ export const FunctionProvider = () =>
         if (!file.startsWith(".")) {
           file = `./${file}`;
         }
-        const { bundle } = yield* Effect.promise(() => import("../bundle.ts"));
+        const { bundle } = yield* Effect.promise(
+          () => import("../../Bundle/index.js"),
+        );
         const outfile = path.join(
           dotAlchemy,
           "out",

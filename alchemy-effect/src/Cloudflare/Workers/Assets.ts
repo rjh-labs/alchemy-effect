@@ -3,12 +3,12 @@ import { FileSystem, Path } from "@effect/platform";
 import type { PlatformError } from "@effect/platform/Error";
 import { Context, Data, Layer } from "effect";
 import * as Effect from "effect/Effect";
-import { Binding } from "../../Binding.ts";
-import { declare, type Capability } from "../../Capability.ts";
 import type { ScopedPlanStatusSession } from "../../Cli.ts";
-import { sha256 } from "../../internal/util/sha256.ts";
-import { CloudflareApi, CloudflareApiError } from "../api.ts";
-import { getCloudflareEnvKey } from "../context.ts";
+import { Binding } from "../../internal/Binding.ts";
+import { declare, type Capability } from "../../internal/Capability.ts";
+import { sha256 } from "../../internal/internal/util/sha256.ts";
+import { CloudflareApi, CloudflareApiError } from "../CloudflareApi.ts";
+import { getCloudflareEnvKey } from "../CloudflareContext.ts";
 import { Worker } from "./Worker.ts";
 
 const MAX_ASSET_SIZE = 1024 * 1024 * 25; // 25MB

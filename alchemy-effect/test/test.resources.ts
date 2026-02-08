@@ -1,4 +1,4 @@
-import type { Input, InputProps } from "@/input";
+import type { Input, InputProps } from "@/lib/Input";
 import { Resource } from "@/resource";
 import * as State from "@/state";
 import { isUnknown } from "@/unknown";

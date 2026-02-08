@@ -1,12 +1,12 @@
 import type { KV } from "cloudflare/resources";
 import * as Effect from "effect/Effect";
 
-import { Binding } from "../../Binding.ts";
-import type { Capability, To } from "../../Capability.ts";
-import { createPhysicalName } from "../../PhysicalName.ts";
+import { Binding } from "../../internal/Binding.ts";
+import type { Capability, To } from "../../internal/Capability.ts";
+import { createPhysicalName } from "../../internal/createPhysicalName.ts";
 import { Resource } from "../../Resource.ts";
-import { Account } from "../account.ts";
-import { CloudflareApi } from "../api.ts";
+import { Account } from "../Account.ts";
+import { CloudflareApi } from "../CloudflareApi.ts";
 import { Worker } from "../Worker/worker.ts";
 
 export type NamespaceProps = {

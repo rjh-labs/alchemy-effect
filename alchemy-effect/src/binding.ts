@@ -3,9 +3,11 @@ import type { Effect } from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type { Capability, ICapability } from "./Capability.ts";
 import type { Diff } from "./Diff.ts";
-import type { Hosted } from "./internal/layer.ts";
+import type { Hosted } from "./Layer.ts";
 import type { IResource, Resource } from "./Resource.ts";
 import type { IRuntime } from "./Runtime.ts";
+
+export const bind = () => {};
 
 export interface BindingProps {
   [key: string]: any;

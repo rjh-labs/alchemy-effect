@@ -4,17 +4,16 @@ import * as Effect from "effect/Effect";
 import type { Simplify } from "effect/Types";
 import { App } from "./App.ts";
 import type { AnyBinding, BindingProvider } from "./Binding.ts";
-import type { ApplyStatus } from "./internal/cli/event.ts";
 import {
   type PlanStatusSession,
   type ScopedPlanStatusSession,
   CLI,
-} from "./internal/cli/service.ts";
-import { generateInstanceId, InstanceId } from "./internal/instance-id.ts";
-import type { AnyService } from "./internal/service.ts";
+} from "./Cli/CLI.ts";
+import type { ApplyStatus } from "./Cli/CLIEvent.ts";
+import { generateInstanceId, InstanceId } from "./InstanceId.ts";
 import type { Instance } from "./internal/util/instance.ts";
 import { asEffect } from "./internal/util/types.ts";
-import * as Output from "./Output.ts";
+import * as Output from "./Output/index.ts";
 import {
   type Apply,
   type BindNode,
@@ -23,9 +22,10 @@ import {
   type IPlan,
   type Providers,
   plan,
-} from "./plan.ts";
+} from "./Plan.ts";
 import { getProviderByType } from "./Provider.ts";
 import type { AnyResource, Resource } from "./Resource.ts";
+import type { AnyService } from "./Service.ts";
 import {
   type CreatedResourceState,
   type CreatingResourceState,
@@ -37,7 +37,7 @@ import {
   type UpdatingReourceState,
   State,
   StateStoreError,
-} from "./State.ts";
+} from "./State/index.ts";
 
 export type ApplyEffect<
   P extends IPlan,

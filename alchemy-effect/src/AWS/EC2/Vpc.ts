@@ -6,7 +6,7 @@ import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
 import type { ScopedPlanStatusSession } from "../../Cli.ts";
 import { somePropsAreDifferent } from "../../Diff.ts";
-import type { Input } from "../../Input.ts";
+import type { Input } from "../../internal/Input.ts";
 import { Resource } from "../../Resource.ts";
 import { createInternalTags, createTagsList, diffTags } from "../../Tags.ts";
 import type { AccountID } from "../Account.ts";

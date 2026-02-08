@@ -1,58 +1,20 @@
-import type * as lambda from "aws-lambda";
+import type { Context as LambdaContext } from "aws-lambda";
 import * as Lambda from "distilled-aws/lambda";
 import type { Event } from "distilled-aws/s3";
 import * as s3 from "distilled-aws/s3";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
+
 import { Binding } from "../../Binding.ts";
-import type { From } from "../../Capability.ts";
+import { declare, type Capability, type From } from "../../Capability.ts";
 import { Account } from "../Account.ts";
 import { Bucket } from "../S3/Bucket.ts";
-import { Function, type FunctionBinding } from "./Function.ts";
-
-import type { Capability } from "../../Capability.ts";
-
-export type S3Record = lambda.S3EventRecord;
-export type S3Event = lambda.S3Event;
-
-/**
- * S3 event types that can trigger notifications.
- */
-export type S3EventType =
-  // Object Created Events
-  | "s3:ObjectCreated:*"
-  | "s3:ObjectCreated:Put"
-  | "s3:ObjectCreated:Post"
-  | "s3:ObjectCreated:Copy"
-  | "s3:ObjectCreated:CompleteMultipartUpload"
-  // Object Removed Events
-  | "s3:ObjectRemoved:*"
-  | "s3:ObjectRemoved:Delete"
-  | "s3:ObjectRemoved:DeleteMarkerCreated"
-  // Object Restore Events
-  | "s3:ObjectRestore:*"
-  | "s3:ObjectRestore:Post"
-  | "s3:ObjectRestore:Completed"
-  | "s3:ObjectRestore:Delete"
-  // Replication Events
-  | "s3:Replication:*"
-  | "s3:Replication:OperationFailedReplication"
-  | "s3:Replication:OperationNotTracked"
-  | "s3:Replication:OperationMissedThreshold"
-  | "s3:Replication:OperationReplicatedAfterThreshold"
-  // Lifecycle Events
-  | "s3:LifecycleExpiration:*"
-  | "s3:LifecycleExpiration:Delete"
-  | "s3:LifecycleExpiration:DeleteMarkerCreated"
-  | "s3:LifecycleTransition"
-  // Intelligent Tiering
-  | "s3:IntelligentTiering"
-  // Object Tagging
-  | "s3:ObjectTagging:*"
-  | "s3:ObjectTagging:Put"
-  | "s3:ObjectTagging:Delete"
-  // Object ACL
-  | "s3:ObjectAcl:Put";
+import {
+  Function,
+  type FunctionBinding,
+  type FunctionProps,
+} from "./Function.ts";
+import type { S3Event, S3EventType } from "./S3Event.ts";
 
 /**
  * Capability for handling S3 bucket events.
@@ -249,3 +211,29 @@ export const BucketEventSourceProvider = () =>
       };
     }),
   );
+
+export const consumeBucket =
+  <B extends Bucket, ID extends string, Req>(
+    id: ID,
+    {
+      bucket,
+      handle,
+      ...eventSourceProps
+    }: {
+      bucket: B;
+      handle: (
+        event: S3Event,
+        context: LambdaContext,
+      ) => Effect.Effect<void, never, Req>;
+    } & BucketEventSourceProps,
+  ) =>
+  <const Props extends FunctionProps<Req>>({ bindings, ...props }: Props) =>
+    Function(id, {
+      handle: Effect.fn(function* (event: S3Event, context: LambdaContext) {
+        yield* declare<OnBucketEvent<From<B>>>();
+        yield* handle(event, context);
+      }),
+    })({
+      ...props,
+      bindings: bindings.and(BucketEventSource(bucket, eventSourceProps)),
+    });

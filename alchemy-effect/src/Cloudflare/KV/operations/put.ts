@@ -1,8 +1,8 @@
 import type * as runtime from "@cloudflare/workers-types";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
-import { declare, type To } from "../../../Capability.ts";
-import { getCloudflareEnvKey } from "../../context.ts";
+import { declare, type To } from "../../../internal/Capability.ts";
+import { getCloudflareEnvKey } from "../../CloudflareContext.ts";
 import { replaceEffectStream } from "../../stream.ts";
 import type * as KV from "../Namespace.ts";
 import type { Bind } from "../Namespace.ts";

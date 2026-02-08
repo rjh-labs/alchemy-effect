@@ -1,28 +1,31 @@
 import * as Context from "effect/Context";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import * as Route from "./Route.ts";
 
-export const Tag = <
+export interface HttpEndpointProps<Routes extends readonly Route.AnyRoute[]> {
+  routes: Routes;
+}
+
+export const HttpEndpoint = <
   Name extends string,
-  Routes extends readonly Route.AnyRoute[],
+  const Routes extends readonly Route.AnyRoute[],
 >(
   name: Name,
+  props: HttpEndpointProps<Routes>,
 ) => Context.Tag(name)<HttpEndpoint, HttpEndpoint>();
 
-export const effect = <
-  Endpoint extends AnyRoute,
-  Err extends Endpoint["errors"] = never,
-  Req = never,
-  InitErr = never,
-  InitReq = never,
->(
-  route: Endpoint,
-  effect: Effect.Effect<
-    (
-      request: InstanceType<Endpoint["input"]>,
-    ) => Effect.Effect<InstanceType<Endpoint["output"]>, Err, Req>,
-    InitErr,
-    Req | InitReq
-  >,
-) => Layer.effect(route, effect); // TODO(sam): implement
+// export const effect = <
+//   Endpoint extends Route.AnyRoute,
+//   Err extends Endpoint["errors"] = never,
+//   Req = never,
+//   InitErr = never,
+//   InitReq = never,
+// >(
+//   route: Endpoint,
+//   effect: Effect.Effect<
+//     (
+//       request: InstanceType<Endpoint["input"]>,
+//     ) => Effect.Effect<InstanceType<Endpoint["output"]>, Err, Req>,
+//     InitErr,
+//     Req | InitReq
+//   >,
+// ) => Layer.effect(route, effect); // TODO(sam): implement

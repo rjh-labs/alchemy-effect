@@ -11,11 +11,11 @@ import type {
 } from "./Binding.ts";
 import type { Capability } from "./Capability.ts";
 import type { Diff, NoopDiff, UpdateDiff } from "./Diff.ts";
-import { InstanceId } from "./internal/instance-id.ts";
+import { InstanceId } from "./InstanceId.ts";
 import { isService, type IService, type Service } from "./internal/service.ts";
 import type { Instance } from "./internal/util/instance.ts";
 import { asEffect } from "./internal/util/types.ts";
-import * as Output from "./Output.ts";
+import * as Output from "./Output/index.ts";
 import type { Provider } from "./Provider.ts";
 import { getProviderByType, type ProviderService } from "./Provider.ts";
 import type { AnyResource, Resource, ResourceTags } from "./Resource.ts";
@@ -29,7 +29,7 @@ import {
   type ResourceState,
   type UpdatedResourceState,
   type UpdatingReourceState,
-} from "./State.ts";
+} from "./State/index.ts";
 
 export type PlanError = never;
 

@@ -1,4 +1,9 @@
 import type { HttpClient } from "@effect/platform/HttpClient";
+import type {
+  Context as LambdaContext,
+  SQSBatchResponse,
+  SQSEvent,
+} from "aws-lambda";
 import type { Credentials } from "distilled-aws/Credentials";
 import type { CommonAwsError } from "distilled-aws/Errors";
 import type * as Lambda from "distilled-aws/lambda";
@@ -6,13 +11,21 @@ import * as lambda from "distilled-aws/lambda";
 import { Region } from "distilled-aws/Region";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
+
 import type { App } from "../../App.ts";
 import { Binding } from "../../Binding.ts";
 import type { From } from "../../Capability.ts";
+import { declare } from "../../Capability.ts";
 import { createInternalTags, hasTags } from "../../Tags.ts";
 import { Account } from "../Account.ts";
+import type { Consume, QueueEvent } from "../SQS/Queue.ts";
 import * as Queue from "../SQS/Queue.ts";
-import { Function, type FunctionBinding } from "./Function.ts";
+import {
+  Function,
+  type FunctionBinding,
+  type FunctionProps,
+} from "./Function.ts";
 
 export interface QueueEventSourceProps {
   batchSize?: number;
@@ -227,3 +240,52 @@ export const QueueEventSourceProvider = () =>
       };
     }),
   );
+
+export const consumeQueue =
+  <Q extends Queue.Queue, ID extends string, Req>(
+    id: ID,
+    {
+      queue,
+      handle,
+    }: {
+      queue: Q;
+      handle: (
+        event: QueueEvent<Q["props"]["schema"]["Type"]>,
+        context: LambdaContext,
+      ) => Effect.Effect<SQSBatchResponse | void, never, Req>;
+    },
+  ) =>
+  <const Props extends FunctionProps<Req>>({ bindings, ...props }: Props) =>
+    Function(id, {
+      handle: Effect.fn(function* (event: SQSEvent, context: LambdaContext) {
+        yield* declare<Consume<From<Q>>>();
+        const records = yield* Effect.all(
+          event.Records.map(
+            Effect.fn(function* (record) {
+              return {
+                ...record,
+                body: yield* S.validate(queue.props.schema)(record.body).pipe(
+                  Effect.catchAll(() => Effect.void),
+                ),
+              };
+            }),
+          ),
+        );
+        const response = yield* handle(
+          {
+            Records: records.filter((record) => record.body !== undefined),
+          },
+          context,
+        );
+        return {
+          batchItemFailures: [
+            ...(response?.batchItemFailures ?? []),
+            ...records
+              .filter((record) => record.body === undefined)
+              .map((failed) => ({
+                itemIdentifier: failed.messageId,
+              })),
+          ],
+        } satisfies SQSBatchResponse;
+      }),
+    })({ ...props, bindings: bindings.and(QueueEventSource(queue)) });

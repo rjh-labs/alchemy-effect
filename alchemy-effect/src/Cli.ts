@@ -1,1 +1,1 @@
-export * from "./internal/cli/index.ts";
+export * from "./internal/internal/cli/index.ts";

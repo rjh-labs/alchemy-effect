@@ -5,17 +5,16 @@ import type { Workers } from "cloudflare/resources";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import * as ESBuild from "../../Bundle/ESBuild.ts";
 import type { Capability } from "../../Capability.ts";
-import type { ScopedPlanStatusSession } from "../../Cli.ts";
-import * as ESBuild from "../../ESBuild.ts";
-import { DotAlchemy } from "../../internal/config/dot-alchemy.ts";
-import type { Hosted, Unbound } from "../../internal/layer.ts";
+import type { ScopedPlanStatusSession } from "../../Cli/index.ts";
+import { DotAlchemy } from "../../Config.ts";
 import { sha256 } from "../../internal/util/sha256.ts";
 import { createPhysicalName } from "../../PhysicalName.ts";
 import { Runtime } from "../../Runtime.ts";
-import { Account } from "../account.ts";
-import { CloudflareApi } from "../api.ts";
-import { CloudflareContext } from "../context.ts";
+import { Account } from "../Account.ts";
+import { CloudflareApi } from "../CloudflareApi.ts";
+import { CloudflareContext } from "../CloudflareContext.ts";
 import * as Assets from "./Assets.ts";
 
 export const WorkerType = "Cloudflare.Worker" as const;

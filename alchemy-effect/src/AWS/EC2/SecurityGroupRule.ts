@@ -1,7 +1,7 @@
 import * as ec2 from "distilled-aws/ec2";
 import * as Effect from "effect/Effect";
 
-import type { Input } from "../../Input.ts";
+import type { Input } from "../../internal/Input.ts";
 import { Resource } from "../../Resource.ts";
 import { createInternalTags, createTagsList, diffTags } from "../../Tags.ts";
 import type { SecurityGroupId } from "./SecurityGroup.ts";

@@ -3,17 +3,17 @@ import type { HttpClient } from "@effect/platform/HttpClient";
 import { Path } from "@effect/platform/Path";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as State from "../State.ts";
 import * as App from "./App.ts";
 import { type AppliedPlan } from "./Apply.ts";
+import { DotAlchemy } from "./DotAlchemy.ts";
 import type { CLI } from "./internal/cli/service.ts";
-import { DotAlchemy } from "./internal/config/dot-alchemy.ts";
 import type { AnyService } from "./internal/service.ts";
 import type { Instance } from "./internal/util/instance.ts";
-import type { DerivePlan, Providers, TraverseResources } from "./plan.ts";
+import type { DerivePlan, Providers, TraverseResources } from "./Plan.ts";
 import type { Ref } from "./Ref.ts";
 import type { AnyResource } from "./Resource.ts";
-import { type StageConfig, type Stages } from "./Stage.ts";
-import * as State from "./State.ts";
+import type { StageConfig, Stages } from "./Stage.ts";
 
 export const defineStack = <
   const Name extends string,
@@ -23,8 +23,6 @@ export const defineStack = <
 >(
   stack: StackConfig<Name, Resources, Req, Err>,
 ): Stack<Name, Instance<Resources[number]>, Req, Err> => stack as any;
-
-export const define = defineStack;
 
 export type StackConfig<
   Name extends string,
@@ -115,4 +113,24 @@ type AsRecord<Resources extends AnyResource | AnyService> = {
     TraverseResources<Resources>,
     { id: Id }
   >;
+};
+
+export interface StackRefBuilders {
+  [stage: string]: string | ((...args: any[]) => string);
+}
+
+export type StackRefs<S extends Stack> = {
+  [stage in string]: StackRef<StackResources<S>>;
+} & {
+  as<Builders extends StackRefBuilders>(
+    stages?: Builders,
+  ): {
+    [stage in Exclude<string, keyof Builders>]: StackRef<StackResources<S>>;
+  } & {
+    [builder in keyof Builders]: Builders[builder] extends string
+      ? StackRef<StackResources<S>>
+      : Builders[builder] extends (...args: infer Args) => any
+        ? (...args: Args) => StackRef<StackResources<S>>
+        : never;
+  };
 };

@@ -1,6 +1,24 @@
 import * as S from "./Schema.ts";
-import type { Annotated } from "./internal/router/annotated.ts";
 import type { ClassTuple } from "./internal/util/class.ts";
+
+export declare function defineTrait<F extends TraitFn>(
+  tag: NoInfer<ReturnType<F>["tag"]>,
+  fn: F,
+): TraitDef<F>;
+
+export declare function defineTrait<T extends Trait>(
+  tag: T["tag"],
+  props: {
+    [k in keyof TraitProps<T>]: TraitProps<T>[k];
+  },
+): TraitDef<<Target>(target: Target) => ApplyTrait<Target, T>>;
+
+export const applyTrait = <T extends Trait<any, any, any>>(
+  tag: T["tag"],
+  props: {
+    [k in keyof TraitProps<T>]: TraitProps<T>[k];
+  },
+): T => undefined!;
 
 export type AnyTrait = Trait<any, any, any>;
 
@@ -9,7 +27,7 @@ export type TraitFn<
   Args extends any[] = any[],
 > = (...args: Args) => T;
 
-export type TraitDef<Fn extends TraitFn> = Fn & {
+export type TraitDef<Fn extends TraitFn = TraitFn> = Fn & {
   /** @internal phantom */
   trait: ReturnType<Fn>;
 };
@@ -24,14 +42,6 @@ export interface Trait<
   errors?: ClassTuple<Errors>;
   provides?: ClassTuple<Provides>;
 }
-
-export type Of<A> = A;
-export const apply = <T extends Trait<any, any, any>>(
-  tag: T["tag"],
-  props: {
-    [k in keyof TraitProps<T>]: TraitProps<T>[k];
-  },
-): T => undefined!;
 
 export type TraitError<A extends Trait<any, any, any>> = InstanceType<
   Exclude<A["errors"], undefined>[number]
@@ -56,27 +66,27 @@ type _TraitProps<A extends Trait<any, any, any>> = Omit<
         provides: Exclude<A["provides"], undefined>;
       });
 
-export declare function defineTrait<F extends TraitFn>(
-  tag: NoInfer<ReturnType<F>["tag"]>,
-  fn: F,
-): TraitDef<F>;
-
-export declare function defineTrait<T extends Trait>(
-  tag: T["tag"],
-  props: {
-    [k in keyof TraitProps<T>]: TraitProps<T>[k];
-  },
-): TraitDef<<Target>(target: Target) => Apply<Target, T>>;
-
-export type Apply<Target, T extends Trait<any, any, any>> = ([Target] extends [
-  Annotated<infer s, infer t>,
-]
+export type ApplyTrait<Target, T extends Trait<any, any, any>> = ([
+  Target,
+] extends [Annotated<infer s, infer t>]
   ? Annotated<s, T | t>
   : [Target] extends [S.Struct.Field]
     ? Annotated<Target, T>
     : [Target] extends [S.AnyClassSchema]
       ? Annotated<Target, T | Annotated.Unwrap<Target>>
       : Target) & {};
+
+export type Annotated<S, T extends Trait<any, any, any>> = S & {
+  /** @internal phantom type */
+  S: S;
+  type: "annotated";
+  /** @internal phatom */
+  traits: T;
+};
+
+export declare namespace Annotated {
+  export type Unwrap<T> = T extends Annotated<infer _, infer t> ? t : never;
+}
 
 // export declare namespace Traits {
 //   export type Of<C, Seen = never> = C extends Seen

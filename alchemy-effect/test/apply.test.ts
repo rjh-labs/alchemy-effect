@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import { App } from "@/app";
 import { apply } from "@/apply";
 import { destroy } from "@/destroy";
-import * as Output from "@/output";
+import * as Output from "@/Output/Output.ts";
 import { CannotReplacePartiallyReplacedResource } from "@/plan";
 import {
   type ReplacedResourceState,
@@ -11,7 +11,7 @@ import {
   type ResourceState,
   State,
 } from "@/state";
-import { test } from "@/test";
+import { test } from "@/Test/Vitest.ts";
 import { describe, expect } from "@effect/vitest";
 import { Data, Layer } from "effect";
 import {

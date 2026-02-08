@@ -9,7 +9,7 @@ import * as Option from "effect/Option";
 import { App } from "../App.ts";
 import { Profile } from "./Profile.ts";
 
-import "./lib/StageConfig.ts";
+import "./StageConfig.ts";
 
 export const fromStageConfig = () =>
   Layer.effect(

@@ -1,11 +1,11 @@
-import { CloudflareApi } from "@/cloudflare/api";
 import { Account } from "@/cloudflare/account";
+import { CloudflareApi } from "@/cloudflare/api";
 import * as KV from "@/cloudflare/kv";
 import * as CloudflareLive from "@/cloudflare/live";
 import { apply, destroy } from "@/index";
-import { test } from "@/test";
+import { test } from "@/Test/Vitest";
 import { expect } from "@effect/vitest";
-import { Config, LogLevel } from "effect";
+import { LogLevel } from "effect";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Logger from "effect/Logger";

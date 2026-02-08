@@ -1,5 +1,3 @@
-// required to avoid this error in consumers: "The inferred type of 'Messages' cannot be named without a reference to '../../distilled-aws/node_modules/@types/aws-lambda'. This is likely not portable. A type annotation is necessary.ts(2742)"
-export type * as lambda from "aws-lambda";
 import type * as lambda from "aws-lambda";
 
 import { Region } from "distilled-aws/Region";
@@ -103,7 +101,7 @@ export type QueueProps<Msg = any> = {
     }
 );
 
-export const queueProvider = () =>
+export const QueueProvider = () =>
   Queue.provider.effect(
     Effect.gen(function* () {
       const region = yield* Region;

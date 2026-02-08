@@ -1,6 +1,6 @@
 import * as S3 from "distilled-aws/s3";
 import * as Effect from "effect/Effect";
-import type { Input } from "../../Input.ts";
+import type { Input } from "../../internal/Input.ts";
 import { Resource } from "../../Resource.ts";
 import type { PolicyDocument } from "../IAM/index.ts";
 import type { BucketName } from "./Bucket.ts";

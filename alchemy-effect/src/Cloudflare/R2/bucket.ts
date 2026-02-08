@@ -1,13 +1,13 @@
 import type { R2 } from "cloudflare/resources";
 import * as Effect from "effect/Effect";
+
 import { Binding } from "../../Binding.ts";
 import type { Capability, To } from "../../Capability.ts";
-import { Worker } from "../Worker/worker.ts";
-
 import { createPhysicalName } from "../../PhysicalName.ts";
 import { Resource } from "../../Resource.ts";
-import { Account } from "../account.ts";
-import { CloudflareApi } from "../api.ts";
+import { Account } from "../Account.ts";
+import { CloudflareApi } from "../CloudflareApi.ts";
+import { Worker } from "../Workers/Worker.ts";
 
 export type BucketProps = {
   name?: string;

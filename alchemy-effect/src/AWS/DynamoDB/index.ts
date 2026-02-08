@@ -1,5 +1,6 @@
-export * from "./lib/index.ts";
-export * from "./operations/index.ts";
-
-export { SecondaryIndex } from "./SecondaryIndex.ts";
-export { Table, TableProvider } from "./Table.ts";
+export * from "./AttributeValue.ts";
+export * as Expr from "./Expr.ts";
+export * from "./GetItem.ts";
+export * from "./ProjectionExpression.ts";
+export * from "./SecondaryIndex.ts";
+export * from "./Table.ts";

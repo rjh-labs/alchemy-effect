@@ -1,6 +1,6 @@
 import type * as S from "effect/Schema";
-import type { Output } from "./Output.ts";
-import type { Primitive } from "./util/data.ts";
+import type { Output } from "./Output/Output.ts";
+import type { Primitive } from "./internal/util/data.ts";
 
 export type Function = (...args: any[]) => any;
 export type Constructor = new (...args: any[]) => any;
@@ -68,7 +68,7 @@ export declare namespace Input {
     // use true extends IsOut to avoid distribution in the case where we have an Out<T>
     // because T is a clean type, e.g. Input<SubnetProps> should just be SubnetProps (don't bother resolving the recursive input type variants)
     true extends IsOut<T> ? ResolveOut<T> : Resolve<T>;
-  export type IsOut<T> = T extends Output<infer U> ? true : never;
+  export type IsOut<T> = T extends Output<infer _U> ? true : never;
 
   export type ResolveOut<T> = T extends Output<infer U> ? U : never;
 }

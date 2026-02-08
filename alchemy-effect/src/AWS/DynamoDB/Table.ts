@@ -21,10 +21,7 @@ import { Resource } from "../../Resource.ts";
 import { createInternalTags, hasTags } from "../../Tags.ts";
 import type { AccountID } from "../Account.ts";
 import type { RegionID } from "../Region.ts";
-import {
-  isScalarAttributeType,
-  toAttributeType,
-} from "./lib/AttributeValue.ts";
+import { isScalarAttributeType, toAttributeType } from "./AttributeValue.ts";
 
 export type TableRecord<Data> = Omit<lambda.DynamoDBRecord, "dynamodb"> & {
   dynamodb: Omit<lambda.StreamRecord, "NewImage" | "OldImage"> & {

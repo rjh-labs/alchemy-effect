@@ -2,7 +2,7 @@ import type * as EC2 from "distilled-aws/ec2";
 import * as ec2 from "distilled-aws/ec2";
 import * as Effect from "effect/Effect";
 
-import type { Input } from "../../Input.ts";
+import type { Input } from "../../internal/Input.ts";
 import { Resource } from "../../Resource.ts";
 import type { NetworkAclId } from "./NetworkAcl.ts";
 

@@ -1,6 +1,8 @@
+import * as Alchemy from "alchemy-effect";
 import * as Route from "alchemy-effect/Route";
 import * as S from "alchemy-effect/Schema";
 import * as Effect from "effect/Effect";
+
 import { InvalidJobId } from "../errors/InvalidJobId.ts";
 import { Job, JobId } from "../Job.ts";
 import { JobStorage } from "../services/JobStorage.ts";
@@ -15,7 +17,7 @@ export class GetJobResponse extends S.Class<GetJobResponse>(
   job: S.optional(Job),
 }) {}
 
-export class GetJob extends Route.Tag("GetJob", {
+export class GetJob extends Alchemy.Route("GetJob", {
   input: GetJobRequest,
   output: GetJobResponse,
   errors: [InvalidJobId],

@@ -1,7 +1,7 @@
 import * as AWS from "@/aws";
 import { Vpc } from "@/aws/ec2";
 import { apply, destroy } from "@/index";
-import { test } from "@/test";
+import { test } from "@/Test/Vitest";
 import { expect } from "@effect/vitest";
 import * as EC2 from "distilled-aws/ec2";
 import { LogLevel } from "effect";

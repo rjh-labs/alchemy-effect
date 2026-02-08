@@ -2,7 +2,7 @@ import { apply, destroy, type } from "@/index";
 
 import * as AWS from "@/aws";
 import { Table } from "@/aws/dynamodb";
-import { test } from "@/test";
+import { test } from "@/Test/Vitest";
 import { expect } from "@effect/vitest";
 import * as DynamoDB from "distilled-aws/dynamodb";
 import * as Data from "effect/Data";

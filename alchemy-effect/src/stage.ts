@@ -1,7 +1,8 @@
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { ref } from "./Ref.ts";
-import type { Stack, StackName, StackRef, StackResources } from "./Stack.ts";
+import type { Stack, StackName, StackRefBuilders, StackRefs } from "./Stack.ts";
+
+import * as Context from "effect/Context";
 
 export interface StageConfig {
   /**
@@ -63,23 +64,3 @@ export const defineStages = <Req = never, Err = never>(
     ) as StackRefs<S>;
   },
 });
-
-export interface StackRefBuilders {
-  [stage: string]: string | ((...args: any[]) => string);
-}
-
-export type StackRefs<S extends Stack> = {
-  [stage in string]: StackRef<StackResources<S>>;
-} & {
-  as<Builders extends StackRefBuilders>(
-    stages?: Builders,
-  ): {
-    [stage in Exclude<string, keyof Builders>]: StackRef<StackResources<S>>;
-  } & {
-    [builder in keyof Builders]: Builders[builder] extends string
-      ? StackRef<StackResources<S>>
-      : Builders[builder] extends (...args: infer Args) => any
-        ? (...args: Args) => StackRef<StackResources<S>>
-        : never;
-  };
-};

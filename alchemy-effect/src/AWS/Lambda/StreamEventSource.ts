@@ -1,25 +1,31 @@
 import type { HttpClient } from "@effect/platform/HttpClient";
+import type {
+  KinesisStreamBatchResponse,
+  KinesisStreamEvent,
+  Context as LambdaContext,
+} from "aws-lambda";
 import type { Credentials } from "distilled-aws/Credentials";
 import type { CommonAwsError } from "distilled-aws/Errors";
-import type * as Lambda from "distilled-aws/lambda";
 import * as lambda from "distilled-aws/lambda";
 import { Region } from "distilled-aws/Region";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
+
+import { declare, type From } from "../../../lib/Capability.ts";
 import type { App } from "../../App.ts";
 import { Binding } from "../../Binding.ts";
-import type { From } from "../../Capability.ts";
 import { createInternalTags, hasTags } from "../../Tags.ts";
 import { Account } from "../Account.ts";
+import type { Consume, Stream, StreamEvent } from "../Kinesis/Stream.ts";
+import { type StreamAttrs, type StreamProps } from "../Kinesis/Stream.ts";
 import {
-  Stream,
-  type Consume,
-  type StreamAttrs,
-  type StreamProps,
-} from "../Kinesis/Stream.ts";
-import { Function, type FunctionBinding } from "./Function.ts";
+  Function,
+  type FunctionBinding,
+  type FunctionProps,
+} from "./Function.ts";
 
-export type StartingPosition = "TRIM_HORIZON" | "LATEST" | "AT_TIMESTAMP";
+export type StreamStartingPosition = "TRIM_HORIZON" | "LATEST" | "AT_TIMESTAMP";
 
 export interface StreamEventSourceProps {
   /**
@@ -36,7 +42,7 @@ export interface StreamEventSourceProps {
    * The position in the stream where Lambda starts reading.
    * @default "TRIM_HORIZON"
    */
-  startingPosition?: StartingPosition;
+  startingPosition?: StreamStartingPosition;
   /**
    * The timestamp to start reading from (only used when startingPosition is AT_TIMESTAMP).
    */
@@ -68,7 +74,7 @@ export interface StreamEventSourceProps {
   /**
    * Scaling configuration for the event source.
    */
-  scalingConfig?: Lambda.ScalingConfig;
+  scalingConfig?: lambda.ScalingConfig;
 }
 
 export interface StreamEventSourceAttr extends FunctionBinding {
@@ -108,17 +114,17 @@ export const StreamEventSourceProvider = () =>
         functionName: string,
         marker?: string,
       ) => Effect.Effect<
-        Lambda.EventSourceMappingConfiguration | undefined,
+        lambda.EventSourceMappingConfiguration | undefined,
         never,
         App | Credentials | Region | HttpClient
       > = Effect.fn(function* (stream, functionName, marker) {
         const retry = Effect.retry({
           while: (
             e:
-              | Lambda.InvalidParameterValueException
-              | Lambda.ResourceNotFoundException
-              | Lambda.ServiceException
-              | Lambda.TooManyRequestsException
+              | lambda.InvalidParameterValueException
+              | lambda.ResourceNotFoundException
+              | lambda.ServiceException
+              | lambda.TooManyRequestsException
               | CommonAwsError
               | any,
           ) =>
@@ -201,8 +207,8 @@ export const StreamEventSourceProvider = () =>
           },
         }) {
           const config:
-            | Lambda.CreateEventSourceMappingRequest
-            | Lambda.UpdateEventSourceMappingRequest = {
+            | lambda.CreateEventSourceMappingRequest
+            | lambda.UpdateEventSourceMappingRequest = {
             FunctionName: functionName,
             EventSourceArn: stream.attr.streamArn,
             BatchSize: batchSize ?? 100,
@@ -281,3 +287,86 @@ export const StreamEventSourceProvider = () =>
       };
     }),
   );
+
+export const consumeStream =
+  <K extends Stream, ID extends string, Req>(
+    id: ID,
+    {
+      stream,
+      handle,
+      ...eventSourceProps
+    }: {
+      stream: K;
+      handle: (
+        event: StreamEvent<K["props"]["schema"]["Type"]>,
+        context: LambdaContext,
+      ) => Effect.Effect<KinesisStreamBatchResponse | void, never, Req>;
+    } & StreamEventSourceProps,
+  ) =>
+  <const Props extends FunctionProps<Req>>({ bindings, ...props }: Props) =>
+    Function(id, {
+      handle: Effect.fn(function* (
+        event: KinesisStreamEvent,
+        context: LambdaContext,
+      ) {
+        yield* declare<Consume<From<K>>>();
+        const records = yield* Effect.all(
+          event.Records.map(
+            Effect.fn(function* (record) {
+              // Decode the Kinesis data from base64
+              const decodedData = Buffer.from(
+                record.kinesis.data,
+                "base64",
+              ).toString("utf-8");
+              let parsedData: unknown;
+              try {
+                parsedData = JSON.parse(decodedData);
+              } catch {
+                // If not JSON, use raw string
+                parsedData = decodedData;
+              }
+
+              const validatedData = yield* S.validate(stream.props.schema)(
+                parsedData,
+              ).pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+
+              return {
+                ...record,
+                kinesis: {
+                  ...record.kinesis,
+                  data: validatedData,
+                },
+              };
+            }),
+          ),
+        );
+
+        const validRecords = records.filter(
+          (record) => record.kinesis.data !== undefined,
+        );
+        const invalidRecords = records.filter(
+          (record) => record.kinesis.data === undefined,
+        );
+
+        const response = yield* handle(
+          {
+            Records: validRecords as StreamEvent<
+              K["props"]["schema"]["Type"]
+            >["Records"],
+          },
+          context,
+        );
+
+        return {
+          batchItemFailures: [
+            ...(response?.batchItemFailures ?? []),
+            ...invalidRecords.map((failed) => ({
+              itemIdentifier: failed.kinesis.sequenceNumber,
+            })),
+          ],
+        } satisfies KinesisStreamBatchResponse;
+      }),
+    })({
+      ...props,
+      bindings: bindings.and(StreamEventSource(stream, eventSourceProps)),
+    });

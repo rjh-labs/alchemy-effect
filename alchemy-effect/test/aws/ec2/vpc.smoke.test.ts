@@ -1,7 +1,7 @@
 import * as AWS from "@/aws";
 import {
-  Eip,
   EgressOnlyInternetGateway,
+  Eip,
   InternetGateway,
   NatGateway,
   NetworkAcl,
@@ -24,14 +24,14 @@ import {
   type AnyResource,
   type AnyService,
 } from "@/index";
-import * as Output from "@/output";
-import { test } from "@/test";
+import * as Output from "@/Output/Output";
+import { test } from "@/Test/Vitest";
 import { expect } from "@effect/vitest";
 import * as EC2 from "distilled-aws/ec2";
+import * as ec2 from "distilled-aws/ec2";
 import { Data, LogLevel, Schedule } from "effect";
 import * as Effect from "effect/Effect";
 import * as Logger from "effect/Logger";
-import * as ec2 from "distilled-aws/ec2";
 
 const logLevel = Logger.withMinimumLogLevel(
   process.env.DEBUG ? LogLevel.Debug : LogLevel.Info,

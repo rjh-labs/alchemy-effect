@@ -1,7 +1,8 @@
-import type { Input, InputProps } from "@/input";
-import * as Output from "@/output";
-import { type CRUD, type IPlan, plan, type TraverseResources } from "@/plan";
-import { test } from "@/test";
+import type { Input, InputProps } from "@/lib/Input";
+import * as Output from "@/Output/Output";
+import { plan, type TraverseResources } from "@/plan";
+import type { ResourceState, ResourceStatus } from "@/state";
+import { test } from "@/Test/Vitest";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import {
@@ -12,7 +13,6 @@ import {
   TestResource,
   type TestResourceProps,
 } from "./test.resources";
-import type { ResourceState, ResourceStatus } from "@/state";
 
 const _test = test;
 

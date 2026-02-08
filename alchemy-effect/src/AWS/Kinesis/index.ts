@@ -1,3 +1,3 @@
-export * from "./operations/index.ts";
-
-export { Stream, StreamProvider } from "./Stream.ts";
+export * from "./PutRecord.ts";
+export * from "./PutRecords.ts";
+export * from "./Stream.ts";

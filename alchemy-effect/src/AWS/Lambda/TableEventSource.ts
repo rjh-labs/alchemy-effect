@@ -1,4 +1,9 @@
 import type { HttpClient } from "@effect/platform/HttpClient";
+import type {
+  DynamoDBBatchResponse,
+  DynamoDBStreamEvent,
+  Context as LambdaContext,
+} from "aws-lambda";
 import type { Credentials } from "distilled-aws/Credentials";
 import * as dynamodb from "distilled-aws/dynamodb";
 import type { CommonAwsError } from "distilled-aws/Errors";
@@ -7,23 +12,31 @@ import * as lambda from "distilled-aws/lambda";
 import { Region } from "distilled-aws/Region";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
+
+import { declare } from "../../../lib/Capability.ts";
 import type { App } from "../../App.ts";
 import { Binding } from "../../Binding.ts";
 import type { From } from "../../Capability.ts";
 import type { Input } from "../../Input.ts";
 import { createInternalTags, hasTags } from "../../Tags.ts";
 import { Account } from "../Account.ts";
+import type { TableEvent } from "../DynamoDB/index.ts";
 import type { Consume } from "../DynamoDB/Table.ts";
+import * as DynamoDB from "../DynamoDB/Table.ts";
 import {
   type AnyTable,
   type TableAttrs,
   type TableProps,
 } from "../DynamoDB/Table.ts";
-import { Function, type FunctionBinding } from "./Function.ts";
+import {
+  Function,
+  type FunctionBinding,
+  type FunctionProps,
+} from "./Function.ts";
 
-export type StartingPosition = "TRIM_HORIZON" | "LATEST";
+type StartingPosition = "TRIM_HORIZON" | "LATEST";
 
-export type StreamViewType =
+type StreamViewType =
   | "KEYS_ONLY"
   | "NEW_IMAGE"
   | "OLD_IMAGE"
@@ -374,3 +387,44 @@ export const TableEventSourceProvider = () =>
       };
     }),
   );
+
+export const consumeTable =
+  <T extends DynamoDB.AnyTable, ID extends string, Req>(
+    id: ID,
+    {
+      table,
+      handle,
+      ...eventSourceProps
+    }: {
+      table: T;
+      handle: (
+        event: TableEvent<InstanceType<T["props"]["items"]>>,
+        context: LambdaContext,
+      ) => Effect.Effect<DynamoDBBatchResponse | void, never, Req>;
+    } & TableEventSourceProps,
+  ) =>
+  <const Props extends FunctionProps<Req>>({ bindings, ...props }: Props) =>
+    Function(id, {
+      handle: Effect.fn(function* (
+        event: DynamoDBStreamEvent,
+        context: LambdaContext,
+      ) {
+        yield* declare<Consume<From<T>>>();
+
+        // Pass the event directly to the handler
+        // The DynamoDB stream records contain dynamodb.NewImage and dynamodb.OldImage
+        // which are already in the correct format (AttributeValue maps)
+        // The user's handle function receives typed records based on the table's items type
+        const response = yield* handle(
+          event as unknown as TableEvent<InstanceType<T["props"]["items"]>>,
+          context,
+        );
+
+        return {
+          batchItemFailures: response?.batchItemFailures ?? [],
+        } satisfies DynamoDBBatchResponse;
+      }),
+    })({
+      ...props,
+      bindings: bindings.and(TableEventSource(table, eventSourceProps)),
+    });

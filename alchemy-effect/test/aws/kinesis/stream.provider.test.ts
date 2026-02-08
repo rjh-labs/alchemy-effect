@@ -1,7 +1,7 @@
 import * as AWS from "@/aws";
 import { Stream } from "@/aws/kinesis";
 import { apply, destroy } from "@/index";
-import { test } from "@/test";
+import { test } from "@/Test/Vitest";
 import { expect } from "@effect/vitest";
 import * as Kinesis from "distilled-aws/kinesis";
 import * as Data from "effect/Data";

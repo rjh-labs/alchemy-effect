@@ -1,0 +1,113 @@
+import type { PlatformError } from "@effect/platform/Error";
+import * as FileSystem from "@effect/platform/FileSystem";
+import * as Path from "@effect/platform/Path";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import { isResource } from "../Resource.ts";
+import { State, StateStoreError, type StateService } from "./State.ts";
+
+// TODO(sam): implement with SQLite3
+export const LocalState = Layer.effect(
+  State,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const dotAlchemy = path.join(process.cwd(), ".alchemy");
+    const stateDir = path.join(dotAlchemy, "state");
+
+    const fail = (err: PlatformError) =>
+      Effect.fail(
+        new StateStoreError({
+          message: err.description ?? err.message,
+        }),
+      );
+
+    const recover = <T>(effect: Effect.Effect<T, PlatformError, never>) =>
+      effect.pipe(
+        Effect.catchTag("SystemError", (e) =>
+          e.reason === "NotFound" ? Effect.succeed(undefined) : fail(e),
+        ),
+        Effect.catchTag("BadArgument", (e) => fail(e)),
+      );
+
+    const stage = ({ stack, stage }: { stack: string; stage: string }) =>
+      path.join(stateDir, stack, stage);
+
+    const resource = ({
+      stack,
+      stage,
+      resourceId,
+    }: {
+      stack: string;
+      stage: string;
+      resourceId: string;
+    }) => path.join(stateDir, stack, stage, `${resourceId}.json`);
+
+    const ensure = yield* Effect.cachedFunction((dir: string) =>
+      fs.makeDirectory(dir, { recursive: true }),
+    );
+
+    const state: StateService = {
+      listStacks: () =>
+        fs.readDirectory(stateDir).pipe(
+          recover,
+          Effect.map((files) => files ?? []),
+        ),
+      listStages: (stack: string) =>
+        fs.readDirectory(path.join(stateDir, stack)).pipe(
+          recover,
+          Effect.map((files) => files ?? []),
+        ),
+      get: (request) =>
+        fs.readFile(resource(request)).pipe(
+          Effect.map((file) => JSON.parse(file.toString())),
+          recover,
+        ),
+      getReplacedResources: Effect.fnUntraced(function* (request) {
+        return (yield* Effect.all(
+          (yield* state.list(request)).map((resourceId) =>
+            state.get({
+              stack: request.stack,
+              stage: request.stage,
+              resourceId,
+            }),
+          ),
+        )).filter((r) => r?.status === "replaced");
+      }),
+      set: (request) =>
+        ensure(stage(request)).pipe(
+          Effect.flatMap(() =>
+            fs.writeFileString(
+              resource(request),
+              JSON.stringify(
+                request.value,
+                (k, v) => {
+                  if (isResource(v)) {
+                    return {
+                      id: v.id,
+                      type: v.type,
+                      props: v.props,
+                      attr: v.attr,
+                    };
+                  }
+                  return v;
+                },
+                2,
+              ),
+            ),
+          ),
+          recover,
+          Effect.map(() => request.value),
+        ),
+      delete: (request) => fs.remove(resource(request)).pipe(recover),
+      list: (request) =>
+        fs.readDirectory(stage(request)).pipe(
+          recover,
+          Effect.map(
+            (files) => files?.map((file) => file.replace(/\.json$/, "")) ?? [],
+          ),
+        ),
+    };
+    return state;
+  }),
+);

@@ -1,9 +1,8 @@
-import { $ } from "@/index";
 import * as AWS from "@/aws";
 import { Table } from "@/aws/dynamodb";
 import * as Lambda from "@/aws/lambda";
-import { apply, destroy, type } from "@/index";
-import { test } from "@/test";
+import { $, apply, destroy, type } from "@/index";
+import { test } from "@/Test/Vitest";
 import { expect } from "@effect/vitest";
 import * as DynamoDB from "distilled-aws/dynamodb";
 import * as lambdaApi from "distilled-aws/lambda";

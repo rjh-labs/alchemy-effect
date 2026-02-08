@@ -1,8 +1,8 @@
 import * as ec2 from "distilled-aws/ec2";
 import * as Effect from "effect/Effect";
 
-import type { Input } from "../../Input.ts";
-import type { ProviderService } from "../../Provider.ts";
+import type { Input } from "../../internal/Input.ts";
+import type { ProviderService } from "../../internal/Provider.ts";
 import { Resource } from "../../Resource.ts";
 import type { NetworkAclId } from "./NetworkAcl.ts";
 import type { SubnetId } from "./Subnet.ts";
