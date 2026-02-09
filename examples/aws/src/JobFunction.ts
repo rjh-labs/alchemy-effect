@@ -11,7 +11,7 @@ import { S3JobStorage } from "./JobStorage.ts";
 import { JobWorker, jobWorker } from "./JobWorker.ts";
 
 // TAG
-export class JobFunction extends Lambda.Function("JobFunction", {
+export class JobFunction extends AWS.Lambda.Function("JobFunction", {
   // not sure about this:
   // disallow things that can't be hosted (non-entrypoints)
   services: [JobApi, JobWorker],

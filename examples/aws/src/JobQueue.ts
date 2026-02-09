@@ -1,4 +1,3 @@
-import * as Alchemy from "alchemy-effect";
 import * as S3 from "alchemy-effect/AWS/S3";
 import * as Service from "alchemy-effect/Service";
 import * as Effect from "effect/Effect";
@@ -6,9 +5,18 @@ import * as Stream from "effect/Stream";
 import { decodeJob, Job } from "./Job.ts";
 import { JobsBucket } from "./JobsBucket.ts";
 
-class _JobQueue extends EventSource.EventSource()
-class _JobQueue extends EventSource.Tag()
+// class _JobQueue extends EventSource.EventSource() // michael hates
+// class __JobQueue extends EventSource.Tag() // john and harry likes
+// class ___JobQueue extends EventSource.Events() // harry likes
+// class ___JobQueue extends EventSource.EventStream() // michael hates
+// class ___JobQueue extends EventSource.Source() // michael hates
+// class ___JobQueue extends EventSource.Producer()
+// class ___JobQueue extends EventSource.Bus()
+// class ___JobQueue extends EventSource.EventBus()
 
+// import * as EventSource from "alchemy-effect/EventSource";
+
+// un-ordered but stream implies order?
 export class JobQueue extends Alchemy.EventSource<JobQueue>()("JobQueue", {
   schema: Job,
 }) {}

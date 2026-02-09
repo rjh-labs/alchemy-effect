@@ -1,20 +1,22 @@
 import * as Alchemy from "alchemy-effect";
+// our brand is not a Thing
 import * as Service from "alchemy-effect/Service";
+// their brand is a Thing
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as Stream from "effect/Stream";
 import { JobQueue } from "./JobQueue.ts";
 
 // Consumer<T>
-export class JobWorker extends Alchemy.Consumer("JobWorker", {
-  // this is where the Layer requirement comes from
+
+// export class JobWorker extends JobQueue.Consumer("JobWorker") {}
+export class JobWorker extends Alchemy.EventConsumer("JobWorker", {
   source: JobQueue,
 }) {}
 
 // cloud agnostic consumer
 export const jobWorker = Service.effect(
   JobQueue,
-  // @ts-expect-error
   Effect.gen(function* () {
     // (optionally init dependencies here)
     return {
