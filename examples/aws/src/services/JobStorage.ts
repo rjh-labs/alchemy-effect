@@ -1,4 +1,3 @@
-import * as Alchemy from "alchemy-effect";
 import * as S3 from "alchemy-effect/AWS/S3";
 import * as Service from "alchemy-effect/Service";
 import * as Effect from "effect/Effect";
@@ -7,7 +6,7 @@ import type { Job } from "../Job.ts";
 import { JobsBucket } from "../JobsBucket.ts";
 
 // TAG
-export class JobStorage extends Alchemy.Service("JobStorage")<
+export class JobStorage extends Service.Tag("JobStorage")<
   JobStorage,
   {
     putJob: (job: Job) => Effect.Effect<void>;

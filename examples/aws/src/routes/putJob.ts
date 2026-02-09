@@ -1,4 +1,4 @@
-import * as Alchemy from "alchemy-effect";
+import * as Route from "alchemy-effect/Route";
 import * as S from "alchemy-effect/Schema";
 import * as Service from "alchemy-effect/Service";
 import * as Effect from "effect/Effect";
@@ -15,7 +15,7 @@ export class PutJobResponse extends S.Class<PutJobResponse>("PutJobResponse")({
   job: Job,
 }) {}
 
-export class PutJob extends Alchemy.Route("PutJob", {
+export class PutJob extends Route.Tag("PutJob", {
   input: PutJobRequest,
   output: PutJobResponse,
   errors: [InvalidJobId],

@@ -1,5 +1,3 @@
-import type * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import type { Pipeable } from "effect/Pipeable";
 import type { AnyClass } from "./Schema.ts";
 
@@ -44,20 +42,3 @@ export declare const Route: <
 ) => Route<Name, Input, Output, Err>;
 
 export const Tag = Route;
-
-export const effect = <
-  R extends AnyRoute,
-  Err extends R["errors"] = never,
-  Req = never,
-  InitErr = never,
-  InitReq = never,
->(
-  route: R,
-  effect: Effect.Effect<
-    (
-      request: InstanceType<R["input"]>,
-    ) => Effect.Effect<InstanceType<R["output"]>, Err, Req>,
-    InitErr,
-    Req | InitReq
-  >,
-) => Layer.effect(route, effect); // TODO(sam): implement

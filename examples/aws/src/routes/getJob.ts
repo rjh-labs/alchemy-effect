@@ -1,8 +1,8 @@
 import * as Alchemy from "alchemy-effect";
-import * as Route from "alchemy-effect/Route";
 import * as S from "alchemy-effect/Schema";
 import * as Effect from "effect/Effect";
 
+import * as Service from "alchemy-effect/Service";
 import { InvalidJobId } from "../errors/InvalidJobId.ts";
 import { Job, JobId } from "../Job.ts";
 import { JobStorage } from "../services/JobStorage.ts";
@@ -23,7 +23,7 @@ export class GetJob extends Alchemy.Route("GetJob", {
   errors: [InvalidJobId],
 }) {}
 
-export const getJob = Route.effect(
+export const getJob = Service.effect(
   GetJob,
   Effect.gen(function* () {
     const jobStorage = yield* JobStorage;

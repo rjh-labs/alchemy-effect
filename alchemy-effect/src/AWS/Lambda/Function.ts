@@ -2,9 +2,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 
 import { FileSystem } from "@effect/platform";
-import type { HttpClient } from "@effect/platform/HttpClient";
 import type { Context as LambdaContext } from "aws-lambda";
-import type { Credentials } from "distilled-aws/Credentials";
 import * as iam from "distilled-aws/iam";
 import type {
   CreateFunctionRequest,
@@ -27,6 +25,7 @@ import { createInternalTags, createTagsList, hasTags } from "../../Tags.ts";
 import { Account } from "../Account.ts";
 import { Assets } from "../Assets.ts";
 
+import type { Class } from "../../Util/class.ts";
 import * as IAM from "../IAM/index.ts";
 
 export type { Context } from "aws-lambda";
@@ -37,6 +36,7 @@ export interface FunctionProps<Req = unknown> extends RuntimeProps<
 > {
   functionName?: string;
   functionArn?: string;
+  services: any[];
   main: string;
   handler?: string;
   memory?: number;
@@ -76,39 +76,26 @@ export interface Function extends Runtime<"AWS.Lambda.Function"> {
 }
 export const Function = Runtime("AWS.Lambda.Function")<Function>();
 
-type Handler = (
-  event: any,
-  context: LambdaContext,
-) => Effect.Effect<any, any, never>;
+export const make = Effect.fn(function* (
+  funcTag: Class<Function>,
+  props: FunctionProps,
+) {
+  // loop through Context and identify entrypoints?
+  // YUCK: would prefer it to be a general solution instead of hard-coded here
+  const context = yield* Effect.context<never>();
 
-type HandlerEffect<Req = Capability | Credentials | HttpClient | Region> =
-  Effect.Effect<Handler, any, Req>;
+  const func = Effect.fn(function* (event: any, context: LambdaContext) {
+    // identify services we have in this function and route requests to them
+  });
 
-const memo = Symbol.for("alchemy::memo");
+  for (const serviceTag of funcTag.services) {
+    // this gets us the implementation but does not help us route
+    const service = yield* serviceTag;
+  }
 
-// TODO(sam): is there a better way to lazily evaluate the Effect and cache the result?
-const resolveHandler = async (
-  effect: HandlerEffect & {
-    [memo]?: Handler;
-  },
-) =>
-  (effect[memo] ??= await Effect.runPromise(
-    // safe to cast away the Capability requirements since they are phantoms
-    effect as HandlerEffect<never>,
-  ));
-
-export const toHandler =
-  <H extends Handler>(
-    effect: Effect.Effect<
-      H,
-      any,
-      Capability | HttpClient | Credentials | Region
-    >,
-  ) =>
-  async (event: any, context: LambdaContext) =>
-    Effect.runPromise(
-      (await resolveHandler(effect))(event, context),
-    ) as Promise<Effect.Effect.Success<ReturnType<H>>>;
+  return async (event: any, ctx: LambdaContext) =>
+    Effect.runPromise(func(event, ctx).pipe(Effect.provide(context)));
+});
 
 export const FunctionProvider = () =>
   Function.provider.effect(

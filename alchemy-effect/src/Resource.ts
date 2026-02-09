@@ -1,6 +1,7 @@
 import * as Context from "effect/Context";
 import type { Effect } from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type { Pipeable } from "effect/Pipeable";
 import type { InstanceId } from "./InstanceId.ts";
 import type { Provider, ProviderService } from "./Provider.ts";
 
@@ -19,7 +20,7 @@ export interface IResource<
   Attrs = unknown,
   Base = unknown,
   Binding = unknown,
-> {
+> extends Pipeable {
   id: ID;
   type: Type;
   Props: unknown;
@@ -127,14 +128,15 @@ export const Resource = <Ctor extends (id: string, props: any) => Resource>(
         static readonly props = props;
         static readonly provider = provider;
       };
-    } as unknown as Ctor & {
-      type: ReturnType<Ctor>["type"];
-      parent: ReturnType<Ctor>;
-      new (): ReturnType<Ctor> & {
+    } as unknown as Ctor &
+      Pipeable & {
+        type: ReturnType<Ctor>["type"];
         parent: ReturnType<Ctor>;
-      };
-      provider: typeof provider;
-    },
+        new (): ReturnType<Ctor> & {
+          parent: ReturnType<Ctor>;
+        };
+        provider: typeof provider;
+      },
     {
       type: type,
       provider,

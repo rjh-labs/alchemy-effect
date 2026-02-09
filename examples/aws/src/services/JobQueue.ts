@@ -3,23 +3,12 @@ import * as S3 from "alchemy-effect/AWS/S3";
 import * as Service from "alchemy-effect/Service";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
-
 import { decodeJob, Job } from "../Job.ts";
 import { JobsBucket } from "../JobsBucket.ts";
 
 export class JobQueue extends Alchemy.EventSource<JobQueue>()("JobQueue", {
-  event: Job,
+  schema: Job,
 }) {}
-
-// cloud agnostic consumer
-export const JobQueueConsumer = Service.consume(
-  JobQueue,
-  Effect.gen(function* () {
-    // initialize any state scoped to a partition of the stream
-    return (stream: Stream.Stream<S3.S3Event>) =>
-      stream.pipe(Stream.map((a) => a));
-  }),
-);
 
 // Implement the Event Source (map S3 events to the JobQueue events)
 export const S3JobQueue = Service.effect(
@@ -34,7 +23,7 @@ export const S3JobQueue = Service.effect(
         S3.getObject(JobsBucket, {
           key: object.key,
           ifMatch: object.eTag,
-        }),
+        }).pipe(Effect.orDie),
       ),
       Stream.mapEffect((object) =>
         object.Body
@@ -49,8 +38,9 @@ export const S3JobQueue = Service.effect(
               ),
               Effect.flatMap(decodeJob),
             )
-          : Effect.fail(new Error("Invalid job body")),
+          : Effect.dieMessage("Invalid job body"),
       ),
+      Stream.orDie,
     );
   }),
 );

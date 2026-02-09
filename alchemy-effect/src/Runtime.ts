@@ -2,10 +2,10 @@ import type { Types } from "effect";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type { Pipeable } from "effect/Pipeable";
 import type { Capability } from "./Capability.ts";
 import type { ProviderService } from "./Provider.ts";
 import type { IResource, Resource, ResourceTags } from "./Resource.ts";
-import type { IService, ServiceDef } from "./Service.ts";
 
 export type RuntimeHandler<
   Inputs extends any[] = any[],
@@ -60,21 +60,14 @@ export interface Runtime<
 >
   extends IRuntime<Type, Handler, Props>, Resource<Type, string, Props> {
   provider: ResourceTags<this>;
-  <
-    const ID extends string,
-    Inputs extends any[],
-    Output,
-    Err,
-    Req,
-    Handler extends RuntimeHandler<Inputs, Output, Err, Req>,
-  >(
+  <const ID extends string>(
     id: ID,
     props: {
-      services:
-    }
-  ): ServiceDef<ID, this, Handler>;
-  // TODO(sam): implement
-  make<Self, P extends Props>(this: Self, props: P): Self;
+      services: any[];
+    },
+  ): Pipeable & {
+    new (): {};
+  };
 }
 
 export const Runtime =
@@ -140,6 +133,9 @@ export const Runtime =
               ? `, ${this.capability.map((c) => `${c}`).join(", ")}`
               : ""
           })`;
+        },
+        make: (props: Self["props"]) => (tag: any) => {
+          //
         },
       },
     ) as unknown as Self;

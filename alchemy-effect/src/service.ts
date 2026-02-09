@@ -1,215 +1,62 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-
-export const Service = Context.Tag;
-
-import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
-import type { ExcludeAny } from ".//Util/types.ts";
-import type { Capability } from "./Capability.ts";
 
-export type ServiceTag<Self, ID extends string, Shape> = Context.TagClass<
-  Self,
-  ID,
-  Shape
-> & {
-  [key in keyof Shape]: Shape[key] extends (
-    ...args: any[]
-  ) => Effect.Effect<infer A, infer Err, infer Req>
-    ? (
-        ...args: Parameters<Shape[key]>
-      ) => Effect.Effect<A, Err, ExcludeAny<Req> | Self>
-    : Shape[key] extends (
-          ...args: any[]
-        ) => Stream.Stream<infer A, infer Err, infer Req>
-      ? (
-          ...args: Parameters<Shape[key]>
-        ) => Stream.Stream<A, Err, ExcludeAny<Req> | Self>
-      : Shape[key] extends (
-            ...args: any[]
-          ) => Sink.Sink<infer A, infer In, infer L, infer Err, infer Req>
-        ? (
-            ...args: Parameters<Shape[key]>
-          ) => Sink.Sink<A, In, L, Err, ExcludeAny<Req> | Self>
-        : Shape[key];
-} & {
-  make: <Impl extends Shape>(impl: Impl) => Impl;
-  layer: {
-    effect: <Impl extends Shape, Err = never, Req = never>(
-      effect: Effect.Effect<Impl, Err, Req>,
-    ) => Layer.Layer<
-      Self,
-      Err,
-      | Req
-      | {
-          [k in keyof Impl]: Impl[k] extends (
-            ...args: any[]
-          ) => Effect.Effect<infer _A, infer _Err, infer Req>
-            ? ExcludeAny<Req>
-            : Impl[k] extends (
-                  ...args: any[]
-                ) => Stream.Stream<infer _A, infer _Err, infer Req>
-              ? ExcludeAny<Req>
-              : Impl[k] extends (
-                    ...args: any[]
-                  ) => Sink.Sink<
-                    infer _A,
-                    infer _In,
-                    infer _L,
-                    infer _Err,
-                    infer Req
-                  >
-                ? ExcludeAny<Req>
-                : never;
-        }[keyof Impl]
-    >;
-    succeed: <Impl extends Shape>(
-      effect: Impl,
-    ) => Layer.Layer<
-      Self,
-      never,
-      {
-        [k in keyof Impl]: Impl[k] extends (
-          ...args: any[]
-        ) => Effect.Effect<infer _A, infer _Err, infer Req>
-          ? ExcludeAny<Req>
-          : Impl[k] extends (
-                ...args: any[]
-              ) => Stream.Stream<infer _A, infer _Err, infer Req>
-            ? ExcludeAny<Req>
-            : Impl[k] extends (
-                  ...args: any[]
-                ) => Sink.Sink<
-                  infer _A,
-                  infer _In,
-                  infer _L,
-                  infer _Err,
-                  infer Req
-                >
-              ? ExcludeAny<Req>
-              : never;
-      }[keyof Impl]
-    >;
-  };
-};
+export const Tag = Context.Tag;
 
-export const ServiceTag =
-  <ID extends string>(
-    id: ID,
-  ): {
-    <Self, Shape>(): ServiceTag<Self, ID, Shape>;
-    <Self>(): <ID extends string, Shape extends Record<string, S.Schema.All>>(
-      shape: Shape,
-    ) => ServiceTag<
-      Self,
-      ID,
-      {
-        [key in keyof Shape]: S.Schema.Type<Shape[key]>;
-      }
-    >;
-  } =>
-  <Self, Shape>() =>
-    new Proxy(Context.Tag(id)<Self, Shape>(), {
-      get: (target: any, prop: string | symbol) =>
-        prop in target
-          ? target[prop]
-          : (...args: any[]) =>
-              target.pipe(
-                Effect.flatMap((service: any) => service[prop](...args)),
-              ),
-    }) as ServiceTag<Self, ID, Shape>;
+type WidenReq<T> = T extends (...args: infer Args) => infer Out
+  ? // we lose generics here
+    (...args: Args) => WidenReq<Out>
+  : T extends Effect.Effect<infer S, infer Err, infer _>
+    ? Effect.Effect<S, Err, any>
+    : T extends Stream.Stream<infer S, infer Err, infer _>
+      ? Stream.Stream<S, Err, any>
+      : T extends Sink.Sink<infer A, infer In, infer L, infer Err, infer _>
+        ? Sink.Sink<A, In, L, Err, any>
+        : T extends any[]
+          ? WidenReqArray<T>
+          : T extends object
+            ? {
+                [k in keyof T]: WidenReq<T[k]>;
+              }
+            : T;
 
-export type TagTypeId = typeof TagTypeId;
-export const TagTypeId = "alchemy/Service" as const;
+type WidenReqArray<T extends any[]> = T extends [infer H, ...infer Tail]
+  ? [WidenReq<H>, ...WidenReqArray<Tail>]
+  : [];
 
-export interface TagClass<
-  Self = any,
-  Id extends string = string,
-  Type = any,
-> extends Context.Tag<Self, Type> {
-  new (_: never): TagClassShape<Id, Type>;
-  readonly key: Id;
-}
-
-export interface TagClassShape<Id, Shape> {
-  readonly [TagTypeId]: TagTypeId;
-  readonly Type: Shape;
-  readonly Id: Id;
-}
-
-export type Capabilities<Shape> = Shape extends (...args: any[]) => infer Return
-  ? Capabilities<Return>
-  : Shape extends Effect.Effect<infer _A, infer _Err, infer Req>
-    ? ExcludeAny<Extract<Req, Capability>>
-    : Shape extends Stream.Stream<infer _A, infer _Err, infer Req>
-      ? ExcludeAny<Extract<Req, Capability>>
-      : Shape extends Sink.Sink<
+type ExtractReq<T> = T extends (...args: any[]) => infer Out
+  ? ExtractReq<Out>
+  : T extends Effect.Effect<infer _A, infer _Err, infer Req>
+    ? Req
+    : T extends Stream.Stream<infer _A, infer _Err, infer Req>
+      ? Req
+      : T extends Sink.Sink<
             infer _A,
             infer _In,
             infer _L,
             infer _Err,
             infer Req
           >
-        ? ExcludeAny<Extract<Req, Capability>>
-        : never;
+        ? Req
+        : T extends any[]
+          ? ExtractReq<T[number]>
+          : T extends object
+            ? ExtractReq<T[keyof T]>
+            : never;
 
-export const Tag =
-  <const ID extends string>(id: ID) =>
-  <Self, Contract>(): TagClass<Self, ID, Contract> =>
-    undefined!;
+export declare const effect: {
+  <I, S>(
+    tag: Context.Tag<I, S>,
+  ): <E, R, Impl extends WidenReq<S>>(
+    effect: Effect.Effect<Impl, E, R>,
+  ) => Layer.Layer<I, E, R | ExtractReq<Impl>>;
 
-export interface Service<Shape, Err, Req, Cap> {}
-
-export const effect = <
-  Tag extends TagClass,
-  A extends Impl<Tag["Identifier"], Tag["Service"]>,
-  Err = never,
-  Req = never,
->(
-  tag: Tag,
-  effect: Effect.Effect<A, Err, Req>,
-): Service<
-  Tag["Service"],
-  Err,
-  Req,
-  {
-    [k in keyof A]: A[k] extends (
-      ...args: any[]
-    ) => Effect.Effect<infer _A, infer _Err, infer Req>
-      ? ExcludeAny<Req>
-      : A[k] extends (
-            ...args: any[]
-          ) => Stream.Stream<infer _A, infer _Err, infer Req>
-        ? ExcludeAny<Req>
-        : A[k] extends (
-              ...args: any[]
-            ) => Sink.Sink<infer _A, infer _In, infer _L, infer _Err, infer Req>
-          ? ExcludeAny<Req>
-          : never;
-  }[keyof A]
-> => undefined!;
-
-export const succeed = <Tag extends ServiceTagClass>(tag: Tag, service: Tag) =>
-  undefined!;
-
-type Impl<Self, Shape> = {
-  [key in keyof Shape]: Shape[key] extends (
-    ...args: infer Args extends any[]
-  ) => Effect.Effect<infer A, infer Err, infer _Req>
-    ? (...args: Args) => Effect.Effect<A, Err, any> // allow any so the user can provide any
-    : Shape[key] extends (
-          ...args: any[]
-        ) => Stream.Stream<infer A, infer Err, infer Req>
-      ? (
-          ...args: Parameters<Shape[key]>
-        ) => Stream.Stream<A, Err, ExcludeAny<Req> | Self>
-      : Shape[key] extends (
-            ...args: any[]
-          ) => Sink.Sink<infer A, infer In, infer L, infer Err, infer Req>
-        ? (
-            ...args: Parameters<Shape[key]>
-          ) => Sink.Sink<A, In, L, Err, ExcludeAny<Req> | Self>
-        : Shape[key];
+  //
+  <T extends Context.Tag<any, any>, Impl extends WidenReq<T["Service"]>, E, R>(
+    tag: T,
+    effect: Effect.Effect<Impl, E, R>,
+  ): Layer.Layer<T["Identifier"], E, R | ExtractReq<Impl>>;
 };
