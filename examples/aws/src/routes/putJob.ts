@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 
 import { InvalidJobId } from "../errors/InvalidJobId.ts";
 import { Job } from "../Job.ts";
-import { JobStorage } from "../services/JobStorage.ts";
+import { JobStorage } from "../JobStorage.ts";
 
 export class PutJobRequest extends S.Class<PutJobRequest>("PutJobRequest")({
   content: S.String,

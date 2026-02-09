@@ -9,6 +9,7 @@ import { getJob, GetJob } from "./routes/GetJob.ts";
 import { putJob, PutJob } from "./routes/PutJob.ts";
 
 export class JobApi extends Alchemy.Endpoint("JobApi", {
+  // coming from here
   routes: [GetJob, PutJob],
   protocols: [Http.Rest, Http.JsonRpc],
   accepts: [ContentType.Json, ContentType.Xml, ContentType.MessagePack],
@@ -16,8 +17,13 @@ export class JobApi extends Alchemy.Endpoint("JobApi", {
 
 export const jobApi = Server.make(JobApi).pipe(
   Layer.provide([Http.RestServer, Http.JsonRpcServer]),
-  Layer.provide([ContentType.JsonCodec, ContentType.XmlCodec]),
   Layer.provide([getJob, putJob]),
+  // codec requirements come from GetJob and PutJob
+  Layer.provide([
+    ContentType.JsonCodec,
+    ContentType.XmlCodec,
+    ContentType.MessagePackCodec,
+  ]),
 );
 
 export const jobClient = Client.make(JobApi).pipe(

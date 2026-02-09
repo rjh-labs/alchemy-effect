@@ -86,13 +86,21 @@ export const make = Effect.fn(function* (
 
   const func = Effect.fn(function* (event: any, context: LambdaContext) {
     // identify services we have in this function and route requests to them
+    for (const handler of interceptors) {
+      if (handler.canHandle(event)) {
+        return handler.handle(event);
+      }
+    }
   });
 
   for (const serviceTag of funcTag.services) {
     // this gets us the implementation but does not help us route
-    const service = yield* serviceTag;
+    const service = yield* RequestInterceptorLayer(serviceTag);
   }
 
+  // Interceptor[]
+
+  // export default ...
   return async (event: any, ctx: LambdaContext) =>
     Effect.runPromise(func(event, ctx).pipe(Effect.provide(context)));
 });

@@ -5,15 +5,19 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import { JobApi, jobApi } from "./JobApi.ts";
+import { S3JobQueue } from "./JobQueue.ts";
 import { JobsBucket } from "./JobsBucket.ts";
-import { S3JobQueue } from "./services/JobQueue.ts";
-import { S3JobStorage } from "./services/JobStorage.ts";
-import { JobWorker, jobWorker } from "./services/JobWorker.ts";
+import { S3JobStorage } from "./JobStorage.ts";
+import { JobWorker, jobWorker } from "./JobWorker.ts";
 
+// TAG
 export class JobFunction extends Lambda.Function("JobFunction", {
+  // not sure about this:
+  // disallow things that can't be hosted (non-entrypoints)
   services: [JobApi, JobWorker],
 }) {}
 
+// IMPLEMENTATION
 export default Function.make(JobFunction, {
   main: import.meta.filename,
 }).pipe(
@@ -22,9 +26,11 @@ export default Function.make(JobFunction, {
       Layer.provide(Layer.provide(S3JobQueue, S3JobStorage)),
     ),
   ),
+  // least privilege
   Alchemy.bind(
     Lambda.GetObject(JobsBucket),
     Lambda.PutObject(JobsBucket),
+    // requires this
     Lambda.BucketEventSource(JobsBucket),
   ),
 );
