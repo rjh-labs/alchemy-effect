@@ -1,14 +1,11 @@
-import * as Alchemy from "alchemy-effect";
-import * as Client from "alchemy-effect/Client";
-import * as ContentType from "alchemy-effect/ContentType";
+import { Client, ContentType, Server } from "alchemy-effect";
 import * as Http from "alchemy-effect/Http";
-import * as Server from "alchemy-effect/Server";
 import * as Layer from "effect/Layer";
 
-import { getJob, GetJob } from "./routes/GetJob.ts";
-import { putJob, PutJob } from "./routes/PutJob.ts";
+import { getJob, GetJob } from "./api/GetJob.ts";
+import { putJob, PutJob } from "./api/PutJob.ts";
 
-export class JobApi extends Alchemy.Endpoint("JobApi", {
+export class JobApi extends Server.Endpoint("JobApi", {
   // coming from here
   routes: [GetJob, PutJob],
   protocols: [Http.Rest, Http.JsonRpc],

@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import type { Endpoint } from "./Endpoint/Endpoint.ts";
+import type { Endpoint } from "./Endpoint.ts";
 
 export const make = <E extends Endpoint>(endpoint: E) =>
   Layer.effect(

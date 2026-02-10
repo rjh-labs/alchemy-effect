@@ -4,9 +4,12 @@
     "package.json",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/**/*.json",
+    "src/**/*.json"
   ],
   "compilerOptions": {
+    "types": [
+      "./src/global.d.ts"
+    ],
     "composite": true,
     "noEmit": false,
     "outDir": "./lib",
@@ -26,6 +29,6 @@
       "DOM",
       "DOM.Iterable",
       "ES2023"
-    ]
+    ],
   }
 }

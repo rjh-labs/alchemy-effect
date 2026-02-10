@@ -3,9 +3,9 @@ import type { Effect } from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type { Capability, ICapability } from "./Capability.ts";
 import type { Diff } from "./Diff.ts";
-import type { Hosted } from "./Layer.ts";
 import type { IResource, Resource } from "./Resource.ts";
 import type { IRuntime } from "./Runtime.ts";
+import type { Hosted } from "./SLayer.ts";
 
 export const bind =
   <B extends AnyBinding[]>(...capabilities: B) =>

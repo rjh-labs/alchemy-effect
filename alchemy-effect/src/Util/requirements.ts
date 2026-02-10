@@ -1,12 +1,8 @@
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 
-export const Tag = Context.Tag;
-
-type WidenReq<T> = T extends (...args: infer Args) => infer Out
+export type WidenReq<T> = T extends (...args: infer Args) => infer Out
   ? // we lose generics here
     (...args: Args) => WidenReq<Out>
   : T extends Effect.Effect<infer S, infer Err, infer _>
@@ -27,7 +23,7 @@ type WidenReqArray<T extends any[]> = T extends [infer H, ...infer Tail]
   ? [WidenReq<H>, ...WidenReqArray<Tail>]
   : [];
 
-type ExtractReq<T> = T extends (...args: any[]) => infer Out
+export type ExtractReq<T> = T extends (...args: any[]) => infer Out
   ? ExtractReq<Out>
   : T extends Effect.Effect<infer _A, infer _Err, infer Req>
     ? Req
@@ -46,17 +42,3 @@ type ExtractReq<T> = T extends (...args: any[]) => infer Out
           : T extends object
             ? ExtractReq<T[keyof T]>
             : never;
-
-export declare const effect: {
-  <I, S>(
-    tag: Context.Tag<I, S>,
-  ): <E, R, Impl extends WidenReq<S>>(
-    effect: Effect.Effect<Impl, E, R>,
-  ) => Layer.Layer<I, E, R | ExtractReq<Impl>>;
-
-  //
-  <T extends Context.Tag<any, any>, Impl extends WidenReq<T["Service"]>, E, R>(
-    tag: T,
-    effect: Effect.Effect<Impl, E, R>,
-  ): Layer.Layer<T["Identifier"], E, R | ExtractReq<Impl>>;
-};

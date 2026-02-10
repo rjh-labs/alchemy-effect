@@ -1,9 +1,9 @@
 import * as Effect from "effect/Effect";
 
 import * as S3 from "distilled-aws/s3";
-import { Binding } from "../../../lib/Binding.ts";
-import { declare, type Capability, type To } from "../../../lib/Capability.ts";
-import { toEnvKey } from "../../../lib/internal/util/env.ts";
+import { Binding } from "../../Binding.ts";
+import { declare, type Capability, type To } from "../../Capability.ts";
+import { toEnvKey } from "../../Env.ts";
 import { Function } from "../Lambda/Function.ts";
 import { Bucket } from "./Bucket.ts";
 

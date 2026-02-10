@@ -25,7 +25,6 @@ import { createInternalTags, createTagsList, hasTags } from "../../Tags.ts";
 import { Account } from "../Account.ts";
 import { Assets } from "../Assets.ts";
 
-import type { Class } from "../../Util/class.ts";
 import * as IAM from "../IAM/index.ts";
 
 export type { Context } from "aws-lambda";
@@ -76,10 +75,13 @@ export interface Function extends Runtime<"AWS.Lambda.Function"> {
 }
 export const Function = Runtime("AWS.Lambda.Function")<Function>();
 
-export const make = Effect.fn(function* (
-  funcTag: Class<Function>,
-  props: FunctionProps,
-) {
+export const _make =
+  (props: FunctionProps) => (eff: Effect.Effect<any, any, any>) =>
+    Effect.gen(function* () {
+      return yield* effe;
+    });
+
+export const make = Effect.fn(function* (props: FunctionProps) {
   // loop through Context and identify entrypoints?
   // YUCK: would prefer it to be a general solution instead of hard-coded here
   const context = yield* Effect.context<never>();

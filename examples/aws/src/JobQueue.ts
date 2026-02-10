@@ -1,29 +1,18 @@
+import { Bus } from "alchemy-effect";
 import * as S3 from "alchemy-effect/AWS/S3";
-import * as Service from "alchemy-effect/Service";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
+
 import { decodeJob, Job } from "./Job.ts";
 import { JobsBucket } from "./JobsBucket.ts";
 
-// class _JobQueue extends EventSource.EventSource() // michael hates
-// class __JobQueue extends EventSource.Tag() // john and harry likes
-// class ___JobQueue extends EventSource.Events() // harry likes
-// class ___JobQueue extends EventSource.EventStream() // michael hates
-// class ___JobQueue extends EventSource.Source() // michael hates
-// class ___JobQueue extends EventSource.Producer()
-// class ___JobQueue extends EventSource.Bus()
-// class ___JobQueue extends EventSource.EventBus()
-
-// import * as EventSource from "alchemy-effect/EventSource";
-
-// un-ordered but stream implies order?
-export class JobQueue extends Alchemy.EventSource<JobQueue>()("JobQueue", {
+// declare an Event Source containing Job events
+export class JobQueue extends Bus.EventSource("JobQueue", {
   schema: Job,
 }) {}
 
-// Implement the Event Source (map S3 events to the JobQueue events)
-export const S3JobQueue = Service.effect(
-  JobQueue,
+// Implement the Event Source (consume from S3 and emit Job events)
+export const S3JobQueue = JobQueue.layer(
   Effect.gen(function* () {
     // this only runs at runtime, but it projects a S3.Consume<Jobs> capability requirement
     return S3.consumeBucketNotifications(JobsBucket).pipe(

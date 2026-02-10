@@ -1,11 +1,9 @@
-import * as Alchemy from "alchemy-effect";
-import * as S from "alchemy-effect/Schema";
+import { Schema as S, SLayer, Server } from "alchemy-effect";
 import * as Effect from "effect/Effect";
 
-import * as Service from "alchemy-effect/Service";
-import { InvalidJobId } from "../errors/InvalidJobId.ts";
 import { Job, JobId } from "../Job.ts";
 import { JobStorage } from "../JobStorage.ts";
+import { InvalidJobId } from "./InvalidJobId.ts";
 
 export class GetJobRequest extends S.Class<GetJobRequest>("GetJobRequest")({
   jobId: JobId,
@@ -17,13 +15,13 @@ export class GetJobResponse extends S.Class<GetJobResponse>(
   job: S.optional(Job),
 }) {}
 
-export class GetJob extends Alchemy.Route("GetJob", {
+export class GetJob extends Server.Operation("GetJob", {
   input: GetJobRequest,
   output: GetJobResponse,
   errors: [InvalidJobId],
 }) {}
 
-export const getJob = Service.effect(
+export const getJob = SLayer.effect(
   GetJob,
   Effect.gen(function* () {
     // everything has to be here

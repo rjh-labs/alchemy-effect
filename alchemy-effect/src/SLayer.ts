@@ -1,11 +1,16 @@
+import * as Layer from "effect/Layer";
+
 import type { Types } from "effect";
-import type { Layer } from "effect/Layer";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import type { Pipeable } from "effect/Pipeable";
 import type { Capability } from "./Capability.ts";
 import type { IRuntime } from "./Runtime.ts";
+import type { Instance } from "./Util/instance.ts";
+import type { ExtractReq, WidenReq } from "./Util/requirements.ts";
 
 export const provide =
-  <Out, Err, Cap extends Capability>(layer: Layer<Out, Err, Cap>) =>
+  <Out, Err, Cap extends Capability>(layer: Layer.Layer<Out, Err, Cap>) =>
   <Svc extends ServiceDef>(service: Svc): Unbound<Svc, Err, Cap> =>
     undefined!;
 
@@ -54,3 +59,16 @@ export declare namespace Hosted {
     };
   }
 }
+
+export declare const effect: {
+  <I, S>(
+    tag: Context.Tag<I, S>,
+  ): <E, R, Impl extends WidenReq<S>>(
+    effect: Effect.Effect<Impl, E, R>,
+  ) => Layer.Layer<I, E, R | ExtractReq<Impl>>;
+
+  <T extends Context.Tag<any, any>, Impl extends WidenReq<T["Service"]>, E, R>(
+    tag: T,
+    effect: Effect.Effect<Impl, E, R>,
+  ): Layer.Layer<Instance<T>, E, R | ExtractReq<Impl>>;
+};

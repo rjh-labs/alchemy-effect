@@ -109,6 +109,11 @@
       "types": "./src/State/index.d.ts",
       "bun": "./src/State/index.ts",
       "import": "./lib/State/index.js"
+    },
+    "./Util": {
+      "types": "./src/Util/index.d.ts",
+      "bun": "./src/Util/index.ts",
+      "import": "./lib/Util/index.js"
     }
   },
   "publishConfig": {

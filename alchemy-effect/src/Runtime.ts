@@ -2,7 +2,6 @@ import type { Types } from "effect";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import type { Pipeable } from "effect/Pipeable";
 import type { Capability } from "./Capability.ts";
 import type { ProviderService } from "./Provider.ts";
 import type { IResource, Resource, ResourceTags } from "./Resource.ts";
@@ -60,12 +59,12 @@ export interface Runtime<
 >
   extends IRuntime<Type, Handler, Props>, Resource<Type, string, Props> {
   provider: ResourceTags<this>;
-  <const ID extends string>(
+  <const ID extends string, Services extends Context.Tag<string, any>[]>(
     id: ID,
     props: {
-      services: any[];
+      services: Services;
     },
-  ): Pipeable & {
+  ): Effect.Effect<any, any, Services[number]> & {
     new (): {};
   };
 }

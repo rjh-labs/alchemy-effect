@@ -1,10 +1,10 @@
 import type { Pipeable } from "effect/Pipeable";
-import type { AnyClass } from "./Schema.ts";
+import type { AnyClass } from "../Schema.ts";
 
-export type AnyRoute = Route<string, AnyClass, AnyClass, AnyClass>;
+export type AnyOperation = Operation<string, AnyClass, AnyClass, AnyClass>;
 
 // TODO(sam): rename to Operation?
-export interface Route<
+export interface Operation<
   Name extends string = string,
   Input extends AnyClass = AnyClass,
   Output extends AnyClass = AnyClass,
@@ -15,13 +15,13 @@ export interface Route<
   input: Input;
   output: Output;
   errors: Err[];
-  new (): Route<Name, Input, Output, Err>;
+  new (): Operation<Name, Input, Output, Err>;
   // handler: (
   //   request: InstanceType<Input>,
   // ) => Effect.Effect<InstanceType<Output>, Err, GlobalReq | MidlewareReq>;
 }
 
-export interface RouteProps<
+export interface OperationProps<
   Input extends AnyClass,
   Output extends AnyClass,
   Err extends AnyClass,
@@ -31,14 +31,12 @@ export interface RouteProps<
   errors: Err[];
 }
 
-export declare const Route: <
+export declare const Operation: <
   Name extends string,
   Input extends AnyClass,
   Output extends AnyClass,
   Err extends AnyClass = never,
 >(
   name: Name,
-  props: RouteProps<Input, Output, Err>,
-) => Route<Name, Input, Output, Err>;
-
-export const Tag = Route;
+  props: OperationProps<Input, Output, Err>,
+) => Operation<Name, Input, Output, Err>;

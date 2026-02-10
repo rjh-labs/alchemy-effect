@@ -34,8 +34,5 @@
     "declaration": true,
     "declarationMap": true,
     "noErrorTruncation": true,
-    "types": [
-      "./global.d.ts",
-    ],
   }
 }

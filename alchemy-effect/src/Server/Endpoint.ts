@@ -1,10 +1,10 @@
 import * as Context from "effect/Context";
 import type { ContentType } from "../ContentType.ts";
-import * as Route from "../Route.ts";
+import * as Route from "./Operation.ts";
 import type { Protocol } from "./Protocol.ts";
 
 export interface EndpointProps<
-  Routes extends readonly Route.AnyRoute[],
+  Routes extends readonly Route.AnyOperation[],
   Protocols extends Protocol[],
   Formats extends ContentType[],
 > {
@@ -15,7 +15,7 @@ export interface EndpointProps<
 
 export interface Endpoint<
   Name extends string = string,
-  Routes extends readonly Route.AnyRoute[] = readonly Route.AnyRoute[],
+  Routes extends readonly Route.AnyOperation[] = readonly Route.AnyOperation[],
   Protocols extends Protocol[] = Protocol[],
   Formats extends ContentType[] = ContentType[],
 > extends Context.TagClass<
@@ -28,7 +28,7 @@ export interface Endpoint<
 
 export const Endpoint = <
   Name extends string,
-  const Routes extends readonly Route.AnyRoute[],
+  const Routes extends readonly Route.AnyOperation[],
 >(
   name: Name,
   props: EndpointProps<Routes>,

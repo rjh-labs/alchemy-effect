@@ -1,12 +1,11 @@
 import * as S3 from "alchemy-effect/AWS/S3";
-import * as Service from "alchemy-effect/Service";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 
+import { SLayer } from "alchemy-effect";
 import type { Job } from "./Job.ts";
 import { JobsBucket } from "./JobsBucket.ts";
 
-// TAG
 export class JobStorage extends Context.Tag("JobStorage")<
   JobStorage,
   {
@@ -15,12 +14,11 @@ export class JobStorage extends Context.Tag("JobStorage")<
   }
 >() {}
 
-export const S3JobStorage = Service.effect(
+export const S3JobStorage = SLayer.effect(
   JobStorage,
   Effect.gen(function* () {
     return {
       putJob: (job) =>
-        // S3.PutObject<Jobs>
         S3.putObject(JobsBucket, {
           key: job.id,
           body: JSON.stringify(job),
@@ -29,7 +27,6 @@ export const S3JobStorage = Service.effect(
           Effect.orDie,
         ),
       getJob: (jobId) =>
-        // S3.GetObject<Jobs>
         S3.getObject(JobsBucket, {
           key: jobId,
         }).pipe(

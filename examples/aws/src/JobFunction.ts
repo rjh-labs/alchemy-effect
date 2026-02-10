@@ -1,8 +1,7 @@
-import * as Alchemy from "alchemy-effect";
-import * as Lambda from "alchemy-effect/AWS/Lambda";
-import * as Function from "alchemy-effect/AWS/Lambda/Function";
+import * as AWS from "alchemy-effect/AWS";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type * as Types from "effect/Types";
 
 import { JobApi, jobApi } from "./JobApi.ts";
 import { S3JobQueue } from "./JobQueue.ts";
@@ -10,27 +9,33 @@ import { JobsBucket } from "./JobsBucket.ts";
 import { S3JobStorage } from "./JobStorage.ts";
 import { JobWorker, jobWorker } from "./JobWorker.ts";
 
-// TAG
+// TAG (a way to reference the Lambda without bloating bundle)
 export class JobFunction extends AWS.Lambda.Function("JobFunction", {
-  // not sure about this:
-  // disallow things that can't be hosted (non-entrypoints)
   services: [JobApi, JobWorker],
 }) {}
 
-// IMPLEMENTATION
-export default Function.make(JobFunction, {
-  main: import.meta.filename,
-}).pipe(
+// IMPLEMENTATION (provide all the runtime layers and infra dependencies)
+export default JobFunction.pipe(
   Effect.provide(
     Layer.mergeAll(jobApi, jobWorker).pipe(
       Layer.provide(Layer.provide(S3JobQueue, S3JobStorage)),
     ),
   ),
-  // least privilege
-  Alchemy.bind(
-    Lambda.GetObject(JobsBucket),
-    Lambda.PutObject(JobsBucket),
-    // requires this
-    Lambda.BucketEventSource(JobsBucket),
+  AWS.Lambda.make({
+    main: import.meta.filename,
+  }),
+  // Add infra dependencies and enforce least privilege IAM policies
+  AWS.Lambda.bind(
+    AWS.S3.GetObject(JobsBucket),
+    AWS.S3.PutObject(JobsBucket),
+    AWS.Lambda.BucketEventSource(JobsBucket),
   ),
 );
+
+export interface InvariantEffect<A, Err, in out Req> extends Effect.Effect<
+  A,
+  Err,
+  Req
+> {
+  _?: Types.Invariant<Req>;
+}

@@ -1,11 +1,10 @@
-import * as Route from "alchemy-effect/Route";
 import * as S from "alchemy-effect/Schema";
-import * as Service from "alchemy-effect/Service";
 import * as Effect from "effect/Effect";
 
-import { InvalidJobId } from "../errors/InvalidJobId.ts";
+import { SLayer, Server } from "alchemy-effect";
 import { Job } from "../Job.ts";
 import { JobStorage } from "../JobStorage.ts";
+import { InvalidJobId } from "./InvalidJobId.ts";
 
 export class PutJobRequest extends S.Class<PutJobRequest>("PutJobRequest")({
   content: S.String,
@@ -15,13 +14,13 @@ export class PutJobResponse extends S.Class<PutJobResponse>("PutJobResponse")({
   job: Job,
 }) {}
 
-export class PutJob extends Route.Tag("PutJob", {
+export class PutJob extends Server.Operation("PutJob", {
   input: PutJobRequest,
   output: PutJobResponse,
   errors: [InvalidJobId],
 }) {}
 
-export const putJob = Service.effect(
+export const putJob = SLayer.effect(
   PutJob,
   Effect.gen(function* () {
     const jobStorage = yield* JobStorage;

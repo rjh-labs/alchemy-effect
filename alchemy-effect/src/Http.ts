@@ -1,8 +1,8 @@
 import type { HttpServerResponse } from "@effect/platform/HttpServerResponse";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { Middleware, type MiddlewareClass } from "./Endpoint/Middleware.ts";
-import { Protocol } from "./Endpoint/Protocol.ts";
+import { Middleware, type MiddlewareClass } from "./Server/Middleware.ts";
+import { Protocol } from "./Server/Protocol.ts";
 import { applyTrait, defineTrait, type Trait, type TraitDef } from "./Trait.ts";
 
 export const Rest = undefined!;
