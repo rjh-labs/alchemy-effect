@@ -1,35 +1,50 @@
-import * as Context from "effect/Context";
 import type { ContentType } from "../ContentType.ts";
-import * as Route from "./Operation.ts";
+import { STag, type STagClass } from "../STag.ts";
+import type * as Route from "./Operation.ts";
 import type { Protocol } from "./Protocol.ts";
 
-export interface EndpointProps<
+export interface EndpointClass<
+  Name extends string,
   Routes extends readonly Route.AnyOperation[],
   Protocols extends Protocol[],
-  Formats extends ContentType[],
-> {
-  routes: Routes;
-  protocols: Protocols;
-  formats: Formats;
-}
-
-export interface Endpoint<
-  Name extends string = string,
-  Routes extends readonly Route.AnyOperation[] = readonly Route.AnyOperation[],
-  Protocols extends Protocol[] = Protocol[],
-  Formats extends ContentType[] = ContentType[],
-> extends Context.TagClass<
-  Endpoint<Name, Routes, Protocols, Formats>,
-  Name,
+  Accepts extends ContentType[],
+> extends STagClass<
+  EndpointClass<Name, Routes, Protocols, Accepts>,
+  `Endpoint<${Name}>`,
   {
     // TODO
+  },
+  {
+    routes: Routes;
+    protocols: Protocols;
+    accepts: Accepts;
   }
-> {}
+> {
+  readonly routes: Routes;
+  readonly protocols: Protocols;
+  readonly accepts: Accepts;
+}
 
 export const Endpoint = <
   Name extends string,
   const Routes extends readonly Route.AnyOperation[],
+  const Protocols extends Protocol[],
+  const Accepts extends ContentType[],
 >(
   name: Name,
-  props: EndpointProps<Routes>,
-) => Context.Tag(name)<HttpEndpoint, HttpEndpoint>();
+  props: {
+    routes: Routes;
+    protocols: Protocols;
+    accepts: Accepts;
+  },
+): EndpointClass<Name, Routes, Protocols, Accepts> =>
+  STag(name, {
+    routes: props.routes,
+    protocols: props.protocols,
+    accepts: props.accepts,
+  })<
+    EndpointClass<Name, Routes, Protocols, Accepts>,
+    {
+      /* TODO */
+    }
+  >() as any;

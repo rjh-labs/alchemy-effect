@@ -4,15 +4,9 @@ import type { Types } from "effect";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import type { Pipeable } from "effect/Pipeable";
-import type { Capability } from "./Capability.ts";
 import type { IRuntime } from "./Runtime.ts";
 import type { Instance } from "./Util/instance.ts";
 import type { ExtractReq, WidenReq } from "./Util/requirements.ts";
-
-export const provide =
-  <Out, Err, Cap extends Capability>(layer: Layer.Layer<Out, Err, Cap>) =>
-  <Svc extends ServiceDef>(service: Svc): Unbound<Svc, Err, Cap> =>
-    undefined!;
 
 export interface Unbound<in ROut, out E = never, in out Capabilities = never>
   extends Unbound.Variance<ROut, E, Capabilities>, Pipeable {}

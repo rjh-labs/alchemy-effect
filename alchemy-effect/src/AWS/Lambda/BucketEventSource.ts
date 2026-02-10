@@ -1,4 +1,3 @@
-import type { Context as LambdaContext } from "aws-lambda";
 import * as Lambda from "distilled-aws/lambda";
 import type { Event } from "distilled-aws/s3";
 import * as s3 from "distilled-aws/s3";
@@ -6,16 +5,12 @@ import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
 
 import { Binding } from "../../Binding.ts";
-import { declare, type From } from "../../Capability.ts";
+import { type From } from "../../Capability.ts";
 import { Account } from "../Account.ts";
 import { Bucket } from "../S3/Bucket.ts";
 import type { ConsumeBucketNotifications } from "../S3/BucketNotification.ts";
-import type { S3Event, S3EventType } from "../S3/S3Event.ts";
-import {
-  Function,
-  type FunctionBinding,
-  type FunctionProps,
-} from "./Function.ts";
+import type { S3EventType } from "../S3/S3Event.ts";
+import { Function, type FunctionBinding } from "./Function.ts";
 
 export interface BucketEventSourceProps {
   /**
@@ -45,7 +40,7 @@ export interface BucketEventSource<
   Props extends BucketEventSourceProps,
 > extends Binding<
   Function,
-  ConsumeBucketNotifications<From<B>>,
+  ConsumeBucketNotifications<B>,
   Props,
   BucketEventSourceAttr,
   "BucketEventSource"
@@ -55,7 +50,7 @@ export const BucketEventSource = Binding<
   <B extends Bucket, const Props extends BucketEventSourceProps>(
     bucket: B,
     props?: Props,
-  ) => BucketEventSource<B, Props>
+  ) => BucketEventSource<From<B>, Props>
 >(Function, "AWS.S3.OnBucketEvent", "BucketEventSource");
 
 export const BucketEventSourceProvider = () =>
@@ -204,29 +199,3 @@ export const BucketEventSourceProvider = () =>
       };
     }),
   );
-
-export const consumeBucket =
-  <B extends Bucket, ID extends string, Req>(
-    id: ID,
-    {
-      bucket,
-      handle,
-      ...eventSourceProps
-    }: {
-      bucket: B;
-      handle: (
-        event: S3Event,
-        context: LambdaContext,
-      ) => Effect.Effect<void, never, Req>;
-    } & BucketEventSourceProps,
-  ) =>
-  <const Props extends FunctionProps<Req>>({ bindings, ...props }: Props) =>
-    Function(id, {
-      handle: Effect.fn(function* (event: S3Event, context: LambdaContext) {
-        yield* declare<ConsumeBucketNotifications<From<B>>>();
-        yield* handle(event, context);
-      }),
-    })({
-      ...props,
-      bindings: bindings.and(BucketEventSource(bucket, eventSourceProps)),
-    });

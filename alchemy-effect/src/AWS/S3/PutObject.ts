@@ -2,7 +2,12 @@ import * as Effect from "effect/Effect";
 
 import * as S3 from "distilled-aws/s3";
 import { Binding } from "../../Binding.ts";
-import { declare, type Capability, type To } from "../../Capability.ts";
+import {
+  declare,
+  type Capability,
+  type In,
+  type To,
+} from "../../Capability.ts";
 import { toEnvKey } from "../../Env.ts";
 import { Function } from "../Lambda/Function.ts";
 import { Bucket } from "./Bucket.ts";
@@ -13,7 +18,7 @@ export interface PutObject<B = Bucket> extends Capability<
 > {}
 
 export const PutObject = Binding<
-  <B extends Bucket>(bucket: B) => Binding<Function, PutObject<To<B>>>
+  <B extends Bucket>(bucket: B) => Binding<Function, PutObject<In<B>>>
 >(Function, "AWS.S3.PutObject");
 
 export interface PutObjectOptions {

@@ -5,3 +5,5 @@ export * from "./Function.ts";
 export * from "./QueueEventSource.ts";
 export * from "./StreamEventSource.ts";
 export * from "./TableEventSource.ts";
+
+export type { Context } from "aws-lambda";

@@ -5,6 +5,8 @@ import * as Layer from "effect/Layer";
 import type { Capability } from "./Capability.ts";
 import type { ProviderService } from "./Provider.ts";
 import type { IResource, Resource, ResourceTags } from "./Resource.ts";
+import type { STagClass } from "./STag.ts";
+import type { Instance } from "./Util/instance.ts";
 
 export type RuntimeHandler<
   Inputs extends any[] = any[],
@@ -59,14 +61,16 @@ export interface Runtime<
 >
   extends IRuntime<Type, Handler, Props>, Resource<Type, string, Props> {
   provider: ResourceTags<this>;
-  <const ID extends string, Services extends Context.Tag<string, any>[]>(
+  <const ID extends string, Services extends STagClass<any, any, any>[]>(
     id: ID,
     props: {
       services: Services;
     },
-  ): Effect.Effect<any, any, Services[number]> & {
-    new (): {};
-  };
+  ): EffectClass<any, never, Instance<Services[number]>>;
+}
+
+export interface EffectClass<A, Err, Req> extends Effect.Effect<A, Err, Req> {
+  new (_: never): {};
 }
 
 export const Runtime =
