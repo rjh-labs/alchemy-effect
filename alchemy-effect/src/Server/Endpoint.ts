@@ -4,10 +4,10 @@ import type * as Route from "./Operation.ts";
 import type { Protocol } from "./Protocol.ts";
 
 export interface EndpointClass<
-  Name extends string,
-  Routes extends readonly Route.AnyOperation[],
-  Protocols extends Protocol[],
-  Accepts extends ContentType[],
+  Name extends string = any,
+  Routes extends readonly Route.AnyOperation[] = any,
+  Protocols extends Protocol[] = any,
+  Accepts extends ContentType[] = any,
 > extends STagClass<
   EndpointClass<Name, Routes, Protocols, Accepts>,
   `Endpoint<${Name}>`,

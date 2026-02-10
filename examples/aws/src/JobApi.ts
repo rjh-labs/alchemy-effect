@@ -13,14 +13,14 @@ export class JobApi extends Server.Endpoint("JobApi", {
 }) {}
 
 export const jobApi = Server.make(JobApi).pipe(
-  Layer.provide([Http.RestServer, Http.JsonRpcServer]),
+  // Layer.provide([Http.RestServer, Http.JsonRpcServer]),
   Layer.provide([getJob, putJob]),
-  // codec requirements come from GetJob and PutJob
-  Layer.provide([
-    ContentType.JsonCodec,
-    ContentType.XmlCodec,
-    ContentType.MessagePackCodec,
-  ]),
+  // // codec requirements come from GetJob and PutJob
+  // Layer.provide([
+  //   ContentType.JsonCodec,
+  //   ContentType.XmlCodec,
+  //   ContentType.MessagePackCodec,
+  // ]),
 );
 
 export const jobClient = Client.make(JobApi).pipe(
