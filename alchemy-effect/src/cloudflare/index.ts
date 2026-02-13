@@ -1,3 +1,4 @@
+export * as DNS from "./dns/index.ts";
 export * as KV from "./kv/index.ts";
 export * as R2 from "./r2/index.ts";
 export * as Assets from "./worker/assets.fetch.ts";

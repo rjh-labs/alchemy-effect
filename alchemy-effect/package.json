@@ -1,137 +1,47 @@
 {
-  "name": "alchemy-effect",
+  "name": "@f3/vendor-alchemy-effect",
   "version": "0.6.0",
   "homepage": "https://alchemy.run",
   "license": "Apache-2.0",
   "author": "Sam Goodwin <sam@alchemy.run>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alchemy-run/alchemy-effect.git",
-    "directory": "alchemy"
+    "url": "git+https://github.com/rjh-labs/alchemy-effect.git",
+    "directory": "alchemy-effect"
   },
-  "bin": {
-    "alchemy-effect": "bin/alchemy-effect.js"
-  },
-  "files": [
-    "bin",
-    "lib",
-    "src"
-  ],
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "bun": "./src/index.ts",
-      "import": "./lib/index.js"
-    },
-    "./Output": {
-      "types": "./lib/output.d.ts",
-      "bun": "./src/output.ts",
-      "import": "./lib/output.js"
-    },
-    "./aws": {
-      "types": "./lib/aws/index.d.ts",
-      "bun": "./src/aws/index.ts",
-      "import": "./lib/aws/index.js"
-    },
-    "./aws/dynamodb": {
-      "types": "./lib/aws/dynamodb/index.d.ts",
-      "bun": "./src/aws/dynamodb/index.ts",
-      "import": "./lib/aws/dynamodb/index.js"
-    },
-    "./aws/ec2": {
-      "types": "./lib/aws/ec2/index.d.ts",
-      "bun": "./src/aws/ec2/index.ts",
-      "import": "./lib/aws/ec2/index.js"
-    },
-    "./aws/kinesis": {
-      "types": "./lib/aws/kinesis/index.d.ts",
-      "bun": "./src/aws/kinesis/index.ts",
-      "import": "./lib/aws/kinesis/index.js"
-    },
-    "./aws/lambda": {
-      "types": "./lib/aws/lambda/index.d.ts",
-      "bun": "./src/aws/lambda/index.ts",
-      "import": "./lib/aws/lambda/index.js"
-    },
-    "./aws/s3": {
-      "types": "./lib/aws/s3/index.d.ts",
-      "bun": "./src/aws/s3/index.ts",
-      "import": "./lib/aws/s3/index.js"
-    },
-    "./aws/sqs": {
-      "types": "./lib/sqs/aws/index.d.ts",
-      "bun": "./src/aws/sqs/index.ts",
-      "import": "./lib/aws/sqs/index.js"
-    },
-    "./aws/sts": {
-      "types": "./lib/sts.d.ts",
-      "bun": "./src/aws/sts.ts",
-      "import": "./lib/aws/sts.js"
-    },
-    "./aws/iam": {
-      "types": "./lib/iam.d.ts",
-      "bun": "./src/aws/iam.ts",
-      "import": "./lib/aws/iam.js"
-    },
-    "./aws/credentials": {
-      "types": "./lib/aws/credentials.d.ts",
-      "bun": "./src/aws/credentials.ts",
-      "import": "./lib/aws/credentials.js"
-    },
-    "./cli": {
-      "types": "./lib/cli/index.d.ts",
-      "bun": "./src/cli/index.ts",
-      "import": "./lib/cli/index.js"
-    },
-    "./cloudflare": {
-      "types": "./lib/cloudflare/index.d.ts",
-      "bun": "./src/cloudflare/index.ts",
-      "import": "./lib/cloudflare/index.js"
-    },
-    "./cloudflare/assets": {
-      "types": "./lib/cloudflare/worker/assets.fetch.d.ts",
-      "bun": "./src/cloudflare/worker/assets.fetch.ts",
-      "import": "./lib/cloudflare/worker/assets.fetch.js"
-    },
-    "./cloudflare/worker": {
-      "types": "./lib/cloudflare/worker/index.d.ts",
-      "bun": "./src/cloudflare/worker/index.ts",
-      "import": "./lib/cloudflare/worker/index.js"
-    },
-    "./cloudflare/kv": {
-      "types": "./lib/cloudflare/kv/index.d.ts",
-      "bun": "./src/cloudflare/kv/index.ts",
-      "import": "./lib/cloudflare/kv/index.js"
-    },
-    "./cloudflare/r2": {
-      "types": "./lib/cloudflare/r2/index.d.ts",
-      "bun": "./src/cloudflare/r2/index.ts",
-      "import": "./lib/cloudflare/r2/index.js"
-    }
-  },
-  "publishConfig": {
-    "access": "public"
+    ".": { "types": "./lib/index.d.ts", "import": "./src/index.ts" },
+    "./Output": { "types": "./lib/output.d.ts", "import": "./src/output.ts" },
+    "./aws": { "types": "./lib/aws/index.d.ts", "import": "./src/aws/index.ts" },
+    "./aws/dynamodb": { "types": "./lib/aws/dynamodb/index.d.ts", "import": "./src/aws/dynamodb/index.ts" },
+    "./aws/ec2": { "types": "./lib/aws/ec2/index.d.ts", "import": "./src/aws/ec2/index.ts" },
+    "./aws/kinesis": { "types": "./lib/aws/kinesis/index.d.ts", "import": "./src/aws/kinesis/index.ts" },
+    "./aws/lambda": { "types": "./lib/aws/lambda/index.d.ts", "import": "./src/aws/lambda/index.ts" },
+    "./aws/s3": { "types": "./lib/aws/s3/index.d.ts", "import": "./src/aws/s3/index.ts" },
+    "./aws/sqs": { "types": "./lib/aws/sqs/index.d.ts", "import": "./src/aws/sqs/index.ts" },
+    "./aws/iam": { "types": "./lib/aws/iam/index.d.ts", "import": "./src/aws/iam/index.ts" },
+    "./aws/credentials": { "types": "./lib/aws/credentials.d.ts", "import": "./src/aws/credentials.ts" },
+    "./cli": { "types": "./lib/cli/index.d.ts", "import": "./src/cli/index.ts" },
+    "./cloudflare": { "types": "./lib/cloudflare/index.d.ts", "import": "./src/cloudflare/index.ts" },
+    "./cloudflare/assets": { "types": "./lib/cloudflare/worker/assets.fetch.d.ts", "import": "./src/cloudflare/worker/assets.fetch.ts" },
+    "./cloudflare/worker": { "types": "./lib/cloudflare/worker/index.d.ts", "import": "./src/cloudflare/worker/index.ts" },
+    "./cloudflare/kv": { "types": "./lib/cloudflare/kv/index.d.ts", "import": "./src/cloudflare/kv/index.ts" },
+    "./cloudflare/r2": { "types": "./lib/cloudflare/r2/index.d.ts", "import": "./src/cloudflare/r2/index.ts" },
+    "./cloudflare/dns": { "types": "./lib/cloudflare/dns/index.d.ts", "import": "./src/cloudflare/dns/index.ts" },
+    "./fly": { "types": "./lib/fly/index.d.ts", "import": "./src/fly/index.ts" }
   },
   "scripts": {
-    "dev": "tsdown --watch",
-    "build": "bun bundle && bun pm pack",
-    "bundle": "tsdown",
-    "bundle:watch": "tsdown --watch",
-    "publish:npm": "cp ../README.md . && bun publish && rm README.md",
-    "test:benchmark": "tsx --tsconfig tsconfig.test.json test/types.benchmark.ts"
+    "check": "tsc -b tsconfig.json"
   },
   "dependencies": {
-    "@aws-sdk/credential-providers": "catalog:",
-    "@effect/vitest": "^0.27.0",
+    "@aws-sdk/credential-providers": "^3.0.0",
     "@smithy/node-config-provider": "^4.0.0",
     "@smithy/shared-ini-file-loader": "^4.3.4",
     "@smithy/types": "^4.8.1",
-    "@types/aws-lambda": "catalog:",
     "aws4fetch": "^1.0.20",
     "cloudflare": "catalog:",
-    "distilled-aws": "catalog:",
     "esbuild": "^0.25.12",
     "fast-xml-parser": "^5.2.5",
     "ignore": "^7.0.5",
@@ -140,38 +50,23 @@
   },
   "devDependencies": {
     "@clack/prompts": "^0.11.0",
-    "@cloudflare/workers-types": "catalog:",
+    "@cloudflare/workers-types": "^4.20250805.0",
     "@effect/cli": "catalog:",
     "@effect/cluster": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/platform-node": "catalog:",
-    "@types/aws-lambda": "catalog:",
-    "@types/bun": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@types/aws-lambda": "^8.10.152",
     "@types/node": "catalog:",
     "@types/react": "^19.2.2",
-    "effect": "catalog:",
+    "distilled-aws": "^0.0.21",
     "ink": "^6.3.1",
     "react": "^19.2.0",
-    "react-devtools-core": "^7.0.1",
-    "tsconfig-paths": "^4.2.0",
-    "tsdown": "^0.15.4",
-    "tsx": "^4.20.6",
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@effect/platform": "*",
-    "@effect/platform-node": "*",
-    "effect": "*"
-  },
-  "peerDependenciesMeta": {
-    "@effect/platform": {
-      "optional": true
-    },
-    "@effect/platform-node": {
-      "optional": true
-    },
-    "effect": {
-      "optional": true
-    }
+    "effect": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/platform-node": "catalog:"
   }
 }

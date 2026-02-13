@@ -2,6 +2,7 @@ import * as Layer from "effect/Layer";
 import * as ESBuild from "../esbuild.ts";
 import { CloudflareApi } from "./api.ts";
 import * as Account from "./account.ts";
+import * as DNS from "./dns/index.ts";
 import * as KV from "./kv/index.ts";
 import { namespaceProvider } from "./kv/namespace.provider.ts";
 import { bucketProvider } from "./r2/bucket.provider.ts";
@@ -22,6 +23,7 @@ export const defaultProviders = () =>
     ),
     namespaceProvider(),
     bucketProvider(),
+    DNS.recordProvider(),
   ).pipe(Layer.provideMerge(bindings()));
 
 export const providers = () =>
