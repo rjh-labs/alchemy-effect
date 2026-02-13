@@ -1,8 +1,8 @@
-import type { KV } from "cloudflare/resources";
+import type { ErrorData, KV } from "cloudflare/resources";
 import * as Effect from "effect/Effect";
 import { createPhysicalName } from "../../physical-name.ts";
 import { Account } from "../account.ts";
-import { CloudflareApi } from "../api.ts";
+import { CloudflareApi, CloudflareApiError } from "../api.ts";
 import {
   Namespace,
   type NamespaceAttr,
@@ -42,12 +42,45 @@ export const namespaceProvider = () =>
         }),
         create: Effect.fn(function* ({ id, news }) {
           const title = yield* createTitle(id, news.title);
+
+          const findExisting = Effect.gen(function* () {
+            let page = 1;
+            while (true) {
+              const namespaces = yield* api.kv.namespaces.list({
+                account_id: accountId,
+                page,
+                per_page: 100,
+              });
+              const match = namespaces.result.find(
+                (namespace) => namespace.title === title,
+              );
+              if (match) return mapResult<NamespaceProps>(match);
+              if (namespaces.nextPageInfo()) {
+                page++;
+              } else {
+                return yield* Effect.die(
+                  new Error(
+                    `KV namespace "${title}" reported as existing but not found in list`,
+                  ),
+                );
+              }
+            }
+          });
+
           return yield* api.kv.namespaces
             .create({
               account_id: accountId,
               title,
             })
-            .pipe(Effect.map(mapResult<NamespaceProps>));
+            .pipe(
+              Effect.map(mapResult<NamespaceProps>),
+              Effect.catchIf(
+                (err): err is CloudflareApiError =>
+                  err._tag === "BadRequest" &&
+                  err.errors.some((e: ErrorData) => e.code === 10014),
+                () => findExisting,
+              ),
+            );
         }),
         update: Effect.fn(function* ({ id, news, output }) {
           const title = yield* createTitle(id, news.title);

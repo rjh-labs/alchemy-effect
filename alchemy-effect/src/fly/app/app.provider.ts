@@ -7,7 +7,7 @@ import { App, type AppAttr, type AppProps } from "./app.ts";
 type FlyAppResponse = {
   id: string;
   name: string;
-  organization: {
+  organization?: {
     slug: string;
   };
   hostname: string;
@@ -34,7 +34,7 @@ export const appProvider = () =>
       ): AppAttr<Props> =>
         ({
           appName: app.name,
-          org: app.organization.slug,
+          org: app.organization?.slug ?? defaultOrg,
           hostname: app.hostname,
         }) as AppAttr<Props>;
 

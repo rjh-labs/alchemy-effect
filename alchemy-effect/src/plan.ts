@@ -586,6 +586,12 @@ export const plan = <const Resources extends (Service | Resource)[]>(
                     });
                   }
                 }
+                // No cloud state found and no local attr — treat as fresh create
+                return Node<Create<Resource>>({
+                  action: "create",
+                  props: news,
+                  state: undefined,
+                });
               }
 
               // TODO(sam): is this correct for all possible states a resource can be in?
