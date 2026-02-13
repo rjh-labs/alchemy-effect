@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import * as Schedule from "effect/Schedule";
 import { FlyApi } from "../api.ts";
 import { Secret, type SecretAttr, type SecretProps } from "./secret.ts";
 
@@ -28,12 +29,23 @@ export const secretProvider = () =>
       return {
         create: Effect.fnUntraced(function* ({ news }) {
           // Set secret via API
-          const response = yield* api.post<{ release: { id: string } }>(
-            `/apps/${news.app}/secrets`,
-            {
-              [news.key]: news.value,
-            },
-          );
+          // Retry on 403/404 — App may be creating concurrently
+          // (Fly returns 403 when app doesn't exist yet)
+          const response = yield* api
+            .post<{ release: { id: string } }>(
+              `/apps/${news.app}/secrets`,
+              {
+                [news.key]: news.value,
+              },
+            )
+            .pipe(
+              Effect.retry({
+                times: 10,
+                schedule: Schedule.spaced("2 seconds"),
+                while: (err) =>
+                  err._tag === "Authentication" || err._tag === "NotFound",
+              }),
+            );
 
           // Calculate digest of value (simple hash for tracking)
           const digest = btoa(news.value).substring(0, 16);

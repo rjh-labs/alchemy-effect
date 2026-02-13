@@ -20,37 +20,33 @@ export class FlyApiError extends Data.Error<{
   status: number;
   body?: unknown;
 }> {
+  static tagFromStatus(status: number): FlyApiError["_tag"] {
+    switch (status) {
+      case 400:
+        return "BadRequest";
+      case 401:
+      case 403:
+        return "Authentication";
+      case 404:
+        return "NotFound";
+      case 409:
+        return "Conflict";
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return "InternalServerError";
+      default:
+        return "Unknown";
+    }
+  }
+
   static fromHttpError(error: HttpClientError.HttpClientError): FlyApiError {
     if (error._tag === "ResponseError") {
-      const status = error.response.status;
-      let tag: FlyApiError["_tag"];
-      switch (status) {
-        case 400:
-          tag = "BadRequest";
-          break;
-        case 401:
-        case 403:
-          tag = "Authentication";
-          break;
-        case 404:
-          tag = "NotFound";
-          break;
-        case 409:
-          tag = "Conflict";
-          break;
-        case 500:
-        case 502:
-        case 503:
-        case 504:
-          tag = "InternalServerError";
-          break;
-        default:
-          tag = "Unknown";
-      }
       return new FlyApiError({
-        _tag: tag,
+        _tag: FlyApiError.tagFromStatus(error.response.status),
         message: error.message,
-        status,
+        status: error.response.status,
       });
     }
     return new FlyApiError({
@@ -96,12 +92,37 @@ export class FlyApi extends Effect.Service<FlyApi>()("fly/api", {
       return client.execute(req).pipe(
         Effect.flatMap((response) =>
           response.text.pipe(
-            Effect.map((text) =>
-              text.trim() === "" ? (undefined as A) : (JSON.parse(text) as A),
-            ),
+            Effect.flatMap((text) => {
+              if (response.status >= 400) {
+                let body: unknown;
+                try {
+                  body = JSON.parse(text);
+                } catch {
+                  body = text;
+                }
+                const tag = FlyApiError.tagFromStatus(response.status);
+                return Effect.fail(
+                  new FlyApiError({
+                    _tag: tag,
+                    message: `Fly API ${method} ${path}: ${response.status} ${typeof body === "object" && body !== null && "error" in body ? (body as any).error : text.slice(0, 200)}`,
+                    status: response.status,
+                    body,
+                  }),
+                );
+              }
+              return Effect.succeed(
+                text.trim() === ""
+                  ? (undefined as A)
+                  : (JSON.parse(text) as A),
+              );
+            }),
           ),
         ),
-        Effect.mapError(FlyApiError.fromHttpError),
+        Effect.catchAll((error) =>
+          error instanceof FlyApiError
+            ? Effect.fail(error)
+            : Effect.fail(FlyApiError.fromHttpError(error)),
+        ),
       );
     };
 

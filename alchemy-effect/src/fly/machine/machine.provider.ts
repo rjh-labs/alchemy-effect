@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import * as Schedule from "effect/Schedule";
 import { createPhysicalName } from "../../physical-name.ts";
 import { FlyApi } from "../api.ts";
 import { Machine, type MachineAttr, type MachineProps } from "./machine.ts";
@@ -44,14 +45,22 @@ export const machineProvider = () =>
         create: Effect.fnUntraced(function* ({ id, news }) {
           const name = yield* createMachineName(id, news.name);
 
-          const machine = yield* api.post<FlyMachineResponse>(
-            `/apps/${news.app}/machines`,
-            {
+          // Retry on 403/404 — App may be creating concurrently
+          // (Fly returns 403 when app doesn't exist yet)
+          const machine = yield* api
+            .post<FlyMachineResponse>(`/apps/${news.app}/machines`, {
               name,
               region: news.region,
               config: news.config,
-            },
-          );
+            })
+            .pipe(
+              Effect.retry({
+                times: 10,
+                schedule: Schedule.spaced("2 seconds"),
+                while: (err) =>
+                  err._tag === "Authentication" || err._tag === "NotFound",
+              }),
+            );
 
           return mapResult<MachineProps>(machine, news.app);
         }),
